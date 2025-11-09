@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">InstaDev</string>
+
+<!--    Login Screen-->
+    <string name="login_screen_header_text_spain">Español (España)</string>
+    <string name="login_screen_textfield_email">Usuario, correo electrónico o móvil</string>
+    <string name="login_screen_textfield_password">Contraseña</string>
+    <string name="login_screen_button_login">Iniciar sesión</string>
+    <string name="login_screen_text_forgot_password">¿Has olvidado la contraseña?</string>
+    <string name="login_screen_button_register">Crear cuenta nueva</string>
+<!--    Register Screen-->
+    <string name="register_screen_title_phone">¿Cuál es tu número de móvil?</string>
+    <string name="register_screen_title_email">¿Cuál es tu correo electrónico?</string>
+    <string name="register_screen_subtitle_phone">Introduce tu número de móvil de contacto. Nadie lo verá en tu perfil.</string>
+    <string name="register_screen_subtitle_email">Introduce tu correo electrónico. Nadie lo verá en tu perfil.</string>
+    <string name="register_screen_body">Puede que recibas notificaciones nuestras en Whatsapp y por SMS por motivos de seguridad y para iniciar sesión.</string>
+    <string name="register_screen_textfield_register_phone">Número de móvil</string>
+    <string name="register_screen_textfield_register_email">Correo electrónico</string>
+    <string name="register_screen_button_next">Siguiente</string>
+    <string name="register_screen_button_register_with_email">Registrarte con tu correo electrónico</string>
+    <string name="register_screen_button_register_with_phone">Registrarte con tu número de móvil</string>
+    <string name="register_screen_text_find_my_account">Buscar mi cuenta</string>
+
+<!--    BottomBar-->
+    <string name="tab_home">Principal</string>
+    <string name="tab_profile">Perfil</string>
+    <string name="tab_add_content">Añadir cont</string>
+    <string name="tab_reels">Reels</string>
+    <string name="tab_search">Buscar</string>
+
+</resources>
