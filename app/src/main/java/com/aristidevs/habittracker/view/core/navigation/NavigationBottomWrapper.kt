@@ -22,5 +22,11 @@ fun NavigationBottomWrapper(modifier: Modifier = Modifier, navHostController: Na
         composable<TabProfile> {
             ProfileScreen()
         }
+
+        composable(
+            route = "habit_detail/{habitId}"
+        ) { backStackEntry ->
+            HabitDetailScreen(...)
+        }
     }
 }
