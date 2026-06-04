@@ -12,4 +12,8 @@ sealed class TabScreens{
 
     @Serializable
     data object TabProfile: TabScreens()
+
+    @Serializable
+    data class TabDetail(val habitId: Long) : TabScreens()
+
 }

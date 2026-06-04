@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">InstaDev</string>
+    <string name="app_name">Habit Tracker</string>
 
 <!--    Login Screen-->
     <string name="login_screen_header_text_spain">Español (España)</string>

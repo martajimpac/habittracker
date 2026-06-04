@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "InstaDev"
+rootProject.name = "HabitTracker"
 include(":app")
  

@@ -1,12 +1,20 @@
 package com.aristidevs.habittracker.view.core.navigation
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.aristidevs.habittracker.R
 
 sealed class BottomNavigation(
     @StringRes val label: Int,
-    @DrawableRes val icon: Int,
+    val iconUnselected: ImageVector,
+    val iconSelected: ImageVector,
     val tabScreen: TabScreens
 ) {
     companion object {
@@ -15,19 +23,22 @@ sealed class BottomNavigation(
 
     data object TabHome : BottomNavigation(
         label = R.string.tab_home,
-        icon = R.drawable.ic_home,
+        iconUnselected = Icons.Outlined.Home,
+        iconSelected = Icons.Filled.Home,
         tabScreen = TabScreens.TabHome
     )
 
     data object TabAddContent : BottomNavigation(
         label = R.string.tab_add_content,
-        icon = R.drawable.ic_add,
+        iconUnselected = Icons.Outlined.AddCircleOutline,
+        iconSelected = Icons.Filled.AddCircle,
         tabScreen = TabScreens.TabAddContent
     )
 
     data object TabProfile : BottomNavigation(
         label = R.string.tab_profile,
-        icon = R.drawable.ic_profile,
+        iconUnselected = Icons.Outlined.Person,
+        iconSelected = Icons.Filled.Person,
         tabScreen = TabScreens.TabProfile
     )
 }

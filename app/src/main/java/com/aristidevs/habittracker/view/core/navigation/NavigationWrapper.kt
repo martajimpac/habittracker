@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.aristidevs.habittracker.view.auth.login.LoginScreen
-import com.aristidevs.habittracker.view.auth.register.RegisterScreen
-import com.aristidevs.habittracker.view.bottom_nav_screen.BottomNavScreen
+import com.aristidevs.habittracker.view.screens.auth.login.LoginScreen
+import com.aristidevs.habittracker.view.screens.auth.register.RegisterScreen
+import com.aristidevs.habittracker.view.screens.bottom_nav_screen.BottomNavScreen
 
 @Composable
 fun NavigationWrapper() {
@@ -24,6 +24,7 @@ fun NavigationWrapper() {
             RegisterScreen(navigateBack = { navController.popBackStack() })
         }
 
+        
         composable<Home> {
             BottomNavScreen()
         }
