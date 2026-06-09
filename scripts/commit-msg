@@ -1,0 +1,73 @@
+#!/bin/bash
+# 🔍 Git Hook - Validar Conventional Commits
+# ============================================
+# Este script valida que los commits sigan el estándar de Conventional Commits
+
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Obtener el mensaje del commit
+COMMIT_MSG_FILE="$1"
+
+if [ -f "$COMMIT_MSG_FILE" ]; then
+    # Leer el mensaje, eliminar el retorno de carro (\r) y recortar espacios al inicio/final
+    COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+else
+    COMMIT_MSG=$(echo "$1" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+fi
+
+# Patrón Conventional Commits
+# Formato: type(scope)?: message (máx 50 caracteres de mensaje)
+PATTERN="^(feat|fix|perf|refactor|docs|test|chore|style)(\(.+\))?: .{1,50}$"
+
+# Mensajes permitidos especiales
+ALLOWED_PATTERNS=(
+    "^Merge "
+    "^Revert "
+    "^Release "
+)
+
+validate_commit() {
+    local msg="$1"
+    for pattern in "${ALLOWED_PATTERNS[@]}"; do
+        if [[ $msg =~ $pattern ]]; then
+            return 0
+        fi
+    done
+
+    if [[ $msg =~ $PATTERN ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+show_help() {
+    cat << 'EOF'
+
+📝 Formato requerido:
+   <type>(<scope>): <message>
+
+✅ Tipos válidos:
+   • feat, fix, perf, refactor, docs, test, chore, style
+
+📚 Scopes comunes:
+   (auth), (home), (detail), (database), (api), (theme), (navigation), (di)
+
+✨ Ejemplo:
+   chore(ci): setup CI CD
+
+EOF
+}
+
+if validate_commit "$COMMIT_MSG"; then
+    echo -e "${GREEN}✅ Commit válido: $COMMIT_MSG${NC}"
+    exit 0
+else
+    echo -e "${RED}❌ Commit inválido: $COMMIT_MSG${NC}"
+    show_help
+    exit 1
+fi

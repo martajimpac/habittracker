@@ -1,0 +1,77 @@
+# .github/workflows/android-build.yml
+# Workflow que compila el APK de producción y sube el artefacto.
+name: Android Build (Release APK)               # Nombre del workflow
+
+# Ejecutar en push y pull_request (cada evento relevante) y posibilidad manual
+on:                                             # Eventos que disparan este workflow
+  push:                                         # Ejecutar en push a cualquier rama
+  pull_request:                                 # Ejecutar también en PRs
+  workflow_dispatch:                            # Permite ejecutar manualmente desde Actions UI
+
+jobs:
+  build-release-apk:                            # Nombre del job
+    name: Build Release APK                     # Título legible del job
+    runs-on: ubuntu-latest                      # Ejecutar en la última VM de Ubuntu
+
+    # Requerimos JDK y permisos para acceso a contenido si fuera necesario
+    steps:
+      - name: Checkout repository               # Paso 1: clonar el repo
+        uses: actions/checkout@v4               # Acción oficial para hacer checkout del código
+        # fetch-depth completo para inspección de tags/commits si es necesario
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17+                     # Paso 2: configurar Java (JDK 17 o superior)
+        uses: actions/setup-java@v4             # Acción oficial para instalar JDK
+        with:
+          distribution: temurin                 # AdoptOpenJDK/Temurin distribution
+          java-version: '17'                    # Solicita JDK 17 (puedes usar '17' o '21' según necesites)
+          cache: gradle                         # Habilita cache básico para Gradle
+
+      - name: Cache Gradle directories           # Paso opcional: cache explícito de gradle (acelera builds)
+        uses: actions/cache@v4                  # Acción de cache
+        with:
+          path: |
+            ~/.gradle/caches                    # Cache de dependencias Gradle
+            ~/.gradle/wrapper                   # Cache del wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Ensure gradlew is executable       # Paso 3: dar permiso de ejecución al wrapper de Gradle
+        run: chmod +x ./gradlew                 # obligatorio en entorno Linux de GitHub
+
+      - name: Install/resolve dependencies      # Paso 4: forzar resolución/descarga de dependencias (pre-instalar)
+        run: ./gradlew --no-daemon --refresh-dependencies
+        # --refresh-dependencies fuerza la resolución y descarga de artefactos remotos
+
+      - name: Run lint                          # Paso 5: ejecutar el linter / checks estáticos antes del build
+        run: ./gradlew lint --no-daemon
+        # Si tu proyecto usa otro task (p. ej. lintRelease) ajústalo aquí.
+        # El job fallará si lint detecta errores críticos.
+
+      - name: Run unit tests (optional but recommended)
+        run: ./gradlew test --no-daemon
+        # Ejecutar suite de tests unitarios antes de compilar release.
+        # Si prefieres no ejecutarlos, elimina este paso; recomendado mantenerlo.
+
+      - name: Assemble Release APK               # Paso 6: compilar el APK de producción
+        run: ./gradlew assembleRelease --no-daemon
+        # Comando solicitado por especificación: genera APK de producción (signed/unsigned según tu configuración)
+        # Asegúrate de que el signingConfig esté correctamente configurado en build.gradle;
+        # si el signing key está en secrets, añade pasos para inyectarla antes de este paso.
+
+      - name: Upload Release APK artifact       # Paso 7: subir APK como artefacto descargable
+        uses: actions/upload-artifact@v4        # Acción para subir artefactos
+        with:
+          name: release-apk                     # Nombre del artifact visible en la ejecución
+          path: app/build/outputs/apk/release/*.apk
+          # Patrón que recoge los APKs generados por assembleRelease.
+          # Ajusta la ruta si tu módulo de app usa otro nombre.
+
+      - name: List produced files (debug helper) # Paso opcional para depuración de CI
+        if: always()
+        run: |
+          echo "=== Files under app/build/outputs/apk/release ==="
+          ls -la app/build/outputs/apk/release || true
+          echo "=== End list ==="
