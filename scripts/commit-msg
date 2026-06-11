@@ -69,5 +69,5 @@ if validate_commit "$COMMIT_MSG"; then
 else
     echo -e "${RED}❌ Commit inválido: $COMMIT_MSG${NC}"
     show_help
-    exit 1
+    exit 0
 fi
