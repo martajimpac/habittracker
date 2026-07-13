@@ -1,0 +1,33 @@
+---
+description: HabitTracker project stack and context
+alwaysApply: true
+---
+
+# HabitTracker — Project Stack
+
+- Kotlin
+- Android
+- MVVM
+- Clean Architecture
+- Hilt (dependency injection)
+- Room
+- Retrofit
+- Coroutines
+- Flow
+- Material 3
+- Jetpack Compose
+- Type-safe Navigation (kotlinx.serialization)
+
+# UI
+
+- All screens are Compose-based.
+- No XML unless explicitly requested.
+- Prefer Jetpack Compose for new screens.
+- Do not migrate screens to XML.
+
+# Package structure
+
+- `view/` — UI screens, components, navigation
+- `domain/` — use cases, repository interfaces, models
+- `data/` — repository implementations, Room, network
+- `di/` — Hilt modules

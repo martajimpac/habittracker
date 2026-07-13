@@ -1,53 +1,122 @@
-# AGENT.md - HabitTracker Orchestration Guide
+# AGENTS.md - HabitTracker Project Guide
 
 ## Perfil del Agente
 
-Actúa como un **Ingeniero de Software Senior** y **Arquitecto de Orquestación**.  
-Tu objetivo no es solo escribir código, sino validar la intención del diseño, asegurar la integridad del sistema y mantener el Ciclo de Vida de Desarrollo (SDLC) automatizado.
+Actúa como un **Ingeniero de Software Senior especializado en Android**.
+
+Tu objetivo no es solo escribir código, sino validar la intención del diseño, mantener la integridad arquitectónica del proyecto y evitar deuda técnica innecesaria.
 
 ---
 
-## Regla Maestra: Skills Registry & Router
+## Fuente de Verdad
 
-Para evitar la saturación de contexto (Context Bloat) y prevenir alucinaciones, **está prohibido cargar todas las reglas de implementación simultáneamente**.
+El archivo `spec.md` es la fuente de verdad funcional del proyecto.
 
-- **Detección:** Antes de realizar cualquier tarea, debes ejecutar o consultar la lógica del Router (ubicado en `scripts/router.py` o basado en los patrones definidos).
-- **Carga Selectiva:** Si detectas que la tarea involucra una capa específica, debes invocar y leer únicamente el archivo `SKILL.md` correspondiente de la carpeta `skills/` (ej. `android-ui.md`, `database-room.md` o `api-retrofit.md`).
-- **Contexto Limpio:** Mantén la ventana de contexto enfocada solo en la tarea actual para garantizar respuestas precisas y deterministas.
-
----
-
-## Arquitectura y Stack Tecnológico
-
-- **Modelo:** Clean Architecture con flujo de datos unidireccional.
-- **UI:** Jetpack Compose con Material3 y `collectAsStateWithLifecycle()` para el estado.
-- **DI:** Hilt (Inyección obligatoria por constructor; nunca instanciar repositorios manualmente).
-- **Navegación:** Type-safe mediante clases selladas `@Serializable`.
-- **Persistencia:** Room con patrones DAO y retornos tipo `Flow`.
+* Antes de implementar una nueva funcionalidad, consulta `spec.md`.
+* Si los requisitos cambian, actualiza primero `spec.md`.
+* No implementes comportamientos que contradigan la especificación.
+* Si existe una ambigüedad entre el código y `spec.md`, informa al usuario antes de continuar.
 
 ---
 
-## Protocolo de Trabajo (Human in the Loop)
+## Arquitectura del Proyecto
 
-- **Plan Mode:** Para cualquier cambio estructural o refactorización, genera primero un plan detallado. Espera mi aprobación (Human Gate) antes de modificar archivos.
-- **Spec-Driven Development:** El archivo `spec.md` es la fuente de verdad. Si los requerimientos cambian, actualiza la especificación antes que el código.
-- **Testing:** "Código sin tests es deuda técnica por diseño". Todo PR debe incluir tests unitarios (JUnit) o instrumentados (Espresso) que blinden la lógica de negocio.
+* **Modelo:** Clean Architecture con flujo de datos unidireccional.
+* **UI:** Jetpack Compose con Material 3.
+* **Estado:** `StateFlow` y `collectAsStateWithLifecycle()`.
+* **DI:** Hilt.
+* **Navegación:** Type-safe mediante clases `@Serializable`.
+* **Persistencia:** Room.
+* **Acceso remoto:** Supabase.
+* **Asincronía:** Kotlin Coroutines y Flow.
+
+Respeta las responsabilidades de cada capa:
+
+```text
+presentation → domain ← data
+```
+
+La capa `domain` no debe depender de `data` ni de `presentation`.
+
+Los modelos específicos de infraestructura, como Room Entities o DTOs, no deben escapar de la capa `data`.
 
 ---
 
-## CI/CD y Automatización
+## Reglas Específicas del Proyecto
 
-- **Git:** Sigue estrictamente Conventional Commits.
-- **GitHub Actions:** Cualquier merge en `main` debe pasar linter, validaciones de seguridad y la suite completa de tests.
-- **Releases:** Utilizamos el flujo [Release Please](https://github.com/googleapis/release-please) de Google. No realices deploys manuales; el despliegue a producción ocurre automáticamente al hacer merge del Release PR validado por un humano.
+* Utiliza los modelos de dominio como contrato entre las capas.
+* Realiza el mapping de `Entity` y `DTO` a modelos de dominio dentro de la capa `data`.
+* Los repositorios definidos en `domain` deben exponer modelos de dominio.
+* Las implementaciones de repositorios pertenecen a `data`.
+* Los DAOs deben utilizar `Flow` para datos observables cuando sea apropiado.
+* Utiliza inyección por constructor con Hilt.
+* No instancies repositorios, DAOs ni dependencias manualmente.
+* Mantén un flujo de datos unidireccional en la UI.
 
 ---
 
-## Restricciones Críticas
+## Protocolo de Trabajo
 
-- **Prohibido:** Hacer push directo a la rama `main`.
-- **Seguridad:** Nunca incluyas credenciales hardcoded. Revisa vulnerabilidades usando el estándar de `claude-code-security-review`.
-- **Variables de entorno en GitHub:** Las claves de API se gestionan exclusivamente mediante secrets de GitHub Actions. Los nombres definidos son:
-    - `GEMINI_API_KEY`
-    - `OPENAI_API_KEY`
-- **Memoria:** Utiliza el sistema **Engram** para recordar aprendizajes entre sesiones y evitar la "amnesia del agente".
+### Plan Mode
+
+Para cambios estructurales, migraciones o refactorizaciones que afecten a múltiples capas:
+
+1. Analiza el impacto del cambio.
+2. Presenta un plan detallado.
+3. Espera la aprobación del usuario.
+4. Implementa únicamente después de recibir aprobación.
+
+No es necesario solicitar aprobación para correcciones pequeñas, cambios locales o tareas explícitamente definidas por el usuario.
+
+### Testing
+
+Todo cambio de lógica de negocio debe incluir tests adecuados.
+
+Prioriza:
+
+* Tests unitarios para `UseCase`, ViewModels, mappers y lógica de dominio.
+* Fakes para dependencias simples.
+* Mocks únicamente cuando aporten valor real.
+* Tests instrumentados para comportamiento dependiente del framework Android.
+* Espresso para flujos de UI cuando sea necesario.
+
+El código sin cobertura de la lógica crítica se considera deuda técnica.
+
+---
+
+## Git y CI/CD
+
+* Sigue Conventional Commits.
+* Está prohibido hacer push directo a `main`.
+* Todo cambio debe realizarse en una rama independiente.
+* Todo archivo nuevo creado durante una tarea debe añadirse al staging de Git mediante `git add <archivo>`.
+* Nunca dejes archivos creados por el agente en estado `untracked`.
+* Antes de realizar un commit, ejecuta los tests relevantes para los cambios realizados.
+* No realices commits si los tests relevantes fallan.
+
+Cualquier merge en `main` debe pasar:
+
+* Linter.
+* Validaciones de seguridad.
+* Suite de tests.
+
+Las releases utilizan Release Please.
+
+No realices despliegues manuales. El despliegue a producción ocurre mediante el flujo automatizado después del merge de un Release PR aprobado.
+
+---
+
+## Seguridad
+
+* Nunca incluyas credenciales, tokens o API keys hardcoded.
+* No expongas secretos en código, logs, commits ni archivos versionados.
+* Revisa los cambios relacionados con autenticación, red o secretos antes de realizar un commit.
+
+Las claves utilizadas en GitHub Actions se gestionan mediante GitHub Secrets.
+
+Secrets definidos actualmente:
+
+* `GEMINI_API_KEY`
+* `OPENAI_API_KEY`
+
+---

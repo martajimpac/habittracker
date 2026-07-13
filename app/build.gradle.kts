@@ -4,20 +4,37 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
-    namespace = "com.aristidevs.habittracker"
+    namespace = "com.marta.habittracker"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aristidevs.habittracker"
+        applicationId = "com.marta.habittracker"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            "\"https://sgmomulixnsugiwlkqgn.supabase.co\""
+        )
+
+        buildConfigField(
+            "String",
+            "SUPABASE_ANON_KEY",
+            "\"sb_publishable_Oc_r1F_c4IXUQ39hoQrTUw_wx1cknMm\""
+        )
     }
 
     buildTypes {
@@ -40,7 +57,10 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
+
 }
 
 dependencies {
@@ -63,6 +83,7 @@ dependencies {
     //DI
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation)
+    implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.room.common)
@@ -77,7 +98,12 @@ dependencies {
     implementation(libs.retrofit.adapter)
 
     //Icons
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    //Supabase
+    implementation(libs.postgrest)
+    implementation(libs.auth)
+    implementation(libs.storage)
 
     //Testing
     testImplementation(libs.junit)
