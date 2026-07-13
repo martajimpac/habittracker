@@ -1,0 +1,14 @@
+---
+description: Testing
+alwaysApply: true
+---
+
+Whenever writing code:
+Consider how it can be tested.
+
+Prefer constructor injection.
+Prefer FAKES before Mocks.
+Avoid static dependencies.
+Business logic should be unit testable.
+Mock repositories instead of use cases.
+Generate tests when requested.

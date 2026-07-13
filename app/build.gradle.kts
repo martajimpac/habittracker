@@ -1,24 +1,40 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrainsKotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
-    namespace = "com.aristidevs.habittracker"
-    compileSdk = 35
+    namespace = "com.marta.habittracker"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aristidevs.instadev"
+        applicationId = "com.marta.habittracker"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            "\"https://sgmomulixnsugiwlkqgn.supabase.co\""
+        )
+
+        buildConfigField(
+            "String",
+            "SUPABASE_ANON_KEY",
+            "\"sb_publishable_Oc_r1F_c4IXUQ39hoQrTUw_wx1cknMm\""
+        )
     }
 
     buildTypes {
@@ -34,18 +50,24 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
+
 }
 
 dependencies {
     //Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -61,11 +83,27 @@ dependencies {
     //DI
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation)
+    implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.compiler)
+
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+
+
 
     //Retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit.adapter)
+
+    //Icons
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    //Supabase
+    implementation(libs.postgrest)
+    implementation(libs.auth)
+    implementation(libs.storage)
 
     //Testing
     testImplementation(libs.junit)

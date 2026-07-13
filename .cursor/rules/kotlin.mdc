@@ -1,0 +1,26 @@
+---
+description: Kotlin style
+alwaysApply: true
+---
+
+Use modern Kotlin.
+
+Prefer:
+- data class
+- sealed interface
+- value class when appropriate
+- extension functions
+- StateFlow over LiveData
+- Coroutines
+- Flow
+
+Avoid:
+- GlobalScope
+- nullable types unless necessary
+- lateinit unless required
+- !! operator
+
+Prefer immutable objects.
+Functions should be short and have a single responsibility.
+Use meaningful names.
+Follow official Kotlin coding conventions.

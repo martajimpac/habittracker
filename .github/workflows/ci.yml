@@ -1,0 +1,208 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  unit-tests:
+    name: 🧪 Unit tests + coverage
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest :app:koverXmlReportDebug :app:koverHtmlReportDebug :app:koverVerifyDebug
+
+      - name: Cobertura → resumen del run
+        if: always()
+        run: |
+          XML=app/build/reports/kover/reportDebug.xml
+          if [ -f "$XML" ]; then
+            echo "## 🧪 Cobertura de líneas (unit)" >> "$GITHUB_STEP_SUMMARY"
+            awk -F'"' '/type="LINE"/{m=$4;c=$6} END{t=m+c; if(t>0) printf "- **%d%%** (%d/%d líneas) — gate mínimo: 20%%\n", c*100/t, c, t}' "$XML" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Unit test results
+          files: app/build/test-results/testDebugUnitTest/**/*.xml
+
+        
+
+  build:
+    name: 🏗️ Assemble debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble debug
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+  static-analysis:
+    name: 🔍 Static analysis ktlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name != 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: ktlint
+        run: ./gradlew :app:ktlintCheck
+
+  instrumented-tests:
+    name: 📱 Instrumented (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name != 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [26, 30, 34]
+    steps:
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Cache AVD
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+      - name: Create AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "AVD snapshot listo para API ${{ matrix.api-level }}"
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./gradlew :app:connectedDebugAndroidTest
+      - name: Publish instrumented results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Instrumented results (API ${{ matrix.api-level }})
+          files: app/build/outputs/androidTest-results/connected/**/*.xml
+      - name: Upload instrumented report
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-report-api${{ matrix.api-level }}
+          path: app/build/reports/androidTests/connected/
+          retention-days: 7
+
+  summary:
+    name: 🧾 CI summary
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests, build, instrumented-tests]
+    if: github.event_name != 'push'
+    steps:
+      - name: Tabla resumen del pipeline
+        run: |
+          {
+            echo "## 🧾 Resumen del pipeline"
+            echo ""
+            echo "| Etapa | Resultado |"
+            echo "|---|---|"
+            echo "| 🔍 Static analysis (ktlint + detekt) | ${{ needs.static-analysis.result == 'success' && '✅ pass' || format('❌ {0}', needs.static-analysis.result) }} |"
+            echo "| 🧪 Unit tests + coverage gate | ${{ needs.unit-tests.result == 'success' && '✅ pass' || format('❌ {0}', needs.unit-tests.result) }} |"
+            echo "| 🏗️ Assemble debug | ${{ needs.build.result == 'success' && '✅ pass' || format('❌ {0}', needs.build.result) }} |"
+            echo "| 📱 Instrumented (API 26/30/34) | ${{ needs.instrumented-tests.result == 'success' && '✅ pass' || format('❌ {0}', needs.instrumented-tests.result) }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Marcar rojo si algo falló
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Algún job del pipeline falló — revisa la tabla del Summary." >&2
+          exit 1

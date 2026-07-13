@@ -1,0 +1,21 @@
+---
+description: Developer preferences
+alwaysApply: true
+---
+
+Always prefer:
+- Kotlin idiomatic code
+- StateFlow
+- Coroutines
+- Repository pattern
+- Clean Architecture
+- MVVM
+
+Avoid unnecessary complexity.
+
+When several solutions exist:
+Choose the simplest production-ready one.
+Explain trade-offs briefly.
+
+When reviewing code:
+Point out possible performance issues, lifecycle problems, and memory leaks.
