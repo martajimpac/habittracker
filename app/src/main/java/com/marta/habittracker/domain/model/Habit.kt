@@ -1,10 +1,10 @@
-package com.marta.habittracker.domain.models
+package com.marta.habittracker.domain.model
 
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import java.time.Instant
 
-data class HabitWithStatus(
+data class Habit(
     val id: Long,
     val name: String,
     val description: String?,

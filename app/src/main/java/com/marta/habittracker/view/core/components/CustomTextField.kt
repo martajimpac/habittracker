@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 
 @Composable
-fun InstaTextField(
+fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -15,7 +15,7 @@ fun InstaTextField(
     label: String = ""
 ) {
     OutlinedTextField(modifier = modifier, shape = shape, value = value, label = {
-        InstaText(
+        CustomText(
             text = label,
         )
     }, onValueChange = { onValueChange(it) })

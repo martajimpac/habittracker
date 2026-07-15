@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 
 @Composable
-fun InstaText(
+fun CustomText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onBackground,

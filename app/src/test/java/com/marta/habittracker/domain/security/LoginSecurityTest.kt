@@ -1,7 +1,7 @@
 package com.marta.habittracker.domain.security
 
-import com.marta.habittracker.domain.models.User
-import com.marta.habittracker.domain.models.UserMode
+import com.marta.habittracker.domain.model.User
+import com.marta.habittracker.domain.model.UserMode
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import kotlinx.coroutines.runBlocking

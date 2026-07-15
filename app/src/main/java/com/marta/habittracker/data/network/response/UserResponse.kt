@@ -1,9 +1,9 @@
 package com.marta.habittracker.data.network.response
 
-import com.marta.habittracker.domain.models.User
-import com.marta.habittracker.domain.models.UserMode.COMPANY_USER
-import com.marta.habittracker.domain.models.UserMode.CONTENT_CREATOR_USER
-import com.marta.habittracker.domain.models.UserMode.REGULAR_USER
+import com.marta.habittracker.domain.model.User
+import com.marta.habittracker.domain.model.UserMode.CompanyUser
+import com.marta.habittracker.domain.model.UserMode.ContentCreatorUser
+import com.marta.habittracker.domain.model.UserMode.RegularUser
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -21,10 +21,10 @@ data class UserResponse(
 fun UserResponse.toDomain(): User {
 
     val userMode = when (userType) {
-        REGULAR_USER.userType -> REGULAR_USER
-        CONTENT_CREATOR_USER.userType -> CONTENT_CREATOR_USER
-        COMPANY_USER.userType -> COMPANY_USER
-        else -> REGULAR_USER
+        RegularUser.userType -> RegularUser
+        ContentCreatorUser.userType -> ContentCreatorUser
+        CompanyUser.userType -> CompanyUser
+        else -> RegularUser
     }
 
     return User(

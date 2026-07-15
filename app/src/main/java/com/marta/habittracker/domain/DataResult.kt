@@ -1,6 +1,6 @@
 package com.marta.habittracker.domain
 
-import com.marta.habittracker.domain.models.AppError
+import com.marta.habittracker.domain.model.AppError
 
 sealed interface DataResult<out T, out E : AppError> {
     data class Success<T>(val data: T) : DataResult<T, Nothing>

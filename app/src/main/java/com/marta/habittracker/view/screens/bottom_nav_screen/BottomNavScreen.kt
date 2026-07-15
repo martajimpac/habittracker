@@ -30,7 +30,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.marta.habittracker.R
-import com.marta.habittracker.view.core.components.InstaBadgeBox
+import com.marta.habittracker.view.core.components.CustomBadgeBox
 import com.marta.habittracker.view.core.navigation.BottomNavigation
 import com.marta.habittracker.view.core.navigation.BottomNavigation.Companion.tabBottomItemsList
 import com.marta.habittracker.view.core.navigation.NavigationBottomWrapper
@@ -123,9 +123,9 @@ fun MyToolbar() {
                     .padding(top = 4.dp)
             )
         }, actions = {
-            InstaBadgeBox(painter = painterResource(R.drawable.ic_like), notificationNumber = 2)
+            CustomBadgeBox(painter = painterResource(R.drawable.ic_like), notificationNumber = 2)
             Spacer(Modifier.width(16.dp))
-            InstaBadgeBox(painter = painterResource(R.drawable.ic_send), notificationNumber = 1)
+            CustomBadgeBox(painter = painterResource(R.drawable.ic_send), notificationNumber = 1)
         })
 }
 

@@ -1,0 +1,6 @@
+## This file must *NOT* be checked into Version Control Systems.
+# Copy this file to local.properties and fill in your values.
+
+sdk.dir=C\:\\path\\to\\Android\\Sdk
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key

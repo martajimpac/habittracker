@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun InstaBadgeBox(modifier: Modifier = Modifier, painter: Painter, notificationNumber: Int) {
+fun CustomBadgeBox(modifier: Modifier = Modifier, painter: Painter, notificationNumber: Int) {
     BadgedBox(badge = {
         Badge(
             containerColor = MaterialTheme.colorScheme.tertiary,

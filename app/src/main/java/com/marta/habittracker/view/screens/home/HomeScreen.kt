@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.marta.habittracker.domain.models.HabitWithStatus
+import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.view.utils.getCalendarDays
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -49,7 +49,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onHabitClick: (Long) -> Unit
 ) {
-    val habits: List<HabitWithStatus> by viewModel.habits.collectAsStateWithLifecycle()
+    val habits: List<Habit> by viewModel.habits.collectAsStateWithLifecycle()
     val selectedDate: LocalDate by viewModel.selectedDate.collectAsStateWithLifecycle()
 
     val completedCount by remember(habits) { derivedStateOf { habits.count { it.isCompleted } } }
@@ -115,11 +115,11 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(habits) { habitWithStatus ->
+            items(habits, key = { it.id }) { habit ->
                 HabitItem(
-                    habitWithStatus = habitWithStatus,
-                    onToggle = { viewModel.toggleComplete(habitWithStatus) },
-                    onItemClick = { onHabitClick(habitWithStatus.id) }
+                    habit = habit,
+                    onToggle = { viewModel.toggleComplete(habit) },
+                    onItemClick = { onHabitClick(habit.id) }
                 )
             }
         }
@@ -156,11 +156,11 @@ fun DateItem(date: LocalDate, isSelected: Boolean, onDateClick: () -> Unit) {
 
 @Composable
 fun HabitItem(
-    habitWithStatus: HabitWithStatus,
+    habit: Habit,
     onToggle: () -> Unit,
     onItemClick: () -> Unit
 ) {
-    val isCompleted = habitWithStatus.isCompleted
+    val isCompleted = habit.isCompleted
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -209,13 +209,13 @@ fun HabitItem(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = habitWithStatus.name,
+                    text = habit.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     textDecoration = if (isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
                     color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
                 )
-                habitWithStatus.description?.let {
+                habit.description?.let {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodySmall,

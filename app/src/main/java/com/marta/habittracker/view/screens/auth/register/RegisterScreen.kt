@@ -32,10 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
-import com.marta.habittracker.view.core.components.InstaButton
-import com.marta.habittracker.view.core.components.InstaButtonSecondary
-import com.marta.habittracker.view.core.components.InstaText
-import com.marta.habittracker.view.core.components.InstaTextField
+import com.marta.habittracker.view.core.components.CustomButton
+import com.marta.habittracker.view.core.components.CustomButtonSecondary
+import com.marta.habittracker.view.core.components.CustomText
+import com.marta.habittracker.view.core.components.CustomTextField
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,20 +99,20 @@ fun RegisterScreen(
             ) {
                 //hacer una animación para el título
                 AnimatedContent(title) {
-                    InstaText(
+                    CustomText(
                         text = it,
                         modifier = Modifier.padding(top = 22.dp),
                         style = MaterialTheme.typography.headlineLarge
                     )
                 }
                 Spacer(Modifier.height(4.dp))
-                InstaText(
+                CustomText(
                     text = subtitle,
                     modifier = Modifier.padding(top = 22.dp),
                     style = MaterialTheme.typography.bodyLarge
                 )
 
-                InstaTextField(
+                CustomTextField(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(30.dp),
                     value = uiState.inputValue,
@@ -121,7 +121,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                InstaButton(
+                CustomButton(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(R.string.login_screen_button_login),
                     onClick = { },
@@ -129,7 +129,7 @@ fun RegisterScreen(
                 )
 
 
-                InstaButtonSecondary(
+                CustomButtonSecondary(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { registerViewModel.onChangeMode() },
                     title = stringResource(R.string.login_screen_button_register)
@@ -138,7 +138,7 @@ fun RegisterScreen(
                 Spacer(Modifier.weight(1.3f))
 
                 TextButton(onClick = {}) {
-                    InstaText(
+                    CustomText(
                         text = stringResource(R.string.login_screen_text_forgot_password),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

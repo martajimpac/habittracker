@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun InstaButton(
+fun CustomButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = MaterialTheme.shapes.extraLarge,
@@ -26,7 +26,7 @@ fun InstaButton(
         enabled = enabled,
         shape = shape
     ) {
-        InstaText(
+        CustomText(
             modifier = Modifier.padding(vertical = 4.dp),
             text = text,
             color = MaterialTheme.colorScheme.onPrimary

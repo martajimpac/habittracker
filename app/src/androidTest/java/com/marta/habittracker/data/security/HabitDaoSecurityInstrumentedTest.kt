@@ -15,7 +15,7 @@ import org.junit.Test
 import java.time.DayOfWeek
 import java.time.LocalDate
 
-class HabitWithStatusDaoSecurityInstrumentedTest {
+class HabitDaoSecurityInstrumentedTest {
 
     private lateinit var database: HabitDatabase
 
