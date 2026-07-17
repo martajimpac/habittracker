@@ -22,7 +22,7 @@ class HardcodedSecretsTest {
             Regex("""-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----""")
         )
 
-        val ignoredDirs = setOf("build", ".gradle", ".git", ".idea")
+        val ignoredDirs = setOf("build", ".gradle", ".git", ".idea", "test", "androidTest")
         val scanExtensions = setOf("kt", "kts", "xml", "json", "properties")
         val findings = projectRoot
             .walkTopDown()

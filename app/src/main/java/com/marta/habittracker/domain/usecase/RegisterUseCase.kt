@@ -4,12 +4,12 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.EmailValidator
 import com.marta.habittracker.domain.PasswordValidator
 import com.marta.habittracker.domain.model.AppError
-import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.RegisterError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.repository.AuthRepository
 import javax.inject.Inject
 
-class LoginUseCase @Inject constructor(
+class RegisterUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(
@@ -17,11 +17,11 @@ class LoginUseCase @Inject constructor(
         password: String,
     ): DataResult<User, AppError> {
         if (!EmailValidator.isValid(email)) {
-            return DataResult.Error(LoginError.InvalidCredentials)
+            return DataResult.Error(RegisterError.InvalidEmail)
         }
         if (!PasswordValidator.isValid(password)) {
-            return DataResult.Error(LoginError.InvalidCredentials)
+            return DataResult.Error(RegisterError.WeakPassword)
         }
-        return authRepository.doLogin(email.trim(), password)
+        return authRepository.doRegister(email.trim(), password)
     }
 }

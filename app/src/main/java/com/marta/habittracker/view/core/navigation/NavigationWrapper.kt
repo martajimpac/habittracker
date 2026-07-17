@@ -21,7 +21,14 @@ fun NavigationWrapper() {
         }
 
         composable<Register> {
-            RegisterScreen(navigateBack = { navController.popBackStack() })
+            RegisterScreen(
+                navigateBack = { navController.popBackStack() },
+                navigateToHome = {
+                    navController.navigate(Home) {
+                        popUpTo(0)
+                    }
+                },
+            )
         }
 
         

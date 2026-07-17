@@ -4,13 +4,13 @@ import com.marta.habittracker.data.*
 import com.marta.habittracker.data.local.database.entities.HabitEntity
 import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
 import com.marta.habittracker.data.local.database.entities.HabitWithRecordsEntity
-import com.marta.habittracker.domain.models.HabitWithStatus
-import com.marta.habittracker.domain.models.HabitRecord
+import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.model.HabitRecord
 import javax.inject.Inject
 
 class HabitMapper @Inject constructor() {
 
-    fun HabitEntity.toDomain(): HabitWithStatus = HabitWithStatus(
+    fun HabitEntity.toDomain(): Habit = Habit(
         id = id,
         name = name,
         description = description,
@@ -19,7 +19,7 @@ class HabitMapper @Inject constructor() {
         records = emptyList()
     )
 
-    fun HabitWithStatus.toEntity(): HabitEntity = HabitEntity(
+    fun Habit.toEntity(): HabitEntity = HabitEntity(
         id = id,
         name = name,
         description = description,
@@ -27,7 +27,7 @@ class HabitMapper @Inject constructor() {
         createdAt = createdAt.toEpochMillis()
     )
 
-    fun HabitWithRecordsEntity.toDomain(): HabitWithStatus = HabitWithStatus(
+    fun HabitWithRecordsEntity.toDomain(): Habit = Habit(
         id = habit.id,
         name = habit.name,
         description = habit.description,
@@ -36,7 +36,7 @@ class HabitMapper @Inject constructor() {
         records = records.map { it.toDomain() }
     )
 
-    fun map(habitWithRecordsEntity: HabitWithRecordsEntity): HabitWithStatus = habitWithRecordsEntity.toDomain()
+    fun map(habitWithRecordsEntity: HabitWithRecordsEntity): Habit = habitWithRecordsEntity.toDomain()
 
     fun HabitRecordEntity.toDomain(): HabitRecord = HabitRecord(
         habitId = habitId,

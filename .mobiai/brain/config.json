@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "project_name": "InstaDev",
+  "project_type": "android",
+  "platforms": [
+    "android"
+  ],
+  "rules": [
+    "Clean Architecture with MVVM",
+    "UI never accesses repositories directly",
+    "ViewModels communicate with Use Cases when present",
+    "Repository interfaces in domain, implementations in data",
+    "Dependencies point inward",
+    "Prefer constructor injection with Hilt",
+    "Jetpack Compose for all screens",
+    "StateFlow for UI state",
+    "Prefer fakes over mocks for simple dependencies"
+  ],
+  "created_at": "2026-07-13T13:48:00Z",
+  "updated_at": "2026-07-15T10:18:57Z"
+}

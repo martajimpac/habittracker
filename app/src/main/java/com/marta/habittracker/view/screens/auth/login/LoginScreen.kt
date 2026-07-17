@@ -15,10 +15,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -28,19 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
-import com.marta.habittracker.view.core.components.InstaButton
-import com.marta.habittracker.view.core.components.InstaButtonSecondary
-import com.marta.habittracker.view.core.components.InstaText
-import com.marta.habittracker.view.core.components.InstaTextField
-
+import com.marta.habittracker.view.core.components.CustomButton
+import com.marta.habittracker.view.core.components.CustomButtonSecondary
+import com.marta.habittracker.view.core.components.CustomText
+import com.marta.habittracker.view.core.components.CustomTextField
 
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     navigateToRegister: () -> Unit,
-    navigateToHome: () -> Unit
+    navigateToHome: () -> Unit,
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.isUserLogged) {
         if (uiState.isUserLogged) {
@@ -48,7 +51,15 @@ fun LoginScreen(
         }
     }
 
-    Scaffold { padding ->
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { padding ->
         Box(Modifier.fillMaxSize()) {
             Column(
                 Modifier
@@ -56,9 +67,9 @@ fun LoginScreen(
                     .padding(padding)
                     .padding(horizontal = 24.dp)
                     .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                InstaText(
+                CustomText(
                     text = stringResource(R.string.login_screen_header_text_spain),
                     modifier = Modifier.padding(top = 22.dp),
                 )
@@ -66,42 +77,44 @@ fun LoginScreen(
                 Image(
                     modifier = Modifier.size(56.dp),
                     painter = painterResource(R.drawable.instadev_logo),
-                    contentDescription = "InstaDev logo header"
+                    contentDescription = "InstaDev logo header",
                 )
                 Spacer(Modifier.weight(1f))
 
-                InstaTextField(
+                CustomTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = uiState.email,
                     label = stringResource(R.string.login_screen_textfield_email),
-                    onValueChange = { loginViewModel.onEmailChanged(it) })
+                    onValueChange = loginViewModel::onEmailChanged,
+                )
 
                 Spacer(Modifier.height(10.dp))
-                InstaTextField(
+                CustomTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = uiState.password,
                     label = stringResource(R.string.login_screen_textfield_password),
-                    onValueChange = { loginViewModel.onPasswordChanged(it) })
+                    onValueChange = loginViewModel::onPasswordChanged,
+                )
                 Spacer(Modifier.height(10.dp))
 
-                InstaButton(
+                CustomButton(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(R.string.login_screen_button_login),
-                    onClick = { loginViewModel.onClickSelected() },
+                    onClick = loginViewModel::onLoginClicked,
                     enabled = uiState.isLoginEnabled && !uiState.isLoading,
                 )
 
                 TextButton(onClick = {}) {
-                    InstaText(
+                    CustomText(
                         text = stringResource(R.string.login_screen_text_forgot_password),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Spacer(Modifier.weight(1.3f))
-                InstaButtonSecondary(
+                CustomButtonSecondary(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { navigateToRegister() },
-                    title = stringResource(R.string.login_screen_button_register)
+                    onClick = navigateToRegister,
+                    title = stringResource(R.string.login_screen_button_register),
                 )
                 Icon(
                     modifier = Modifier
@@ -109,7 +122,7 @@ fun LoginScreen(
                         .padding(vertical = 22.dp),
                     painter = painterResource(R.drawable.ic_meta),
                     contentDescription = "meta logo",
-                    tint = MaterialTheme.colorScheme.onBackground
+                    tint = MaterialTheme.colorScheme.onBackground,
                 )
             }
         }
