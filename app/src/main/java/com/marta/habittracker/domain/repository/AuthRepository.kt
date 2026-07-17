@@ -7,6 +7,11 @@ import com.marta.habittracker.domain.model.User
 interface AuthRepository {
     suspend fun doLogin(
         email: String,
-        password: String
+        password: String,
+    ): DataResult<User, AppError>
+
+    suspend fun doRegister(
+        email: String,
+        password: String,
     ): DataResult<User, AppError>
 }

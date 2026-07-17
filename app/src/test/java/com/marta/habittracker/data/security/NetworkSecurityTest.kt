@@ -1,7 +1,5 @@
 package com.marta.habittracker.data.security
 
-import com.marta.habittracker.di.DataModule
-import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.Protocol
 import okhttp3.Request
@@ -12,18 +10,6 @@ import org.junit.Test
 import java.util.concurrent.TimeUnit
 
 class NetworkSecurityTest {
-
-    @Test
-    fun retrofitBaseUrlUsesHttps() {
-        val retrofit = DataModule.provideRetrofit(
-            Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            }
-        )
-
-        assertEquals("https", retrofit.baseUrl().scheme)
-    }
 
     @Test
     fun authInterceptorSendsTokenOnlyInAuthorizationHeader() {

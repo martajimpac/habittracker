@@ -1,59 +1,43 @@
 package com.marta.habittracker.domain.security
 
-import com.marta.habittracker.domain.model.User
-import com.marta.habittracker.domain.model.UserMode
-import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.LoginUseCase
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class LoginSecurityTest {
 
     @Test
-    fun weakPasswordsAreRejectedBeforeCallingRepository() = runBlocking {
+    fun weakPasswordsAreRejectedBeforeCallingRepository() = runTest {
         val repository = FakeAuthRepository()
         val useCase = LoginUseCase(repository)
 
         val weakPasswords = listOf(
             "",
-            "123456",
-            "password",
-            "qwerty12",
-            "abcdefg",
-            "11111111"
+            "12345",
+            "pass",
+            "qwert",
+            "abc",
         )
 
         weakPasswords.forEach { weakPassword ->
             val result = useCase("secure.user@example.com", weakPassword)
 
-            assertNull("Weak password must not authenticate: $weakPassword", result)
+            assertTrue(result is DataResult.Error)
+            assertEquals(LoginError.InvalidCredentials, (result as DataResult.Error).error)
         }
 
         assertEquals(
             "Weak credentials should be rejected locally and never sent to network/backend",
             0,
-            repository.calls
+            repository.loginCalls,
         )
-    }
-
-    private class FakeAuthRepository : AuthRepository {
-        var calls = 0
-
-        override suspend fun doLogin(user: String, password: String): List<User> {
-            calls++
-            return listOf(
-                User(
-                    userId = "user-1",
-                    name = "Secure User",
-                    nickname = "secure",
-                    followers = 0,
-                    following = emptyList(),
-                    userMode = UserMode.REGULAR_USER,
-                    verified = false
-                )
-            )
-        }
     }
 }

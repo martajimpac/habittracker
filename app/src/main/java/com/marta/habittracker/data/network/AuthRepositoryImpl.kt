@@ -3,6 +3,7 @@ package com.marta.habittracker.data.network
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.RegisterError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.UserMode
 import com.marta.habittracker.domain.repository.AuthRepository
@@ -32,17 +33,7 @@ class AuthRepositoryImpl @Inject constructor(
             val currentUser = supabase.auth.currentUserOrNull()
                 ?: return DataResult.Error(AppError.Common.Unknown)
 
-            DataResult.Success(
-                User(
-                    userId = currentUser.id,
-                    name = currentUser.userMetadata?.get("name")?.toString().orEmpty(),
-                    nickname = currentUser.email.orEmpty(),
-                    followers = 0,
-                    following = emptyList(),
-                    userMode = UserMode.RegularUser,
-                    verified = !currentUser.email.isNullOrBlank(),
-                ),
-            )
+            DataResult.Success(mapUser(currentUser))
         } catch (exception: AuthRestException) {
             DataResult.Error(mapAuthError(exception.error))
         } catch (_: IOException) {
@@ -50,6 +41,48 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (_: Exception) {
             DataResult.Error(AppError.Common.Unknown)
         }
+    }
+
+    override suspend fun doRegister(
+        email: String,
+        password: String,
+    ): DataResult<User, AppError> {
+        return try {
+            supabase.auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+            }
+
+            val currentUser = supabase.auth.currentUserOrNull()
+            if (currentUser == null) {
+                return DataResult.Error(RegisterError.EmailConfirmationRequired)
+            }
+
+            DataResult.Success(mapUser(currentUser))
+        } catch (exception: AuthRestException) {
+            DataResult.Error(mapRegisterError(exception.error))
+        } catch (_: IOException) {
+            DataResult.Error(AppError.Common.Network)
+        } catch (_: Exception) {
+            DataResult.Error(AppError.Common.Unknown)
+        }
+    }
+
+    private fun mapUser(currentUser: io.github.jan.supabase.auth.user.UserInfo): User =
+        User(
+            userId = currentUser.id,
+            name = currentUser.userMetadata?.get("name")?.toString().orEmpty(),
+            nickname = currentUser.email.orEmpty(),
+            followers = 0,
+            following = emptyList(),
+            userMode = UserMode.RegularUser,
+            verified = currentUser.emailConfirmedAt != null,
+        )
+
+    private fun mapRegisterError(errorCode: String): AppError = when (errorCode) {
+        "user_already_exists" -> RegisterError.EmailAlreadyRegistered
+        "weak_password" -> RegisterError.WeakPassword
+        else -> AppError.Common.Unknown
     }
 
     private fun mapAuthError(errorCode: String): AppError = when (errorCode) {

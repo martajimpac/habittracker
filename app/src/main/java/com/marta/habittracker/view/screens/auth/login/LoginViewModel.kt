@@ -88,4 +88,8 @@ data class LoginUiState(
     val isUserLogged: Boolean = false,
     val loggedUser: User? = null,
     val errorMessage: String? = null,
-)
+) {
+    override fun toString(): String =
+        "LoginUiState(isLoading=$isLoading, isLoginEnabled=$isLoginEnabled, " +
+            "isUserLogged=$isUserLogged, loggedUser=${loggedUser?.userId}, errorMessage=$errorMessage)"
+}
