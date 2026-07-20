@@ -2,7 +2,7 @@ package com.marta.habittracker.view.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marta.habittracker.domain.models.HabitWithStatus
+import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,24 +29,23 @@ class HomeViewModel @Inject constructor(
 
     // Lista reactiva de hábitos. Cada vez que cambie la fecha o la DB, esto se actualiza solo.
     @OptIn(ExperimentalCoroutinesApi::class)
-    val habits: StateFlow<List<HabitWithStatus>> = _selectedDate
+    val habits: StateFlow<List<Habit>> = _selectedDate
         .flatMapLatest { date ->
             repository.getHabitsWithStatus(date)
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList<HabitWithStatus>()
+            initialValue = emptyList()
         )
 
     fun onDateSelected(date: LocalDate) {
         _selectedDate.value = date
     }
     
-    fun toggleComplete(habitWithStatus: HabitWithStatus) {
+    fun toggleComplete(habit: Habit) {
         viewModelScope.launch {
-            // Pasamos la fecha actual seleccionada para saber qué día marcar
-            repository.toggleHabitCompletion(habitWithStatus, _selectedDate.value)
+            repository.toggleHabitCompletion(habit, _selectedDate.value)
         }
     }
 }

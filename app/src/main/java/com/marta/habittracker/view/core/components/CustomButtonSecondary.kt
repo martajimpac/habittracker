@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun InstaButtonSecondary(
+fun CustomButtonSecondary(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     border: BorderStroke = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
@@ -19,7 +19,7 @@ fun InstaButtonSecondary(
     OutlinedButton(
         modifier = modifier, onClick = onClick, border = border
     ) {
-        InstaText(text = title, color = titleColor)
+        CustomText(text = title, color = titleColor)
     }
 
 }

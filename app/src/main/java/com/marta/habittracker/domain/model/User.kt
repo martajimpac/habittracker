@@ -1,4 +1,4 @@
-package com.marta.habittracker.domain.models
+package com.marta.habittracker.domain.model
 
 data class User(
     val userId: String,
@@ -7,11 +7,11 @@ data class User(
     val followers: Int,
     val following: List<String>,
     val userMode: UserMode,
-    val verified:Boolean
+    val verified: Boolean,
 )
 
 sealed class UserMode(val userType: Int) {
-    data object REGULAR_USER : UserMode(0)
-    data object CONTENT_CREATOR_USER : UserMode(1)
-    data object COMPANY_USER : UserMode(2)
+    data object RegularUser : UserMode(0)
+    data object ContentCreatorUser : UserMode(1)
+    data object CompanyUser : UserMode(2)
 }

@@ -4,20 +4,6 @@
 
 HabitTracker es una aplicacion Android para crear, consultar y completar habitos personales. La app debe proteger la privacidad del usuario, mantener la integridad de los datos locales y comunicarse con servicios remotos usando canales seguros.
 
-## Stack
-
-- Lenguaje: Kotlin.
-- UI: Jetpack Compose con Material3.
-- Arquitectura: Clean Architecture y flujo de datos unidireccional.
-- Estado UI: `StateFlow` observado desde Compose con `collectAsStateWithLifecycle()`.
-- DI: Hilt con inyeccion por constructor.
-- Persistencia local: Room.
-- Red: Retrofit.
-- Backend: Firebase Realtime Database.
-- Testing: JUnit 4 para unit tests, AndroidX Test/Espresso para tests instrumentados.
-
-## Capas
-
 ### View
 
 - Las pantallas Compose solo deben renderizar estado y enviar eventos al ViewModel.

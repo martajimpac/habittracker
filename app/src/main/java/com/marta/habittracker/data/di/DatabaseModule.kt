@@ -1,4 +1,4 @@
-package com.marta.habittracker.di
+package com.marta.habittracker.data.di
 
 import android.content.Context
 import androidx.room.Room
@@ -18,15 +18,14 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideHabitDatabase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): HabitDatabase {
         return Room.databaseBuilder(
             context,
             HabitDatabase::class.java,
-            "habit_db"
+            "habit_db",
         ).build()
     }
-
 
     @Provides
     fun provideHabitDao(database: HabitDatabase): HabitDao {

@@ -55,57 +55,6 @@ Los modelos específicos de infraestructura, como Room Entities o DTOs, no deben
 
 ---
 
-## Protocolo de Trabajo
-
-### Plan Mode
-
-Para cambios estructurales, migraciones o refactorizaciones que afecten a múltiples capas:
-
-1. Analiza el impacto del cambio.
-2. Presenta un plan detallado.
-3. Espera la aprobación del usuario.
-4. Implementa únicamente después de recibir aprobación.
-
-No es necesario solicitar aprobación para correcciones pequeñas, cambios locales o tareas explícitamente definidas por el usuario.
-
-### Testing
-
-Todo cambio de lógica de negocio debe incluir tests adecuados.
-
-Prioriza:
-
-* Tests unitarios para `UseCase`, ViewModels, mappers y lógica de dominio.
-* Fakes para dependencias simples.
-* Mocks únicamente cuando aporten valor real.
-* Tests instrumentados para comportamiento dependiente del framework Android.
-* Espresso para flujos de UI cuando sea necesario.
-
-El código sin cobertura de la lógica crítica se considera deuda técnica.
-
----
-
-## Git y CI/CD
-
-* Sigue Conventional Commits.
-* Está prohibido hacer push directo a `main`.
-* Todo cambio debe realizarse en una rama independiente.
-* Todo archivo nuevo creado durante una tarea debe añadirse al staging de Git mediante `git add <archivo>`.
-* Nunca dejes archivos creados por el agente en estado `untracked`.
-* Antes de realizar un commit, ejecuta los tests relevantes para los cambios realizados.
-* No realices commits si los tests relevantes fallan.
-
-Cualquier merge en `main` debe pasar:
-
-* Linter.
-* Validaciones de seguridad.
-* Suite de tests.
-
-Las releases utilizan Release Please.
-
-No realices despliegues manuales. El despliegue a producción ocurre mediante el flujo automatizado después del merge de un Release PR aprobado.
-
----
-
 ## Seguridad
 
 * Nunca incluyas credenciales, tokens o API keys hardcoded.

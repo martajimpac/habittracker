@@ -5,10 +5,9 @@ import com.marta.habittracker.data.local.database.entities.HabitEntity
 import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
 import com.marta.habittracker.data.local.database.mappers.HabitMapper
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
-import com.marta.habittracker.domain.models.HabitWithStatus
+import com.marta.habittracker.domain.model.Habit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,25 +19,16 @@ class HabitRepositoryImpl @Inject constructor(
     private val dispatchers: DispatchersProvider,
 ) : DomainHabitRepository {
 
-    override fun getHabitsWithStatus(date: LocalDate): Flow<List<HabitWithStatus>> {
-        val dayOfWeek = DayOfWeek.of(date.dayOfWeek.value)
+    override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> {
+        val dayOfWeek = date.dayOfWeek
         return habitDao.getHabitsWithRecords()
             .map { habitsList ->
                 habitsList
-                    .filter {
-                        it.habit.daysOfWeek.contains(dayOfWeek) }
+                    .filter { it.habit.daysOfWeek.contains(dayOfWeek) }
                     .map { habitWithRecords ->
                         val habit = habitMapper.map(habitWithRecords)
                         val isCompleted = habitWithRecords.records.any { it.date == date && it.isCompleted }
-                        HabitWithStatus(
-                            id = habit.id,
-                            name = habit.name,
-                            description = habit.description,
-                            daysOfWeek = habit.daysOfWeek,
-                            createdAt = habit.createdAt,
-                            records = habit.records,
-                            isCompleted = isCompleted
-                        )
+                        habit.copy(isCompleted = isCompleted)
                     }
             }
 
@@ -58,10 +48,10 @@ class HabitRepositoryImpl @Inject constructor(
         }*/
     }
 
-    override suspend fun toggleHabitCompletion(habitWithStatus: HabitWithStatus, date: LocalDate) {
-        val habitId = habitWithStatus.id
+    override suspend fun toggleHabitCompletion(habit: Habit, date: LocalDate) {
+        val habitId = habit.id
 
-        if (habitWithStatus.isCompleted) {
+        if (habit.isCompleted) {
             habitDao.deleteHabitRecord(habitId, date)
         } else {
             val record = HabitRecordEntity(

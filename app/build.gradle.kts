@@ -7,6 +7,14 @@ plugins {
     alias(libs.plugins.room)
 }
 
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
 room {
     schemaDirectory("$projectDir/schemas")
 }
@@ -27,13 +35,12 @@ android {
         buildConfigField(
             "String",
             "SUPABASE_URL",
-            "\"https://sgmomulixnsugiwlkqgn.supabase.co\""
+            "\"${localProperties.getProperty("SUPABASE_URL", "")}\"",
         )
-
         buildConfigField(
             "String",
-            "SUPABASE_ANON_KEY",
-            "\"sb_publishable_Oc_r1F_c4IXUQ39hoQrTUw_wx1cknMm\""
+            "SUPABASE_PUBLISHABLE_KEY",
+            "\"${localProperties.getProperty("SUPABASE_PUBLISHABLE_KEY", "")}\"",
         )
     }
 
@@ -107,9 +114,12 @@ dependencies {
     implementation(libs.postgrest)
     implementation(libs.auth)
     implementation(libs.storage)
+    implementation(libs.ktor.client.android)
 
     //Testing
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
