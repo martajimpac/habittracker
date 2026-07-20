@@ -4,7 +4,8 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.model.toUserMessage
+import com.marta.habittracker.domain.usecase.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    private val registerUseCase: RegisterUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -56,13 +57,7 @@ class RegisterViewModel @Inject constructor(
         if (!state.isRegisterEnabled || state.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
-            when (
-                val result = authRepository.doRegister(
-                    name = state.name.trim(),
-                    email = state.email.trim(),
-                    password = state.password,
-                )
-            ) {
+            when (val result = registerUseCase(state.email.trim(), state.password)) {
                 is DataResult.Success -> {
                     _uiState.update { it.copy(isLoading = false) }
                     _navigateToHome.emit(Unit)
@@ -71,7 +66,7 @@ class RegisterViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "Unable to create account. Try again.",
+                            errorMessage = result.error.toUserMessage(),
                         )
                     }
                 }

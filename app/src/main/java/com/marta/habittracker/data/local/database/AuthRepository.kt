@@ -3,8 +3,8 @@ package com.marta.habittracker.data.local.database
 import com.marta.habittracker.data.local.database.mappers.HabitMapper
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
-import com.marta.habittracker.domain.models.AppError
-import com.marta.habittracker.domain.models.User
+import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.repository.AuthRepository as DomainAuthRepository
 import javax.inject.Inject
 
@@ -22,7 +22,6 @@ class AuthRepository @Inject constructor(
     }
 
     override suspend fun doRegister(
-        name: String,
         email: String,
         password: String,
     ): DataResult<User, AppError> {

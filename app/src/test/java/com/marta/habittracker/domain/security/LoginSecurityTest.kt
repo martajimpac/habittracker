@@ -1,10 +1,10 @@
 package com.marta.habittracker.domain.security
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.models.AppError
-import com.marta.habittracker.domain.models.LoginError
-import com.marta.habittracker.domain.models.User
-import com.marta.habittracker.domain.models.UserMode
+import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.User
+import com.marta.habittracker.domain.model.UserMode
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import kotlinx.coroutines.runBlocking
@@ -38,14 +38,13 @@ class LoginSecurityTest {
                     nickname = "secure",
                     followers = 0,
                     following = emptyList(),
-                    userMode = UserMode.REGULAR_USER,
+                    userMode = UserMode.RegularUser,
                     verified = false
                 )
             )
         }
 
         override suspend fun doRegister(
-            name: String,
             email: String,
             password: String,
         ): DataResult<User, AppError> {

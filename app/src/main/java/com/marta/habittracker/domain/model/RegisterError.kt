@@ -1,6 +1,8 @@
-package com.marta.habittracker.domain.models
+package com.marta.habittracker.domain.model
 
 sealed interface RegisterError : AppError {
-    data object EmailAlreadyRegistered : RegisterError
+    data object InvalidEmail : RegisterError
     data object WeakPassword : RegisterError
+    data object EmailAlreadyRegistered : RegisterError
+    data object EmailConfirmationRequired : RegisterError
 }

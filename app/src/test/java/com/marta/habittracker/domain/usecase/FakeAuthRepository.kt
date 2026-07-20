@@ -9,6 +9,7 @@ import com.marta.habittracker.domain.repository.AuthRepository
 class FakeAuthRepository(
     private val loginResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
     private val registerResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
+    private val loggedIn: Boolean = false,
 ) : AuthRepository {
 
     var loginCalls: Int = 0
@@ -43,6 +44,8 @@ class FakeAuthRepository(
         lastRegisterPassword = password
         return registerResult
     }
+
+    override suspend fun isLoggedIn(): Boolean = loggedIn
 
     companion object {
         val defaultUser = User(
