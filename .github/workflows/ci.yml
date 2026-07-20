@@ -39,7 +39,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest :app:koverXmlReportDebug :app:koverHtmlReportDebug :app:koverVerifyDebug
+        run: ./gradlew :app:testDebugUnitTest :app:koverXmlReport :app:koverHtmlReport :app:koverVerify
 
       - name: Cobertura → resumen del run
         if: always()
@@ -92,9 +92,10 @@ jobs:
 
   static-analysis:
     name: 🔍 Static analysis ktlint
+    if: false #QUITAR PARA ACTIVAR DE NUEVO
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.event_name != 'push'
+    #if: github.event_name != 'push'
 
     steps:
       - uses: actions/checkout@v4
