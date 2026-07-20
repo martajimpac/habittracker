@@ -1,14 +1,56 @@
 <resources>
     <string name="app_name">Habit Tracker</string>
 
-<!--    Login Screen-->
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_get_started">Get Started 🚀</string>
+    <string name="onboarding_slide1_title">Build Habits That\nActually Stick</string>
+    <string name="onboarding_slide1_description">Track your daily routines and watch consistency transform into lasting change.</string>
+    <string name="onboarding_slide2_title">Visualize Your\nProgress</string>
+    <string name="onboarding_slide2_description">Beautiful charts and streaks keep you motivated and show how far you\'ve come.</string>
+    <string name="onboarding_slide3_title">Achieve Your\nBest Self</string>
+    <string name="onboarding_slide3_description">Set goals, earn streaks, and celebrate every milestone on your journey.</string>
+
+    <!-- Login -->
+    <string name="login_welcome_title">Welcome back!</string>
+    <string name="login_welcome_subtitle">Sign in to continue your habit journey</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_email_placeholder">your@email.com</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_password_placeholder">Enter password</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_sign_in">Sign In</string>
+    <string name="login_signing_in">Signing in…</string>
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="login_sign_up">Sign up</string>
+
+    <!-- Legacy login keys kept for compatibility -->
     <string name="login_screen_header_text_spain">Español (España)</string>
-    <string name="login_screen_textfield_email">Usuario, correo electrónico o móvil</string>
-    <string name="login_screen_textfield_password">Contraseña</string>
-    <string name="login_screen_button_login">Iniciar sesión</string>
-    <string name="login_screen_text_forgot_password">¿Has olvidado la contraseña?</string>
-    <string name="login_screen_button_register">Crear cuenta nueva</string>
-<!--    Register Screen-->
+    <string name="login_screen_textfield_email">Email</string>
+    <string name="login_screen_textfield_password">Password</string>
+    <string name="login_screen_button_login">Sign In</string>
+    <string name="login_screen_text_forgot_password">Forgot password?</string>
+    <string name="login_screen_button_register">Sign up</string>
+
+    <!-- Register -->
+    <string name="register_back">Back</string>
+    <string name="register_title">Create account</string>
+    <string name="register_subtitle">Start building better habits today</string>
+    <string name="register_name_label">Full Name</string>
+    <string name="register_name_placeholder">Alex Rivera</string>
+    <string name="register_email_label">Email</string>
+    <string name="register_email_placeholder">alex@example.com</string>
+    <string name="register_password_label">Password</string>
+    <string name="register_password_placeholder">Min. 8 characters</string>
+    <string name="register_terms_prefix">By continuing you agree to our</string>
+    <string name="register_terms_of_service">Terms of Service</string>
+    <string name="register_terms_and">and</string>
+    <string name="register_privacy_policy">Privacy Policy</string>
+    <string name="register_create_account">Create Account</string>
+    <string name="register_creating_account">Creating account…</string>
+
+    <!-- Legacy register keys -->
     <string name="register_screen_title_phone">¿Cuál es tu número de móvil?</string>
     <string name="register_screen_title_email">¿Cuál es tu correo electrónico?</string>
     <string name="register_screen_subtitle_phone">Introduce tu número de móvil de contacto. Nadie lo verá en tu perfil.</string>
@@ -21,11 +63,10 @@
     <string name="register_screen_button_register_with_phone">Registrarte con tu número de móvil</string>
     <string name="register_screen_text_find_my_account">Buscar mi cuenta</string>
 
-<!--    BottomBar-->
+    <!-- BottomBar -->
     <string name="tab_home">Principal</string>
     <string name="tab_profile">Perfil</string>
     <string name="tab_add_content">Añadir cont</string>
     <string name="tab_reels">Reels</string>
     <string name="tab_search">Buscar</string>
-
 </resources>

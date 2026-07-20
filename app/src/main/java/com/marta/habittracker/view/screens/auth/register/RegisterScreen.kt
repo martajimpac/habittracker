@@ -1,162 +1,260 @@
 package com.marta.habittracker.view.screens.auth.register
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
-import com.marta.habittracker.view.core.components.InstaButton
-import com.marta.habittracker.view.core.components.InstaButtonSecondary
-import com.marta.habittracker.view.core.components.InstaText
-import com.marta.habittracker.view.core.components.InstaTextField
+import com.marta.habittracker.ui.theme.HabitField
+import com.marta.habittracker.ui.theme.HabitOnSurface
+import com.marta.habittracker.ui.theme.HabitOnSurfaceVariant
+import com.marta.habittracker.ui.theme.HabitPrimary
+import com.marta.habittracker.ui.theme.HabitPrimaryLight
+import com.marta.habittracker.ui.theme.HabitSurface
+import com.marta.habittracker.ui.theme.HabitTermsBg
+import com.marta.habittracker.ui.theme.HabitTermsText
+import com.marta.habittracker.view.screens.auth.login.AuthLabeledField
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     registerViewModel: RegisterViewModel = hiltViewModel(),
     navigateBack: () -> Unit,
+    navigateToHome: () -> Unit = {},
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
-    val title: String
-    val subtitle: String
-    val label: String
-    val changeModeTitle: String
-    when(uiState.mode){
-        MY_MODE.PHONE -> {
-            title = stringResource(R.string.register_screen_title_phone)
-            subtitle = stringResource(R.string.register_screen_subtitle_phone)
-            label = stringResource(R.string.register_screen_textfield_register_phone)
-            changeModeTitle = stringResource(R.string.register_screen_button_register_with_email)
-        }
-        MY_MODE.EMAIL -> {
-            title = stringResource(R.string.register_screen_title_email)
-            subtitle = stringResource(R.string.register_screen_subtitle_email)
-            label = stringResource(R.string.register_screen_textfield_register_email)
-            changeModeTitle = stringResource(R.string.register_screen_button_register_with_phone)
+    LaunchedEffect(Unit) {
+        registerViewModel.navigateToHome.collect {
+            navigateToHome()
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    MaterialTheme.colorScheme.background
-                ),
-                title = {},
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigateBack() }
-                    ){
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HabitSurface),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+        ) {
+            IconButton(
+                onClick = navigateBack,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .clip(CircleShape)
+                    .background(HabitField),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.register_back),
+                    tint = HabitOnSurface,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.register_title),
+                style = MaterialTheme.typography.headlineMedium,
+                color = HabitOnSurface,
+            )
+            Text(
+                text = stringResource(R.string.register_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = HabitOnSurfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            AuthLabeledField(
+                label = stringResource(R.string.register_name_label),
+                value = uiState.name,
+                onValueChange = registerViewModel::onNameChanged,
+                placeholder = stringResource(R.string.register_name_placeholder),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AuthLabeledField(
+                label = stringResource(R.string.register_email_label),
+                value = uiState.email,
+                onValueChange = registerViewModel::onEmailChanged,
+                placeholder = stringResource(R.string.register_email_placeholder),
+                keyboardType = KeyboardType.Email,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AuthLabeledField(
+                label = stringResource(R.string.register_password_label),
+                value = uiState.password,
+                onValueChange = registerViewModel::onPasswordChanged,
+                placeholder = stringResource(R.string.register_password_placeholder),
+                trailingIcon = {
+                    IconButton(onClick = registerViewModel::onTogglePasswordVisibility) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "back",
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.clickable { navigateBack() }
+                            imageVector = if (uiState.isPasswordVisible) {
+                                Icons.Outlined.VisibilityOff
+                            } else {
+                                Icons.Outlined.Visibility
+                            },
+                            contentDescription = null,
+                            tint = HabitOnSurfaceVariant,
+                        )
+                    }
+                },
+                visualTransformation = if (uiState.isPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                keyboardType = KeyboardType.Password,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(HabitTermsBg)
+                    .clickable { registerViewModel.onTermsChecked(!uiState.termsAccepted) }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(if (uiState.termsAccepted) HabitPrimary else HabitField),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (uiState.termsAccepted) {
+                        Icon(
+                            imageVector = Icons.Outlined.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp),
                         )
                     }
                 }
-            )
-
-        }
-    ) { padding ->
-        Box(Modifier.fillMaxSize()) {
-            Column(
-                Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(padding)
-                    .padding(horizontal = 16.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                //hacer una animación para el título
-                AnimatedContent(title) {
-                    InstaText(
-                        text = it,
-                        modifier = Modifier.padding(top = 22.dp),
-                        style = MaterialTheme.typography.headlineLarge
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                InstaText(
-                    text = subtitle,
-                    modifier = Modifier.padding(top = 22.dp),
-                    style = MaterialTheme.typography.bodyLarge
+                Spacer(modifier = Modifier.size(12.dp))
+                Text(
+                    text = buildAnnotatedString {
+                        append(stringResource(R.string.register_terms_prefix))
+                        append(" ")
+                        withStyle(SpanStyle(color = HabitPrimary, fontWeight = FontWeight.Bold)) {
+                            append(stringResource(R.string.register_terms_of_service))
+                        }
+                        append(" ")
+                        append(stringResource(R.string.register_terms_and))
+                        append(" ")
+                        withStyle(SpanStyle(color = HabitPrimary, fontWeight = FontWeight.Bold)) {
+                            append(stringResource(R.string.register_privacy_policy))
+                        }
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = HabitTermsText,
                 )
-
-                InstaTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(30.dp),
-                    value = uiState.inputValue,
-                    label = label,
-                    onValueChange = { registerViewModel.onRegisterChanged(it) })
-
-                Spacer(Modifier.height(8.dp))
-
-                InstaButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(R.string.login_screen_button_login),
-                    onClick = { },
-                    enabled = uiState.isRegisterEnabled && !uiState.isLoading,
-                )
-
-
-                InstaButtonSecondary(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { registerViewModel.onChangeMode() },
-                    title = stringResource(R.string.login_screen_button_register)
-                )
-
-                Spacer(Modifier.weight(1.3f))
-
-                TextButton(onClick = {}) {
-                    InstaText(
-                        text = stringResource(R.string.login_screen_text_forgot_password),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Button(
+                onClick = registerViewModel::onRegisterClicked,
+                enabled = uiState.isRegisterEnabled && !uiState.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    disabledContainerColor = HabitPrimaryLight,
+                    contentColor = Color.White,
+                    disabledContentColor = Color.White,
+                ),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight))
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (uiState.isLoading) {
+                                R.string.register_creating_account
+                            } else {
+                                R.string.register_create_account
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
 
         if (uiState.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
-}
-
-@Preview
-@Composable
-fun RegisterScreenPreview() {
-    RegisterScreen(navigateBack = {})
 }

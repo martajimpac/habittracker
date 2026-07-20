@@ -100,6 +100,9 @@ dependencies {
     //Icons
     implementation(libs.androidx.compose.material.icons.extended)
 
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     //Supabase
     implementation(libs.postgrest)
     implementation(libs.auth)

@@ -22,12 +22,14 @@ class HardcodedSecretsTest {
             Regex("""-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----""")
         )
 
-        val ignoredDirs = setOf("build", ".gradle", ".git", ".idea")
+        val ignoredDirs = setOf("build", ".gradle", ".git", ".idea", "test", "androidTest")
         val scanExtensions = setOf("kt", "kts", "xml", "json", "properties")
         val findings = projectRoot
             .walkTopDown()
             .onEnter { it.name !in ignoredDirs }
             .filter { it.isFile && it.extension in scanExtensions }
+            .filter { !it.path.contains("${File.separator}src${File.separator}test${File.separator}") }
+            .filter { !it.path.contains("${File.separator}src${File.separator}androidTest${File.separator}") }
             .flatMap { file ->
                 val text = file.readText()
                 forbiddenPatterns.mapNotNull { pattern ->

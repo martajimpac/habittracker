@@ -1,11 +1,13 @@
 package com.marta.habittracker.domain
 
-import android.util.Patterns
-
 object EmailValidator {
 
+    private val emailRegex = Regex(
+        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    )
+
     fun isValid(email: String?): Boolean {
-        return !email.isNullOrBlank() &&
-                Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+        if (email.isNullOrBlank()) return false
+        return emailRegex.matches(email.trim())
     }
 }

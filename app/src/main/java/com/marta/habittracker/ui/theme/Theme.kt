@@ -14,36 +14,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = InstaBlue,
+    primary = HabitPrimaryLight,
     onPrimary = Color.White,
     background = Gray20,
     onBackground = Gray70,
+    surface = Gray20,
     onSurface = Color.White,
     onSurfaceVariant = Color.White,
     tertiary = Red60
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = InstaBlue,
+    primary = HabitPrimary,
     onPrimary = Color.White,
-    background = Gray100,
-    onSurface = Color.Black,
-    onBackground = Gray80,
-    onSurfaceVariant = Gray30,
+    background = HabitSurface,
+    onBackground = HabitOnSurface,
+    surface = HabitSurface,
+    onSurface = HabitOnSurface,
+    onSurfaceVariant = HabitOnSurfaceVariant,
     tertiary = Red60
 )
 
-
-// Local para nuestros colores personalizados
 val LocalStateColors = staticCompositionLocalOf<StateColors> {
     error("No StateColors provided")
 }
 
-
 @Composable
 fun InstaDevTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -68,9 +66,9 @@ fun InstaDevTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography  = Typography,
-            shapes      = shapes,
-            content     = content
+            typography = Typography,
+            shapes = shapes,
+            content = content
         )
     }
 }

@@ -2,67 +2,106 @@ package com.marta.habittracker.view.screens.auth.register
 
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
-import com.marta.habittracker.domain.usecase.LoginUseCase
+import androidx.lifecycle.viewModelScope
+import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor(val loginUseCase: LoginUseCase) : ViewModel() {
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
-    val uiState: StateFlow<RegisterUiState> = _uiState
+    val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun onRegisterChanged(phoneNumber: String) {
-        _uiState.update { state ->
-            state.copy(
-                inputValue = phoneNumber,
-                isRegisterEnabled =  when(_uiState.value.mode){
-                    MY_MODE.EMAIL -> {
-                        isPhoneNumberValid(phoneNumber)
-                    }
-                    MY_MODE.PHONE -> {
-                        isEmailAddressValid(phoneNumber)
+    private val _navigateToHome = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val navigateToHome: SharedFlow<Unit> = _navigateToHome.asSharedFlow()
+
+    fun onNameChanged(name: String) {
+        _uiState.update { it.copy(name = name, errorMessage = null) }
+        verifyForm()
+    }
+
+    fun onEmailChanged(email: String) {
+        _uiState.update { it.copy(email = email, errorMessage = null) }
+        verifyForm()
+    }
+
+    fun onPasswordChanged(password: String) {
+        _uiState.update { it.copy(password = password, errorMessage = null) }
+        verifyForm()
+    }
+
+    fun onTogglePasswordVisibility() {
+        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+    }
+
+    fun onTermsChecked(checked: Boolean) {
+        _uiState.update { it.copy(termsAccepted = checked) }
+        verifyForm()
+    }
+
+    fun onRegisterClicked() {
+        val state = _uiState.value
+        if (!state.isRegisterEnabled || state.isLoading) return
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        viewModelScope.launch {
+            when (
+                val result = authRepository.doRegister(
+                    name = state.name.trim(),
+                    email = state.email.trim(),
+                    password = state.password,
+                )
+            ) {
+                is DataResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    _navigateToHome.emit(Unit)
+                }
+                is DataResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Unable to create account. Try again.",
+                        )
                     }
                 }
-
-            )
-        }
-
-    }
-
-    fun onChangeMode() {
-        registerState(true)
-        _uiState.update {
-            it.copy(
-                mode = if(it.mode == MY_MODE.EMAIL) MY_MODE.PHONE else MY_MODE.EMAIL,
-                inputValue = ""
-            )
+            }
         }
     }
 
-
-    /**** MÉTODOS PRIVADOS ****/
-
-    private fun registerState(isLoading: Boolean){
-        _uiState.update { it.copy(isLoading = isLoading) }
+    private fun verifyForm() {
+        val state = _uiState.value
+        val enabled = state.name.isNotBlank() &&
+            Patterns.EMAIL_ADDRESS.matcher(state.email).matches() &&
+            state.password.length >= 8 &&
+            state.termsAccepted
+        _uiState.update { it.copy(isRegisterEnabled = enabled) }
     }
-
-    private fun isPhoneNumberValid(phoneNumber: String): Boolean = Patterns.PHONE.matcher(phoneNumber).matches()
-
-    private fun isEmailAddressValid(email: String): Boolean = Patterns.EMAIL_ADDRESS.matcher(email).matches()
-
 }
 
 data class RegisterUiState(
-    val inputValue: String = "",
+    val name: String = "",
+    val email: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
-    val isRegisterEnabled: Boolean = true,
-    val mode: MY_MODE = MY_MODE.EMAIL,
-)
-
-enum class MY_MODE {
-    PHONE, EMAIL
+    val isRegisterEnabled: Boolean = false,
+    val isPasswordVisible: Boolean = false,
+    val termsAccepted: Boolean = false,
+    val errorMessage: String? = null,
+) {
+    override fun toString(): String {
+        return "RegisterUiState(isLoading=$isLoading, isRegisterEnabled=$isRegisterEnabled, " +
+            "isPasswordVisible=$isPasswordVisible, termsAccepted=$termsAccepted, " +
+            "hasError=${errorMessage != null})"
+    }
 }
