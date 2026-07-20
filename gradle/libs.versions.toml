@@ -22,6 +22,7 @@ datastore = "1.1.7"
 ktor = "3.0.3"
 coroutines = "1.10.2"
 robolectric = "4.14.1"
+kover = "0.8.0"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -69,3 +70,4 @@ jetbrainsKotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization
 hilt = {id = "com.google.dagger.hilt.android", version.ref = "hilt"}
 ksp = {id = "com.google.devtools.ksp", version.ref = "ksp"}
 room = { id = "androidx.room", version.ref = "room" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
