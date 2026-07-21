@@ -18,7 +18,7 @@ Adapt the create-habit screen to match Figma, persist the new visual/reminder fi
 | Schema approach | Extend `habits` entity (not a separate appearance table) |
 | Room version | `20260127` |
 | Future sync | Offline-first local cache; fields must be portable for later Supabase mapping |
-| Remote identity | Add `remoteId: String?` now (null until sync) |
+| Habit identity | Single client-generated UUID (`String`) as Room PK and future Supabase id — no separate `remoteId` |
 
 ## Architecture
 
@@ -33,24 +33,30 @@ Home / Stats / Detail ← Habit (domain) with icon, colorHex, reminderTime
 
 ## Data model (`habits`, Room version `20260127`)
 
-Existing fields kept: `id`, `name`, `description?`, `daysOfWeek`, `createdAt`.
-
-New fields:
-
 | Field | Type | Notes |
 |-------|------|--------|
+| `id` | `String` | Client-generated UUID; Room `@PrimaryKey` (no autoGenerate); same id synced to Supabase later |
+| `name` | `String` | Required |
+| `description` | `String?` | Optional |
+| `daysOfWeek` | serializable list | Unchanged semantics |
+| `createdAt` | `Long` | Unchanged |
 | `icon` | `String` | Emoji, default `"💧"` |
 | `colorHex` | `String` | e.g. `"#6750A4"`, default primary |
 | `reminderTime` | `String?` | `"HH:mm"` or null |
-| `remoteId` | `String?` | Supabase id when synced; null for local-only |
 
-Migration from previous schema: `ALTER TABLE` add columns with defaults; existing rows get default icon/color and `remoteId = null`.
+**No `remoteId`.** One identifier everywhere.
+
+Migration from previous schema (Long PK):
+
+- Recreate / migrate `habits` and `habit_records` so FKs use `habitId: String`.
+- Existing local habits get a new UUID assigned during migration (one-time remap); records updated to match.
+- New habits: UUID generated in the client at create time (e.g. `UUID.randomUUID().toString()` in data/domain create path).
 
 ### Sync readiness (future)
 
 - Store color as hex string, icon as emoji string, time as `HH:mm` — JSON/SQL friendly.
-- `remoteId` reserved for Supabase primary key / UUID.
-- Local `id: Long` remains Room PK for offline relations (`habit_records`).
+- Habit `id` is the shared UUID for Room and Supabase — no id mapping layer.
+- `habit_records.habitId` references that same UUID string.
 - Sync implementation (push/pull, conflict rules) is out of scope.
 
 ## UI — Create Habit
@@ -102,6 +108,7 @@ Colors: #6750A4 #0D9488 #D97706 #E11D48 #059669 #2563EB #EA580C #7C3AED
 ## Success criteria
 
 - Create Habit UI matches Figma layout (with day chips instead of frequency select, plus optional description).
-- New habits persist icon, color, reminder time, and `remoteId = null`.
+- New habits persist icon, color, reminder time, and a client-generated UUID `id`.
 - Home, Stats, and Detail show the stored icon/color.
 - App still works offline from Room after create.
+- No separate `remoteId`; local and future Supabase id are the same UUID.

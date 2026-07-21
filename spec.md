@@ -37,7 +37,8 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - El usuario puede eliminar habitos y sus registros asociados.
 - El usuario puede crear un habito con nombre, descripcion opcional, icono, color, hora de recordatorio opcional y dias de la semana.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
-- Los habitos se leen desde Room para uso offline; `remoteId` queda preparado para sync futuro con Supabase (sin sync en este alcance).
+- Los habitos se leen desde Room para uso offline.
+- El id del habito es un UUID generado en el cliente (String), compartido entre Room y el futuro sync con Supabase (sin `remoteId` separado; sin sync en este alcance).
 - Detalle de diseno: `docs/designs/2026-07-21-add-habit-figma-design.md`.
 
 ## Requisitos de Seguridad
