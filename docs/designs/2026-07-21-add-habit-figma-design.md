@@ -29,7 +29,7 @@ Home / Stats / Detail ← Habit (domain) with icon, colorHex, reminderTime
 
 - Domain models remain the contract between layers.
 - Room entities and future Supabase DTOs stay in `data` and map to domain.
-- No Supabase habit sync in this change — only schema readiness (`remoteId` + portable field types).
+- No Supabase habit sync in this change — only portable fields and a shared client UUID.
 
 ## Data model (`habits`, Room version `20260127`)
 
