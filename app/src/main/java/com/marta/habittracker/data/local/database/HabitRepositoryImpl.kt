@@ -48,6 +48,11 @@ class HabitRepositoryImpl @Inject constructor(
         }*/
     }
 
+    override fun getAllHabitsWithRecords(): Flow<List<Habit>> =
+        habitDao.getHabitsWithRecords().map { habitsList ->
+            habitsList.map(habitMapper::map)
+        }
+
     override suspend fun toggleHabitCompletion(habit: Habit, date: LocalDate) {
         val habitId = habit.id
 

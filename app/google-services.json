@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "439337143422",
+    "project_id": "habittracker-a1c7b",
+    "storage_bucket": "habittracker-a1c7b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439337143422:android:5ca58d927b3237ef3f1c2f",
+        "android_client_info": {
+          "package_name": "com.marta.habittracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiQ1_O5ukJjXG4TtH4abMwyNyP9wxRPbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
