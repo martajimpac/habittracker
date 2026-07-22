@@ -2,10 +2,10 @@ package com.marta.habittracker.view.core.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -18,7 +18,7 @@ sealed class BottomNavigation(
     val tabScreen: TabScreens
 ) {
     companion object {
-        val tabBottomItemsList = listOf(TabHome, TabAddContent, TabProfile)
+        val tabBottomItemsList = listOf(TabHome, TabStats, TabProfile)
     }
 
     data object TabHome : BottomNavigation(
@@ -28,11 +28,11 @@ sealed class BottomNavigation(
         tabScreen = TabScreens.TabHome
     )
 
-    data object TabAddContent : BottomNavigation(
-        label = R.string.tab_add_content,
-        iconUnselected = Icons.Outlined.AddCircleOutline,
-        iconSelected = Icons.Filled.AddCircle,
-        tabScreen = TabScreens.TabAddContent
+    data object TabStats : BottomNavigation(
+        label = R.string.tab_stats,
+        iconUnselected = Icons.Outlined.BarChart,
+        iconSelected = Icons.Filled.BarChart,
+        tabScreen = TabScreens.TabStats
     )
 
     data object TabProfile : BottomNavigation(

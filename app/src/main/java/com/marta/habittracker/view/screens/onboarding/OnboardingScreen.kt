@@ -16,11 +16,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,12 +30,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.marta.habittracker.R
 import com.marta.habittracker.ui.theme.HabitAmber
 import com.marta.habittracker.ui.theme.HabitAmberLight
 import com.marta.habittracker.ui.theme.HabitPrimary
 import com.marta.habittracker.ui.theme.HabitPrimaryLight
+import com.marta.habittracker.view.core.components.HabitButton
+import com.marta.habittracker.view.core.components.HabitButtonVariant
 import com.marta.habittracker.ui.theme.HabitTeal
 import com.marta.habittracker.ui.theme.HabitTealLight
 import kotlinx.coroutines.launch
@@ -131,19 +130,12 @@ private fun OnboardingPage(
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.End,
         ) {
-            TextButton(
+            HabitButton(
+                text = stringResource(R.string.onboarding_skip),
                 onClick = onSkip,
-                colors = ButtonDefaults.textButtonColors(contentColor = Color.White),
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f)),
-            ) {
-                Text(
-                    text = stringResource(R.string.onboarding_skip),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White,
-                )
-            }
+                variant = HabitButtonVariant.GhostPill,
+                fillMaxWidth = false,
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -197,24 +189,13 @@ private fun OnboardingPage(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 40.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = HabitPrimary,
+        HabitButton(
+            text = stringResource(
+                if (isLast) R.string.onboarding_get_started else R.string.onboarding_continue
             ),
-        ) {
-            Text(
-                text = stringResource(
-                    if (isLast) R.string.onboarding_get_started else R.string.onboarding_continue
-                ),
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
+            onClick = onContinue,
+            modifier = Modifier.padding(bottom = 40.dp),
+            variant = HabitButtonVariant.PrimaryLight,
+        )
     }
 }

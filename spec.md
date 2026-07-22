@@ -1,4 +1,4 @@
-# HabitTracker Spec
+A# HabitTracker Spec
 
 ## Objetivo
 
@@ -40,6 +40,16 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Los habitos se leen desde Room para uso offline.
 - El id del habito es un UUID generado en el cliente (String), compartido entre Room y el futuro sync con Supabase (sin `remoteId` separado; sin sync en este alcance).
 - Detalle de diseno: `docs/designs/2026-07-21-add-habit-figma-design.md`.
+
+### Profile (tab)
+
+- La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar con iniciales, stats, menu rows, Sign Out).
+- Header usa datos reales del usuario autenticado: display name y email (via `AuthRepository`); avatar = iniciales derivadas del nombre.
+- Stats del header (Day Streak, Completed, Habits) son valores mock fijos por ahora; no se calculan desde habitos.
+- Filas de menu: Notifications, Goals & Targets, Reminders, Preferences, Achievements — solo UI; sin navegacion ni acciones.
+- Sign Out es solo UI; sin logout real en este alcance.
+- Todos los textos de Profile van en ingles (`strings.xml`).
+- `ProfileViewModel` solo expone nombre y email; no maneja clicks de menu ni sign-out.
 
 ## Requisitos de Seguridad
 

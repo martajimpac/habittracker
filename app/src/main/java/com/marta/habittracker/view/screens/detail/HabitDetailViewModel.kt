@@ -32,13 +32,13 @@ class HabitDetailViewModel @Inject constructor(
      *
      * Seguridad de tipos:
      * Al usar la navegación Type-Safe de Compose, Hilt sabe
-     * que si la ruta es TabDetail(val habitId: Long), debe buscar
+     * que si la ruta es TabDetail(val habitId: String), debe buscar
      * una clave llamada "habitId".
      */
 
     // Extraemos el habitId.
     // "habitId" debe llamarse igual que la propiedad en tu data class TabDetail
-    private val habitId: Long = checkNotNull(savedStateHandle["habitId"])
+    private val habitId: String = checkNotNull(savedStateHandle["habitId"])
 
     // 1. Estado del Hábito (Nombre, descripción, días...)
     // Lo exponemos como un StateFlow para que la UI reaccione si se edita

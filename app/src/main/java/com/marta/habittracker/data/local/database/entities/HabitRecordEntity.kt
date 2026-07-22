@@ -13,14 +13,14 @@ import java.time.LocalDate
             entity = HabitEntity::class,
             parentColumns = ["id"],
             childColumns = ["habitId"],
-            onDelete = ForeignKey.CASCADE // Si borras el hábito, se borran sus registros
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
-    indices = [Index(value = ["habitId", "date"], unique = true)] // Evita duplicados para el mismo día
+    indices = [Index(value = ["habitId", "date"], unique = true)],
 )
 data class HabitRecordEntity(
     @PrimaryKey(autoGenerate = true) val recordId: Long = 0,
-    val habitId: Long,
+    val habitId: String,
     val date: LocalDate,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
 )

@@ -35,20 +35,25 @@ class HabitDaoSecurityInstrumentedTest {
     @Test
     fun habitRecordsAreDeletedWhenHabitIsDeleted() = runBlocking {
         val dao = database.habitDao()
-        val habitId = dao.insertHabit(
+        val habitId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        dao.insertHabit(
             HabitEntity(
+                id = habitId,
                 name = "Meditation",
                 description = "Private habit",
-                daysOfWeek = listOf(DayOfWeek.MONDAY)
-            )
+                daysOfWeek = listOf(DayOfWeek.MONDAY),
+                icon = "🧘",
+                colorHex = "#6750A4",
+                reminderTime = "07:00",
+            ),
         )
 
         dao.upsertHabitRecord(
             HabitRecordEntity(
                 habitId = habitId,
                 date = LocalDate.of(2026, 6, 10),
-                isCompleted = true
-            )
+                isCompleted = true,
+            ),
         )
 
         val habit = dao.getHabitById(habitId).first()!!
@@ -56,19 +61,24 @@ class HabitDaoSecurityInstrumentedTest {
 
         assertTrue(
             "Habit records must not remain orphaned after deleting the parent habit",
-            dao.getRecordsForHabit(habitId).first().isEmpty()
+            dao.getRecordsForHabit(habitId).first().isEmpty(),
         )
     }
 
     @Test
     fun upsertHabitRecordDoesNotCreateDuplicateCompletionForSameDay() = runBlocking {
         val dao = database.habitDao()
-        val habitId = dao.insertHabit(
+        val habitId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        dao.insertHabit(
             HabitEntity(
+                id = habitId,
                 name = "Workout",
                 description = null,
-                daysOfWeek = listOf(DayOfWeek.WEDNESDAY)
-            )
+                daysOfWeek = listOf(DayOfWeek.WEDNESDAY),
+                icon = "🏃",
+                colorHex = "#059669",
+                reminderTime = null,
+            ),
         )
         val date = LocalDate.of(2026, 6, 10)
 

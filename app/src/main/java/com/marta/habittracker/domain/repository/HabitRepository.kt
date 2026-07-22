@@ -8,10 +8,11 @@ import java.time.LocalDate
 
 interface HabitRepository {
     fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>>
+    fun getAllHabitsWithRecords(): Flow<List<Habit>>
     suspend fun toggleHabitCompletion(habit: Habit, date: LocalDate)
-    fun getHabitById(id: Long): Flow<HabitEntity?>
-    fun getRecordsForHabit(habitId: Long): Flow<List<HabitRecordEntity>>
-    suspend fun insertHabit(habit: HabitEntity): Long
+    fun getHabitById(id: String): Flow<HabitEntity?>
+    fun getRecordsForHabit(habitId: String): Flow<List<HabitRecordEntity>>
+    suspend fun insertHabit(habit: HabitEntity)
     suspend fun updateHabit(habit: HabitEntity)
     suspend fun deleteHabit(habit: HabitEntity)
 }

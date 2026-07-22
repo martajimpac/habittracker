@@ -73,6 +73,17 @@ class AuthRepositoryImpl @Inject constructor(
         return supabase.auth.currentUserOrNull() != null
     }
 
+    override suspend fun getCurrentUserDisplayName(): String {
+        val user = supabase.auth.currentUserOrNull() ?: return "there"
+        val metadataName = user.userMetadata?.get("name")?.toString()?.trim().orEmpty()
+        if (metadataName.isNotBlank()) return metadataName
+        return user.email?.substringBefore("@").orEmpty().ifBlank { "there" }
+    }
+
+    override suspend fun getCurrentUserEmail(): String {
+        return supabase.auth.currentUserOrNull()?.email.orEmpty()
+    }
+
     private fun mapUser(currentUser: UserInfo): User =
         User(
             userId = currentUser.id,

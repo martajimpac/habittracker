@@ -48,6 +48,7 @@ Los modelos específicos de infraestructura, como Room Entities o DTOs, no deben
 * Realiza el mapping de `Entity` y `DTO` a modelos de dominio dentro de la capa `data`.
 * Los repositorios definidos en `domain` deben exponer modelos de dominio.
 * Las implementaciones de repositorios pertenecen a `data`.
+* Las pantallas Compose no acceden a repositorios directamente; los ViewModels sí pueden usar interfaces de repositorio (y Use Cases cuando existan).
 * Los DAOs deben utilizar `Flow` para datos observables cuando sea apropiado.
 * Utiliza inyección por constructor con Hilt.
 * No instancies repositorios, DAOs ni dependencias manualmente.

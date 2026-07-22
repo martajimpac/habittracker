@@ -1,228 +1,605 @@
 package com.marta.habittracker.view.screens.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.view.utils.getCalendarDays
+import com.marta.habittracker.ui.theme.HabitField
+import com.marta.habittracker.ui.theme.HabitOnSurface
+import com.marta.habittracker.ui.theme.HabitOnSurfaceVariant
+import com.marta.habittracker.ui.theme.HabitOutline
+import com.marta.habittracker.ui.theme.HabitPrimary
+import com.marta.habittracker.ui.theme.HabitPrimaryLight
+import com.marta.habittracker.ui.theme.HabitSurface
+import com.marta.habittracker.ui.theme.HabitTermsBg
+import com.marta.habittracker.ui.theme.HabitTermsText
+import com.marta.habittracker.view.core.components.HabitFab
+import com.marta.habittracker.view.core.components.ProgressRing
+import com.marta.habittracker.view.utils.dayShortLabel
+import com.marta.habittracker.view.utils.greetingForHour
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
 fun HomeScreen(
+    onAdd: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
-    onHabitClick: (Long) -> Unit
 ) {
-    val habits: List<Habit> by viewModel.habits.collectAsStateWithLifecycle()
-    val selectedDate: LocalDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val habits by viewModel.habits.collectAsStateWithLifecycle()
+    val allHabits by viewModel.allHabits.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
 
-    val completedCount by remember(habits) { derivedStateOf { habits.count { it.isCompleted } } }
-    val progress by remember(habits) {
-        derivedStateOf { if (habits.isEmpty()) 0f else completedCount.toFloat() / habits.size }
+    val today = viewModel.today
+    val isToday = selectedDate == today
+    val isPast = selectedDate.isBefore(today)
+    val isFuture = selectedDate.isAfter(today)
+
+    val (completedCount, totalCount) = remember(habits, selectedDate) {
+        completionStats(habits, selectedDate)
+    }
+    val pct = completionPercent(completedCount, totalCount)
+    val greeting = remember { greetingForHour(java.time.LocalTime.now().hour) }
+    val dateLabel = remember(selectedDate) {
+        selectedDate.format(DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH))
+    }
+    val dayLabel = remember(selectedDate) {
+        selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    }
+    val overallStreak = remember(allHabits) {
+        allHabits.maxOfOrNull { calculateStreak(it.records) } ?: 0
     }
 
-    val calendarDays = remember { getCalendarDays() }
+    Scaffold(
+        topBar = {
+            HomeHeader(
+                selectedDate = selectedDate,
+                isToday = isToday,
+                isPast = isPast,
+                dateLabel = dateLabel,
+                dayLabel = dayLabel,
+                greeting = greeting,
+                userDisplayName = userDisplayName,
+                weekDays = viewModel.weekDays,
+                allHabits = allHabits,
+                onDateSelected = viewModel::onDateSelected,
+            )
+        },
+        floatingActionButton = {
+            if (isToday) {
+                HabitFab(
+                    onClick = onAdd,
+                    icon = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.home_add_habit),
+                )
+            }
+        },
+        containerColor = HabitSurface,
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                top = 16.dp,
+                bottom = 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+                item {
+                    HomeProgressCard(
+                        pct = pct,
+                        completedCount = completedCount,
+                        totalCount = totalCount,
+                        isToday = isToday,
+                        dayLabel = dayShortLabel(selectedDate),
+                        habits = habits,
+                        selectedDate = selectedDate,
+                    )
+                }
 
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = if (isToday) {
+                                stringResource(R.string.home_todays_habits)
+                            } else {
+                                stringResource(R.string.home_day_habits, dayShortLabel(selectedDate))
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            color = HabitOnSurface,
+                        )
+                        Text(
+                            text = stringResource(R.string.home_total_count, totalCount),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = HabitOnSurfaceVariant,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(HabitField)
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                        )
+                    }
+                }
+
+                if (habits.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.home_empty_habits),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = HabitOnSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                        )
+                    }
+                } else {
+                    items(habits, key = { it.id }) { habit ->
+                        HomeHabitCard(
+                            habit = habit,
+                            isDone = habit.isCompleted,
+                            isToday = isToday,
+                            onToggle = { viewModel.toggleComplete(habit) },
+                        )
+                    }
+                }
+
+                item {
+                    when {
+                        isToday -> HomeMotivationCard(overallStreak = overallStreak)
+                        else -> HomeDayInfoCard(
+                            pct = pct,
+                            completedCount = completedCount,
+                            totalCount = totalCount,
+                            isPast = isPast,
+                            isFuture = isFuture,
+                        )
+                    }
+                }
+        }
+    }
+}
+
+@Composable
+private fun HomeHeader(
+    selectedDate: LocalDate,
+    isToday: Boolean,
+    isPast: Boolean,
+    dateLabel: String,
+    dayLabel: String,
+    greeting: String,
+    userDisplayName: String,
+    weekDays: List<LocalDate>,
+    allHabits: List<Habit>,
+    onDateSelected: (LocalDate) -> Unit,
+) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Cabecera con Progreso
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = "Tu Progreso",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                strokeCap = StrokeCap.Round
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "$completedCount de ${habits.size} hábitos completados",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Selector de fecha Horizontal
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            items(calendarDays) { date ->
-                val isSelected = date == selectedDate
-                DateItem(
-                    date = date,
-                    isSelected = isSelected,
-                    onDateClick = { viewModel.onDateSelected(date) }
-                )
-            }
-        }
-
-        // Lista de Hábitos
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(habits, key = { it.id }) { habit ->
-                HabitItem(
-                    habit = habit,
-                    onToggle = { viewModel.toggleComplete(habit) },
-                    onItemClick = { onHabitClick(habit.id) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DateItem(date: LocalDate, isSelected: Boolean, onDateClick: () -> Unit) {
-    val dayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-    
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-
-    Card(
-        onClick = onDateClick,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.width(55.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) {
-            Text(text = dayName, style = MaterialTheme.typography.labelMedium, color = contentColor)
-            Text(
-                text = date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = contentColor
-            )
-        }
-    }
-}
-
-@Composable
-fun HabitItem(
-    habit: Habit,
-    onToggle: () -> Unit,
-    onItemClick: () -> Unit
-) {
-    val isCompleted = habit.isCompleted
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onItemClick,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) 
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
-            else 
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 0.dp else 2.dp),
-        border = if (isCompleted) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            .fillMaxWidth()
+            .background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+            .padding(horizontal = 20.dp)
+            .padding(top = 16.dp, bottom = 20.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Checkbox personalizado (Satisfactorio)
-            IconButton(
-                onClick = onToggle,
-                modifier = Modifier
-                    .background(
-                        color = if (isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent,
-                        shape = androidx.compose.foundation.shape.CircleShape
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                        shape = androidx.compose.foundation.shape.CircleShape
-                    )
-                    .size(28.dp)
-            ) {
-                if (isCompleted) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = habit.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    text = when {
+                        isToday -> stringResource(R.string.home_today_label, dateLabel)
+                        isPast -> stringResource(R.string.home_past_label, dateLabel)
+                        else -> stringResource(R.string.home_upcoming_label, dateLabel)
+                    },
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    textDecoration = if (isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
-                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+                    color = Color.White.copy(alpha = 0.75f),
                 )
-                habit.description?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Text(
+                    text = if (isToday) {
+                        stringResource(R.string.home_greeting, greeting, firstName(userDisplayName))
+                    } else {
+                        dayLabel
+                    },
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = userAvatarInitials(userDisplayName),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            weekDays.forEach { date ->
+                val active = date == selectedDate
+                val dayHabits = habitsForDate(allHabits, date)
+                val dayCompleted = dayHabits.count { isHabitCompletedOnDate(it, date) }
+                val dayPct = completionPercent(dayCompleted, dayHabits.size)
+
+                WeekDayChip(
+                    label = dayShortLabel(date),
+                    dayNumber = date.dayOfMonth,
+                    active = active,
+                    dayPct = dayPct,
+                    onClick = { onDateSelected(date) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.WeekDayChip(
+    label: String,
+    dayNumber: Int,
+    active: Boolean,
+    dayPct: Int,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (active) Color.White else Color.White.copy(alpha = 0.15f))
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            fontSize = 10.sp,
+            color = if (active) HabitPrimary else Color.White.copy(alpha = 0.7f),
+        )
+        Text(
+            text = dayNumber.toString(),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Black,
+            color = if (active) HabitPrimary else Color.White,
+        )
+        Box(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(
+                    when {
+                        dayPct == 100 -> Color(0xFF4ADE80)
+                        dayPct > 0 -> if (active) HabitPrimary else Color.White.copy(alpha = 0.5f)
+                        else -> Color.Transparent
+                    }
+                ),
+        )
+    }
+}
+
+@Composable
+private fun HomeProgressCard(
+    pct: Int,
+    completedCount: Int,
+    totalCount: Int,
+    isToday: Boolean,
+    dayLabel: String,
+    habits: List<Habit>,
+    selectedDate: LocalDate,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            ProgressRing(
+                progress = if (totalCount == 0) 0f else completedCount.toFloat() / totalCount,
+                color = HabitPrimary,
+            )
+            Text(
+                text = stringResource(R.string.home_percent, pct),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = HabitPrimary,
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
+                color = HabitOnSurface,
+            )
+            Text(
+                text = if (isToday) {
+                    stringResource(R.string.home_completed_today)
+                } else {
+                    stringResource(R.string.home_completed_day, dayLabel)
+                },
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = HabitOnSurfaceVariant,
+            )
+            if (habits.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    habits.forEach { habit ->
+                        val done = isHabitCompletedOnDate(habit, selectedDate)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(6.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (done) habitAccentColor(habit) else HabitOutline
+                                ),
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeHabitCard(
+    habit: Habit,
+    isDone: Boolean,
+    isToday: Boolean,
+    onToggle: () -> Unit,
+) {
+    val accentColor = habitAccentColor(habit)
+    val streak = calculateStreak(habit.records)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (!isToday && !isDone) 0.55f else 1f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .clickable(enabled = isToday, onClick = onToggle)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(accentColor.copy(alpha = 0.09f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = habitEmoji(habit), fontSize = 24.sp)
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = habit.name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isDone) HabitOnSurfaceVariant else HabitOnSurface,
+                textDecoration = if (isDone) TextDecoration.LineThrough else null,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(top = 2.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.LocalFireDepartment,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(12.dp),
+                )
+                Text(
+                    text = stringResource(R.string.home_streak_days, streak),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accentColor,
+                )
+                Text(
+                    text = stringResource(R.string.home_time_separator, habitTimeLabel(habit)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = HabitOnSurfaceVariant,
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(if (isDone) accentColor else Color.Transparent)
+                .border(
+                    width = 2.5.dp,
+                    color = if (isDone) accentColor else Color(0xFFCAC4D0),
+                    shape = CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (isDone) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeMotivationCard(overallStreak: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Brush.horizontalGradient(listOf(HabitTermsBg, HabitOutline)))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(HabitPrimary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Bolt,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Column {
+            Text(
+                text = stringResource(R.string.home_keep_it_up),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFF21005D),
+            )
+            Text(
+                text = stringResource(R.string.home_overall_streak, overallStreak),
+                style = MaterialTheme.typography.labelSmall,
+                color = HabitTermsText,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeDayInfoCard(
+    pct: Int,
+    completedCount: Int,
+    totalCount: Int,
+    isPast: Boolean,
+    isFuture: Boolean,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(HabitField)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = when {
+                pct == 100 -> "🏆"
+                pct >= 50 -> "📊"
+                else -> "📅"
+            },
+            fontSize = 24.sp,
+        )
+        Column {
+            Text(
+                text = when {
+                    pct == 100 -> stringResource(R.string.home_perfect_day)
+                    isPast -> stringResource(R.string.home_past_record)
+                    else -> stringResource(R.string.home_upcoming_day)
+                },
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                color = HabitOnSurface,
+            )
+            Text(
+                text = when {
+                    isFuture -> stringResource(R.string.home_future_message)
+                    else -> stringResource(
+                        R.string.home_past_message,
+                        completedCount,
+                        totalCount,
+                        pct,
+                    )
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = HabitOnSurfaceVariant,
+            )
         }
     }
 }

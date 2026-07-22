@@ -64,9 +64,82 @@
     <string name="register_screen_text_find_my_account">Buscar mi cuenta</string>
 
     <!-- BottomBar -->
-    <string name="tab_home">Principal</string>
-    <string name="tab_profile">Perfil</string>
-    <string name="tab_add_content">Añadir cont</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_stats">Stats</string>
+    <string name="tab_profile">Profile</string>
+
+    <!-- Home -->
+    <string name="home_today_label">Today · %1$s</string>
+    <string name="home_past_label">Past · %1$s</string>
+    <string name="home_upcoming_label">Upcoming · %1$s</string>
+    <string name="home_greeting">%1$s, %2$s! 👋</string>
+    <string name="home_todays_habits">Today\'s Habits</string>
+    <string name="home_day_habits">%1$s\'s Habits</string>
+    <string name="home_total_count">%1$d total</string>
+    <string name="home_empty_habits">No habits scheduled for this day.</string>
+    <string name="home_percent">%1$d%%</string>
+    <string name="home_completed_ratio">%1$d/%2$d</string>
+    <string name="home_completed_today">Habits completed today</string>
+    <string name="home_completed_day">Habits completed · %1$s</string>
+    <string name="home_streak_days">%1$d day streak</string>
+    <string name="home_time_separator">· %1$s</string>
+    <string name="home_keep_it_up">Keep it up!</string>
+    <string name="home_overall_streak">You\'re on a %1$d-day streak overall 🔥</string>
+    <string name="home_perfect_day">Perfect day!</string>
+    <string name="home_past_record">Past record</string>
+    <string name="home_upcoming_day">Upcoming day</string>
+    <string name="home_future_message">Habits not yet available for future days</string>
+    <string name="home_past_message">%1$d of %2$d habits completed · %3$d%%</string>
+    <string name="home_add_habit">Add habit</string>
+    <string name="home_all_day">All day</string>
+
+    <!-- Add habit -->
+    <string name="add_habit_title">New Habit</string>
+    <string name="add_habit_save">Save</string>
+    <string name="add_habit_cancel">Cancel</string>
+    <string name="add_habit_close">Close</string>
+    <string name="add_habit_name_label">Habit Name</string>
+    <string name="add_habit_name_placeholder">e.g. Morning Run</string>
+    <string name="add_habit_description_label">Description (optional)</string>
+    <string name="add_habit_description_placeholder">e.g. 30 minutes outdoors</string>
+    <string name="add_habit_choose_icon">Choose Icon</string>
+    <string name="add_habit_choose_color">Choose Color</string>
+    <string name="add_habit_reminder_time">Reminder Time</string>
+    <string name="add_habit_frequency">Frequency</string>
+    <string name="add_habit_create">Create Habit</string>
+
+    <!-- Detail -->
+    <string name="detail_loading">Loading…</string>
+    <string name="detail_back">Back</string>
+    <string name="detail_tab_stats">Stats</string>
+    <string name="detail_tab_calendar">Calendar</string>
+    <string name="detail_tab_settings">Settings</string>
+    <string name="detail_overall_performance">Overall performance</string>
+    <string name="detail_completed">Completed</string>
+    <string name="detail_calendar_placeholder">Completion history</string>
+    <string name="detail_edit_habit">Edit habit</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Stats</string>
+    <string name="stats_coming_soon">Stats coming soon</string>
+    <string name="stats_empty">No habits yet</string>
+
+    <!-- Profile -->
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_goals">Goals &amp; Targets</string>
+    <string name="profile_reminders">Reminders</string>
+    <string name="profile_preferences">Preferences</string>
+    <string name="profile_achievements">Achievements</string>
+    <string name="profile_sign_out">Sign Out</string>
+    <string name="profile_stat_day_streak">Day Streak</string>
+    <string name="profile_stat_completed">Completed</string>
+    <string name="profile_stat_habits">Habits</string>
+    <string name="profile_mock_streak_value">14</string>
+    <string name="profile_mock_completed_value">89</string>
+    <string name="profile_mock_habits_value">6</string>
+
+    <!-- Legacy tab keys -->
+    <string name="tab_add_content">Add</string>
     <string name="tab_reels">Reels</string>
     <string name="tab_search">Buscar</string>
 </resources>

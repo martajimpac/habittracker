@@ -53,5 +53,9 @@ class LoginSecurityTest {
         }
 
         override suspend fun isLoggedIn(): Boolean = false
+
+        override suspend fun getCurrentUserDisplayName(): String = "Secure User"
+
+        override suspend fun getCurrentUserEmail(): String = "secure@example.com"
     }
 }

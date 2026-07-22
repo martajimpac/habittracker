@@ -15,9 +15,23 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import javax.inject.Inject
 
+val HabitIconOptions = listOf(
+    "💧", "🏃", "📚", "🧘", "🍎", "😴", "☕", "🎵", "✍️", "❤️", "🎯", "⚡",
+)
+
+val HabitColorOptions = listOf(
+    "#6750A4", "#0D9488", "#D97706", "#E11D48",
+    "#059669", "#2563EB", "#EA580C", "#7C3AED",
+)
+
+private val ReminderTimePattern = Regex("""^([01]\d|2[0-3]):([0-5]\d)$""")
+
 data class AddContentUiState(
     val name: String = "",
     val description: String = "",
+    val icon: String = HabitIconOptions.first(),
+    val colorHex: String = HabitColorOptions.first(),
+    val reminderTime: String = "08:00",
     val selectedDays: Set<DayOfWeek> = emptySet(),
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
@@ -40,6 +54,18 @@ class AddContentViewModel @Inject constructor(
 
     fun onDescriptionChanged(description: String) {
         _uiState.update { it.copy(description = description) }
+    }
+
+    fun onIconSelected(icon: String) {
+        _uiState.update { it.copy(icon = icon, errorMessage = null) }
+    }
+
+    fun onColorSelected(colorHex: String) {
+        _uiState.update { it.copy(colorHex = colorHex, errorMessage = null) }
+    }
+
+    fun onReminderTimeChanged(reminderTime: String) {
+        _uiState.update { it.copy(reminderTime = reminderTime, errorMessage = null) }
     }
 
     fun onDayToggled(day: DayOfWeek) {
@@ -68,13 +94,17 @@ class AddContentViewModel @Inject constructor(
                     name = currentState.name.trim(),
                     description = currentState.description.trim().ifBlank { null },
                     daysOfWeek = currentState.selectedDays,
+                    icon = currentState.icon,
+                    colorHex = currentState.colorHex,
+                    reminderTime = currentState.reminderTime.trim().ifBlank { null },
                 )
                 _habitSaved.emit(Unit)
+                _uiState.update { it.copy(isSaving = false) }
             } catch (_: Exception) {
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        errorMessage = "No se pudo guardar el hábito. Inténtalo de nuevo.",
+                        errorMessage = "Could not save the habit. Please try again.",
                     )
                 }
             }
@@ -83,8 +113,10 @@ class AddContentViewModel @Inject constructor(
 
     private fun validate(state: AddContentUiState): String? {
         return when {
-            state.name.isBlank() -> "El nombre del hábito es obligatorio."
-            state.selectedDays.isEmpty() -> "Selecciona al menos un día de la semana."
+            state.name.isBlank() -> "Habit name is required."
+            state.selectedDays.isEmpty() -> "Select at least one day of the week."
+            state.reminderTime.isNotBlank() && !ReminderTimePattern.matches(state.reminderTime.trim()) ->
+                "Reminder time must use HH:mm format."
             else -> null
         }
     }

@@ -11,6 +11,7 @@ import com.marta.habittracker.view.screens.add_content.AddContentScreen
 import com.marta.habittracker.view.screens.detail.HabitDetailScreen
 import com.marta.habittracker.view.screens.home.HomeScreen
 import com.marta.habittracker.view.screens.profile.ProfileScreen
+import com.marta.habittracker.view.screens.stats.StatsScreen
 
 @Composable
 fun NavigationBottomWrapper(modifier: Modifier = Modifier, navHostController: NavHostController) {
@@ -18,14 +19,16 @@ fun NavigationBottomWrapper(modifier: Modifier = Modifier, navHostController: Na
 
         composable<TabHome> {
             HomeScreen(
-                onHabitClick = { id ->
-                    // Navegamos usando la clase HabitDetail
-                    navHostController.navigate(TabDetail(habitId = id))
-                }
+                onAdd = { navHostController.navigate(TabAddContent) },
             )
         }
 
-        composable<TabAddContent> { AddContentScreen() }
+        composable<TabStats> { StatsScreen() }
+        composable<TabAddContent> {
+            AddContentScreen(
+                onBack = { navHostController.popBackStack() },
+            )
+        }
         composable<TabProfile> { ProfileScreen() }
 
         composable<TabDetail> {
@@ -33,7 +36,5 @@ fun NavigationBottomWrapper(modifier: Modifier = Modifier, navHostController: Na
                 onBack = { navHostController.popBackStack() }
             )
         }
-
-
     }
 }

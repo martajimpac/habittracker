@@ -1,43 +1,46 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.marta.habittracker.view.screens.bottom_nav_screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.marta.habittracker.R
-import com.marta.habittracker.view.core.components.CustomBadgeBox
+import com.marta.habittracker.ui.theme.HabitOnSurfaceVariant
+import com.marta.habittracker.ui.theme.HabitPrimary
+import com.marta.habittracker.ui.theme.HabitSurface
+import com.marta.habittracker.ui.theme.HabitTermsBg
 import com.marta.habittracker.view.core.navigation.BottomNavigation
 import com.marta.habittracker.view.core.navigation.BottomNavigation.Companion.tabBottomItemsList
 import com.marta.habittracker.view.core.navigation.NavigationBottomWrapper
 
 @Composable
 fun BottomNavScreen(bottomNavViewModel: BottomNavViewModel = hiltViewModel()) {
-
     val tabNavController = rememberNavController()
     val navStackEntry by tabNavController.currentBackStackEntryAsState()
     val destination = navStackEntry?.destination
@@ -47,85 +50,79 @@ fun BottomNavScreen(bottomNavViewModel: BottomNavViewModel = hiltViewModel()) {
     } ?: BottomNavigation.TabHome
 
     Scaffold(
-        topBar = { MyToolbar() },
         bottomBar = {
-            MyBottomBar(
+            HabitBottomBar(
                 selectedTab = selectedTab,
-                navHost = tabNavController
+                navHost = tabNavController,
             )
-        }
+        },
+        containerColor = HabitSurface,
     ) { innerPadding ->
         NavigationBottomWrapper(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
-            navHostController = tabNavController
+            navHostController = tabNavController,
         )
     }
 }
 
 @Composable
-fun MyBottomBar(selectedTab: BottomNavigation, navHost: NavHostController) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.background,
-        tonalElevation = 8.dp
+fun HabitBottomBar(selectedTab: BottomNavigation, navHost: NavHostController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .border(width = 1.dp, color = HabitPrimary.copy(alpha = 0.1f))
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         tabBottomItemsList.forEach { tabItem ->
             val isSelected = tabItem == selectedTab
-            NavigationBarItem(
-                selected = isSelected,
-                icon = {
-                    Icon(
-                        modifier = Modifier.size(26.dp),
-                        imageVector = if (isSelected)
-                            tabItem.iconSelected
-                        else
-                            tabItem.iconUnselected,
-                        contentDescription = null
-                    )
-                },
-                label = { 
-                    Text(
-                        text = stringResource(tabItem.label),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    ) 
-                },
-                onClick = {
-                    if (!isSelected) {
-                        navHost.navigate(tabItem.tabScreen) {
-                            popUpTo(navHost.graph.startDestinationId) {
-                                saveState = true
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {
+                            if (!isSelected) {
+                                navHost.navigate(tabItem.tabScreen) {
+                                    popUpTo(navHost.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                        },
+                    )
+                    .padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (isSelected) HabitTermsBg else Color.Transparent)
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = if (isSelected) tabItem.iconSelected else tabItem.iconUnselected,
+                        contentDescription = null,
+                        tint = if (isSelected) HabitPrimary else HabitOnSurfaceVariant,
+                    )
                 }
-            )
+                Text(
+                    text = stringResource(tabItem.label),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    color = if (isSelected) HabitPrimary else HabitOnSurfaceVariant,
+                )
+            }
         }
     }
 }
-
-@Composable
-fun MyToolbar() {
-    TopAppBar(
-        modifier = Modifier.padding(end = 16.dp), colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
-        ), title = {
-            Icon(
-                painter = painterResource(R.drawable.ic_instagram_title),
-                contentDescription = "InstaDev Title logo",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .height(44.dp)
-                    .padding(top = 4.dp)
-            )
-        }, actions = {
-            CustomBadgeBox(painter = painterResource(R.drawable.ic_like), notificationNumber = 2)
-            Spacer(Modifier.width(16.dp))
-            CustomBadgeBox(painter = painterResource(R.drawable.ic_send), notificationNumber = 1)
-        })
-}
-

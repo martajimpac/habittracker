@@ -7,8 +7,8 @@
   ],
   "rules": [
     "Clean Architecture with MVVM",
-    "UI never accesses repositories directly",
-    "ViewModels communicate with Use Cases when present",
+    "Compose screens never access repositories directly; ViewModels may use repository interfaces",
+    "ViewModels communicate with Use Cases when present, otherwise repositories are fine",
     "Repository interfaces in domain, implementations in data",
     "Dependencies point inward",
     "Prefer constructor injection with Hilt",
@@ -17,5 +17,5 @@
     "Prefer fakes over mocks for simple dependencies"
   ],
   "created_at": "2026-07-13T13:48:00Z",
-  "updated_at": "2026-07-15T10:18:57Z"
+  "updated_at": "2026-07-22T09:53:00Z"
 }

@@ -16,4 +16,8 @@ interface AuthRepository {
     ): DataResult<User, AppError>
 
     suspend fun isLoggedIn(): Boolean
+
+    suspend fun getCurrentUserDisplayName(): String
+
+    suspend fun getCurrentUserEmail(): String
 }

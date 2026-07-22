@@ -38,6 +38,6 @@ fun Long.toInstant(): Instant = Instant.ofEpochMilli(this)
 
 fun Instant.toEpochMillis(): Long = this.toEpochMilli()
 
-fun LocalDate.toKotlin(): KotlinLocalDate = KotlinLocalDate(this.year, this.monthValue, this.dayOfMonth)
+fun LocalDate.toKotlin(): KotlinLocalDate = KotlinLocalDate.parse(this.toString())
 
-fun KotlinLocalDate.toJava(): LocalDate = LocalDate.of(this.year, this.monthNumber, this.dayOfMonth)
+fun KotlinLocalDate.toJava(): LocalDate = LocalDate.parse(this.toString())

@@ -1,11 +1,11 @@
 package com.marta.habittracker.data.local.database
 
-import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import com.marta.habittracker.data.local.database.entities.HabitEntity
 import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
 import com.marta.habittracker.data.local.database.mappers.HabitMapper
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -31,21 +31,6 @@ class HabitRepositoryImpl @Inject constructor(
                         habit.copy(isCompleted = isCompleted)
                     }
             }
-
-
-        /*.onStart {
-            refreshScope.launch {
-                if (!refreshMutex.tryLock()) return@launch
-                try {
-                    refreshProduct()
-                } catch (e: Exception) {
-                } finally {
-                    refreshMutex.unlock()
-                }
-            }
-        }.catch {
-            // Log importante
-        }*/
     }
 
     override fun getAllHabitsWithRecords(): Flow<List<Habit>> =
@@ -62,18 +47,18 @@ class HabitRepositoryImpl @Inject constructor(
             val record = HabitRecordEntity(
                 habitId = habitId,
                 date = date,
-                isCompleted = true
+                isCompleted = true,
             )
             habitDao.upsertHabitRecord(record)
         }
     }
 
-    override fun getHabitById(id: Long): Flow<HabitEntity?> = habitDao.getHabitById(id)
+    override fun getHabitById(id: String): Flow<HabitEntity?> = habitDao.getHabitById(id)
 
-    override fun getRecordsForHabit(habitId: Long): Flow<List<HabitRecordEntity>> =
+    override fun getRecordsForHabit(habitId: String): Flow<List<HabitRecordEntity>> =
         habitDao.getRecordsForHabit(habitId)
 
-    override suspend fun insertHabit(habit: HabitEntity): Long = habitDao.insertHabit(habit)
+    override suspend fun insertHabit(habit: HabitEntity) = habitDao.insertHabit(habit)
 
     override suspend fun updateHabit(habit: HabitEntity) = habitDao.updateHabit(habit)
 

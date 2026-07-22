@@ -9,13 +9,12 @@ import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
 @Database(
     entities = [
         HabitEntity::class,
-        HabitRecordEntity::class
+        HabitRecordEntity::class,
     ],
-    version = 1,
-    exportSchema = false)
+    version = 20260127,
+    exportSchema = false,
+)
 @TypeConverters(Converters::class)
 abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
 }
-
-

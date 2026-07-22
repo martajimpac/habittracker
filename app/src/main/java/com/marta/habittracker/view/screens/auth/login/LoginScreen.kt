@@ -22,14 +22,11 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -38,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,15 +43,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.ui.theme.HabitField
 import com.marta.habittracker.ui.theme.HabitOnSurface
 import com.marta.habittracker.ui.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.ui.theme.HabitPrimary
-import com.marta.habittracker.ui.theme.HabitPrimaryLight
 import com.marta.habittracker.ui.theme.HabitSurface
+import com.marta.habittracker.view.core.components.HabitButton
+import com.marta.habittracker.view.core.components.HabitButtonVariant
 
 @Composable
 fun LoginScreen(
@@ -153,16 +150,13 @@ fun LoginScreen(
                 keyboardType = KeyboardType.Password,
             )
 
-            TextButton(
+            HabitButton(
+                text = stringResource(R.string.login_forgot_password),
                 onClick = { /* UI only */ },
                 modifier = Modifier.align(Alignment.End),
-            ) {
-                Text(
-                    text = stringResource(R.string.login_forgot_password),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = HabitPrimary,
-                )
-            }
+                variant = HabitButtonVariant.TextLink,
+                fillMaxWidth = false,
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -176,42 +170,15 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Button(
+            HabitButton(
+                text = stringResource(
+                    if (uiState.isLoading) R.string.login_signing_in else R.string.login_sign_in
+                ),
                 onClick = loginViewModel::onClickSelected,
                 enabled = uiState.isLoginEnabled && !uiState.isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = HabitPrimaryLight,
-                    contentColor = Color.White,
-                    disabledContentColor = Color.White,
-                ),
-                contentPadding = ButtonDefaults.ContentPadding,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            if (uiState.isLoading) {
-                                Brush.linearGradient(listOf(HabitPrimaryLight, HabitPrimaryLight))
-                            } else {
-                                Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight))
-                            }
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (uiState.isLoading) R.string.login_signing_in else R.string.login_sign_in
-                        ),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
-            }
+                loading = uiState.isLoading,
+                variant = HabitButtonVariant.Primary,
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 

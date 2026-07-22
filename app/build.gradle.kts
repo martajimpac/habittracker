@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,9 +8,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.kover)
+    alias(libs.plugins.google.services)
 }
-
-import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
@@ -22,7 +23,7 @@ room {
 
 android {
     namespace = "com.marta.habittracker"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.marta.habittracker"
@@ -61,6 +62,7 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            freeCompilerArgs.add("-Xdeprecation")
         }
     }
     buildFeatures {
@@ -91,6 +93,7 @@ dependencies {
     //DI
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation)
+    implementation(libs.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.compiler)
 
@@ -116,6 +119,11 @@ dependencies {
     implementation(libs.auth)
     implementation(libs.storage)
     implementation(libs.ktor.client.android)
+
+    //Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
 
     //Testing
     testImplementation(libs.junit)

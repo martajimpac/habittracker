@@ -6,9 +6,12 @@ import java.time.DayOfWeek
 
 @Entity(tableName = "habits")
 data class HabitEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey val id: String,
     val name: String,
-    val description: String?,
+    val description: String? = null,
     val daysOfWeek: List<DayOfWeek>,
-    val createdAt: Long = System.currentTimeMillis()
+    val icon: String = "💧",
+    val colorHex: String = "#6750A4",
+    val reminderTime: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
 )

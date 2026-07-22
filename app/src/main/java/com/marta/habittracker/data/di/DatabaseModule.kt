@@ -24,7 +24,9 @@ object DatabaseModule {
             context,
             HabitDatabase::class.java,
             "habit_db",
-        ).build()
+        )
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
     }
 
     @Provides

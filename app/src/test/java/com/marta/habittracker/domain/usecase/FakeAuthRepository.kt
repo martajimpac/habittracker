@@ -10,6 +10,8 @@ class FakeAuthRepository(
     private val loginResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
     private val registerResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
     private val loggedIn: Boolean = false,
+    private val displayName: String = defaultUser.name,
+    private val email: String = defaultUser.nickname,
 ) : AuthRepository {
 
     var loginCalls: Int = 0
@@ -46,6 +48,10 @@ class FakeAuthRepository(
     }
 
     override suspend fun isLoggedIn(): Boolean = loggedIn
+
+    override suspend fun getCurrentUserDisplayName(): String = displayName
+
+    override suspend fun getCurrentUserEmail(): String = email
 
     companion object {
         val defaultUser = User(
