@@ -5,6 +5,9 @@
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_get_started">Get Started 🚀</string>
+    <string name="onboarding_slide1_emoji">🎯</string>
+    <string name="onboarding_slide2_emoji">📊</string>
+    <string name="onboarding_slide3_emoji">🏆</string>
     <string name="onboarding_slide1_title">Build Habits That\nActually Stick</string>
     <string name="onboarding_slide1_description">Track your daily routines and watch consistency transform into lasting change.</string>
     <string name="onboarding_slide2_title">Visualize Your\nProgress</string>
@@ -24,6 +27,8 @@
     <string name="login_signing_in">Signing in…</string>
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_sign_up">Sign up</string>
+    <string name="login_logo_emoji">🎯</string>
+    <string name="login_error_unable_to_sign_in">Unable to sign in. Check your credentials.</string>
 
     <!-- Legacy login keys kept for compatibility -->
     <string name="login_screen_header_text_spain">Español (España)</string>
@@ -49,6 +54,19 @@
     <string name="register_privacy_policy">Privacy Policy</string>
     <string name="register_create_account">Create Account</string>
     <string name="register_creating_account">Creating account…</string>
+
+    <!-- Auth / common errors (user-facing) -->
+    <string name="error_login_invalid_credentials">Email o contraseña incorrectos.</string>
+    <string name="error_login_email_not_verified">Debes confirmar tu email antes de iniciar sesión.</string>
+    <string name="error_register_invalid_email">Introduce un correo electrónico válido.</string>
+    <string name="error_register_weak_password">La contraseña debe tener al menos 8 caracteres, con letras y números.</string>
+    <string name="error_register_email_already_registered">Este correo ya está registrado.</string>
+    <string name="error_register_email_confirmation_required">Revisa tu correo para confirmar la cuenta antes de iniciar sesión.</string>
+    <string name="error_common_network">Error de conexión. Comprueba tu red.</string>
+    <string name="error_common_unauthorized">No tienes permiso para acceder.</string>
+    <string name="error_common_unknown">No se pudo completar la operación. Inténtalo de nuevo.</string>
+    <string name="error_no_internet">No internet connection. Try again when you are online.</string>
+    <string name="error_sync_failed">Could not sync habits. Please try again.</string>
 
     <!-- Legacy register keys -->
     <string name="register_screen_title_phone">¿Cuál es tu número de móvil?</string>
@@ -92,6 +110,11 @@
     <string name="home_past_message">%1$d of %2$d habits completed · %3$d%%</string>
     <string name="home_add_habit">Add habit</string>
     <string name="home_all_day">All day</string>
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="user_fallback_name">there</string>
+    <string name="user_avatar_initials_fallback">?</string>
 
     <!-- Add habit -->
     <string name="add_habit_title">New Habit</string>
@@ -107,6 +130,10 @@
     <string name="add_habit_reminder_time">Reminder Time</string>
     <string name="add_habit_frequency">Frequency</string>
     <string name="add_habit_create">Create Habit</string>
+    <string name="add_habit_error_name_required">Habit name is required.</string>
+    <string name="add_habit_error_days_required">Select at least one day of the week.</string>
+    <string name="add_habit_error_reminder_format">Reminder time must use HH:mm format.</string>
+    <string name="add_habit_error_save_failed">Could not save the habit. Please try again.</string>
 
     <!-- Detail -->
     <string name="detail_loading">Loading…</string>
@@ -118,6 +145,19 @@
     <string name="detail_completed">Completed</string>
     <string name="detail_calendar_placeholder">Completion history</string>
     <string name="detail_edit_habit">Edit habit</string>
+
+    <!-- Activity heatmap -->
+    <string name="activity_title">Activity</string>
+    <string name="activity_less">Less</string>
+    <string name="activity_more">More</string>
+    <string name="activity_week_label">W%1$d</string>
+    <string name="activity_day_mon">M</string>
+    <string name="activity_day_tue">T</string>
+    <string name="activity_day_wed">W</string>
+    <string name="activity_day_thu">T</string>
+    <string name="activity_day_fri">F</string>
+    <string name="activity_day_sat">S</string>
+    <string name="activity_day_sun">S</string>
 
     <!-- Stats -->
     <string name="stats_title">Stats</string>
@@ -137,6 +177,13 @@
     <string name="profile_mock_streak_value">14</string>
     <string name="profile_mock_completed_value">89</string>
     <string name="profile_mock_habits_value">6</string>
+
+    <!-- Accessibility / chrome -->
+    <string name="cd_toolbar_actions">Toolbar actions</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Habit Tracker Notifications</string>
+    <string name="notification_default_title">Habit Tracker</string>
 
     <!-- Legacy tab keys -->
     <string name="tab_add_content">Add</string>

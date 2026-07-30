@@ -1,4 +1,4 @@
-A# HabitTracker Spec
+# HabitTracker Spec
 
 ## Objetivo
 
@@ -27,6 +27,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - No debe existir mas de un registro de cumplimiento para el mismo habito y fecha.
 - Retrofit debe usar exclusivamente HTTPS para endpoints remotos.
 - Los tokens de autenticacion deben enviarse en headers seguros, no en query params ni logs.
+- Habitos y registros se sincronizan con Supabase (online-first): Supabase es la fuente de verdad en escrituras; Room es cache de lectura (tambien offline).
 
 ## Requisitos Funcionales Basicos
 
@@ -37,9 +38,21 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - El usuario puede eliminar habitos y sus registros asociados.
 - El usuario puede crear un habito con nombre, descripcion opcional, icono, color, hora de recordatorio opcional y dias de la semana.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
-- Los habitos se leen desde Room para uso offline.
-- El id del habito es un UUID generado en el cliente (String), compartido entre Room y el futuro sync con Supabase (sin `remoteId` separado; sin sync en este alcance).
+- Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
+- Escritura (crear, completar, editar, borrar): requiere conexion a internet. Sin red, la operacion no modifica Room ni Supabase y la UI muestra un error de "sin internet" (`strings.xml`).
+- Con red: la escritura va primero a Supabase; solo si el remoto OK se actualiza Room. Si falla el remoto: log (`Log.e`), error en UI, Room no cambia.
+- El id del habito es un UUID generado en el cliente (String), compartido entre Room y Supabase (sin `remoteId` separado).
 - Detalle de diseno: `docs/designs/2026-07-21-add-habit-figma-design.md`.
+
+### Sync de habitos (Supabase)
+
+- Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS por `user_id = auth.uid()`.
+- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `created_at`, `updated_at`, `deleted_at` (soft delete).
+- `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
+- Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
+- Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
+- Room almacena los mismos campos de sync (`updatedAt` / `deletedAt`) para alinear con el remoto.
+- Fuera de alcance: outbox, dual-write offline, WorkManager periodico, UI rica de sync, resolucion manual de conflictos.
 
 ### Profile (tab)
 
@@ -50,6 +63,16 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Sign Out es solo UI; sin logout real en este alcance.
 - Todos los textos de Profile van en ingles (`strings.xml`).
 - `ProfileViewModel` solo expone nombre y email; no maneja clicks de menu ni sign-out.
+
+### Activity heatmap
+
+- Componente reutilizable `ActivityHeatmap` (grid 4 semanas × 7 dias, lun–dom).
+- Ventana: ultimas 4 semanas rolling alineadas a lunes (W4 = semana actual).
+- Colores invertidos vs mock oscuro: fondo claro; celda blanca = Less / no completado; morado oscuro = More / completado (escala intermedia en Stats).
+- **Detail → tab Calendar:** intensidad binaria del habito (0 o 1).
+- **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados.
+- Leyenda Less → More; etiqueta de hoy con borde sutil opcional.
+- Tab Stats de Detail mantiene el anillo de %% overall (sin cambiar en este alcance).
 
 ## Requisitos de Seguridad
 
@@ -74,6 +97,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Los tokens deben viajar en el header `Authorization`.
 - Los tokens no deben viajar en URL, query params o bodies innecesarios.
 - Los interceptores no deben escribir tokens ni credenciales en logs.
+- Las politicas RLS de Supabase deben impedir que un usuario autenticado lea o escriba filas de otro `user_id`.
 
 ### Secretos
 
@@ -87,6 +111,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Unit tests de red para verificar HTTPS y manejo seguro de tokens.
 - Unit tests o scripts de seguridad para deteccion de secretos hardcodeados.
 - Instrumented tests de Room para validar integridad referencial y unicidad de registros.
+- Unit tests del comportamiento online-first: sin red las mutaciones fallan sin tocar Room; con remoto OK se actualiza cache.
 
 ## CI/CD
 
@@ -104,4 +129,3 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Hilt debe tener un binding explicito entre `domain.repository.HabitRepository` y `HabitRepositoryImpl`.
 - Los ViewModels deben depender del contrato de dominio, no de una implementacion de data.
 - La version de KSP debe alinearse con la version del plugin de Kotlin.
-

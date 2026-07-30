@@ -1,8 +1,9 @@
 package com.marta.habittracker.domain.usecase
 
-import com.marta.habittracker.data.local.database.entities.HabitEntity
-import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
+import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.repository.HabitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -10,26 +11,37 @@ import java.time.LocalDate
 
 class FakeHabitRepository : HabitRepository {
 
-    val insertedHabits = mutableListOf<HabitEntity>()
+    val insertedHabits = mutableListOf<Habit>()
     var insertCalls: Int = 0
         private set
+    var insertResult: DataResult<Unit, AppError> = DataResult.Success(Unit)
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> = flowOf(emptyList())
 
     override fun getAllHabitsWithRecords(): Flow<List<Habit>> = flowOf(emptyList())
 
-    override suspend fun toggleHabitCompletion(habit: Habit, date: LocalDate) = Unit
+    override suspend fun toggleHabitCompletion(
+        habit: Habit,
+        date: LocalDate,
+    ): DataResult<Unit, AppError> = DataResult.Success(Unit)
 
-    override fun getHabitById(id: String): Flow<HabitEntity?> = flowOf(null)
+    override fun getHabitById(id: String): Flow<Habit?> = flowOf(null)
 
-    override fun getRecordsForHabit(habitId: String): Flow<List<HabitRecordEntity>> = flowOf(emptyList())
+    override fun getRecordsForHabit(habitId: String): Flow<List<HabitRecord>> = flowOf(emptyList())
 
-    override suspend fun insertHabit(habit: HabitEntity) {
+    override suspend fun insertHabit(habit: Habit): DataResult<Unit, AppError> {
         insertCalls++
-        insertedHabits.add(habit)
+        if (insertResult is DataResult.Success) {
+            insertedHabits.add(habit)
+        }
+        return insertResult
     }
 
-    override suspend fun updateHabit(habit: HabitEntity) = Unit
+    override suspend fun updateHabit(habit: Habit): DataResult<Unit, AppError> =
+        DataResult.Success(Unit)
 
-    override suspend fun deleteHabit(habit: HabitEntity) = Unit
+    override suspend fun deleteHabit(habit: Habit): DataResult<Unit, AppError> =
+        DataResult.Success(Unit)
+
+    override suspend fun syncFromRemote(): DataResult<Unit, AppError> = DataResult.Success(Unit)
 }

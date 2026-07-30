@@ -18,6 +18,7 @@ data class Habit(
 )
 
 data class HabitRecord(
+    val id: String = "",
     val habitId: String,
     val date: LocalDate,
     val isCompleted: Boolean,

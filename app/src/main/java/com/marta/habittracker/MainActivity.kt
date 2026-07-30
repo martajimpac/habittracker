@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.marta.habittracker.ui.theme.InstaDevTheme
-import com.marta.habittracker.view.core.navigation.NavigationWrapper
+import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.navigation.NavigationWrapper
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

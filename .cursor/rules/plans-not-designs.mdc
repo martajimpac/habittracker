@@ -1,0 +1,21 @@
+---
+description: Persist implementation plans in docs/plans; never use docs/designs
+alwaysApply: true
+---
+
+# Plans vs design docs
+
+## Do
+
+- When creating an implementation plan (`mobiai-mobile-planning`), **always** write it to `docs/plans/YYYY-MM-DD-<feature-name>.md` unless the user explicitly says not to save that plan.
+- Create `docs/plans/` if missing.
+- Stage the plan file with the rest of the task files.
+
+## Do not
+
+- Do **not** create `docs/designs/` (or dated design-doc folders) for brainstorming/design capture.
+- Capture approved design requirements in `spec.md` (or `specs/` / `spec/`) and important architecture decisions in `.mobiai/brain/` — not in `docs/designs/`.
+
+## Clarification
+
+Rejecting design docs ≠ rejecting plans. Prefer `docs/plans/` even if the user previously asked to avoid `docs/designs/`.

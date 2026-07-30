@@ -1,0 +1,34 @@
+---
+description: All user-facing copy must live in strings.xml — never hardcode UI text
+alwaysApply: true
+---
+
+# Android strings — always use resources
+
+Every **user-visible** string (UI copy, errors shown to users, content descriptions, notification titles/channel names, greetings, placeholders, empty states) **must** come from `app/src/main/res/values/strings.xml` (and locale variants under `values-xx/` when added).
+
+## Required
+
+- Compose: `stringResource(R.string.…)` / `pluralStringResource`
+- Views / services / non-Compose: `context.getString(R.string.…)`
+- ViewModels: expose `@StringRes Int` (or resolve via `@ApplicationContext` `getString`) — **never** hardcode message text in Kotlin
+- Domain stays free of Android `R` and of hardcoded user copy; map errors to string resources in `presentation`
+
+## Forbidden
+
+- Hardcoded user-facing literals in Compose, ViewModels, Activities, Services, helpers used by UI
+- Putting UI copy in domain models or repositories (use empty/null and let presentation apply `R.string.…` fallbacks)
+
+## Allowed exceptions (not user copy)
+
+- Log tags, SQL, DataStore/Room keys, API paths, JSON field names
+- Animation labels (`animate*AsState(label = …)`)
+- Debug/`toString()` overrides, format patterns (`yyyy-MM-dd`, `HH:mm`)
+- Navigation argument keys, preference keys, channel **IDs** (not display names)
+- Icon/emoji option lists that are data values (still prefer resources when shown as standalone UI chrome)
+
+## When adding or changing UI text
+
+1. Add or update the entry in `strings.xml` first.
+2. Reference it with `R.string.…` at the call site.
+3. Do not leave the old literal in code “temporarily”.

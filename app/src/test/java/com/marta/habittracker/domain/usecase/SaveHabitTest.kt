@@ -1,6 +1,8 @@
 package com.marta.habittracker.domain.usecase
 
+import com.marta.habittracker.domain.DataResult
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DayOfWeek as KotlinDayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -16,7 +18,7 @@ class SaveHabitTest {
         val days = setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)
         val habitId = "11111111-1111-1111-1111-111111111111"
 
-        useCase(
+        val result = useCase(
             name = "Leer",
             description = "30 minutos",
             daysOfWeek = days,
@@ -26,12 +28,13 @@ class SaveHabitTest {
             id = habitId,
         )
 
+        assertTrue(result is DataResult.Success)
         assertEquals(1, repository.insertCalls)
         val inserted = repository.insertedHabits.single()
         assertEquals(habitId, inserted.id)
         assertEquals("Leer", inserted.name)
         assertEquals("30 minutos", inserted.description)
-        assertEquals(days.toList(), inserted.daysOfWeek)
+        assertEquals(setOf(KotlinDayOfWeek.MONDAY, KotlinDayOfWeek.FRIDAY), inserted.daysOfWeek)
         assertEquals("📚", inserted.icon)
         assertEquals("#D97706", inserted.colorHex)
         assertEquals("09:00", inserted.reminderTime)
@@ -42,15 +45,16 @@ class SaveHabitTest {
         val repository = FakeHabitRepository()
         val useCase = SaveHabit(repository)
 
-        val id = useCase(
+        val result = useCase(
             name = "Correr",
             description = null,
             daysOfWeek = setOf(DayOfWeek.TUESDAY),
-            icon = "🏃",
+            icon = "directions_run",
             colorHex = "#059669",
             reminderTime = null,
         )
 
+        val id = (result as DataResult.Success).data
         assertEquals(id, repository.insertedHabits.single().id)
         assertTrue(UUID.fromString(id).toString() == id)
     }
@@ -61,17 +65,17 @@ class SaveHabitTest {
         val useCase = SaveHabit(repository)
         val habitId = "22222222-2222-2222-2222-222222222222"
 
-        val id = useCase(
+        val result = useCase(
             name = "Correr",
             description = null,
             daysOfWeek = setOf(DayOfWeek.TUESDAY),
-            icon = "🏃",
+            icon = "directions_run",
             colorHex = "#059669",
             reminderTime = "06:00",
             id = habitId,
         )
 
-        assertEquals(habitId, id)
+        assertEquals(habitId, (result as DataResult.Success).data)
     }
 
     @Test
@@ -95,7 +99,7 @@ class SaveHabitTest {
     }
 
     @Test
-    fun `invoke converts daysOfWeek set to list for persistence`() = runTest {
+    fun `invoke converts java daysOfWeek set to kotlinx set for domain`() = runTest {
         val repository = FakeHabitRepository()
         val useCase = SaveHabit(repository)
         val days = linkedSetOf(
@@ -115,7 +119,7 @@ class SaveHabitTest {
         )
 
         assertEquals(
-            listOf(DayOfWeek.WEDNESDAY, DayOfWeek.MONDAY),
+            setOf(KotlinDayOfWeek.WEDNESDAY, KotlinDayOfWeek.MONDAY),
             repository.insertedHabits.single().daysOfWeek,
         )
     }

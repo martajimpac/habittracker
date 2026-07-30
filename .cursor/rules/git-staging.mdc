@@ -1,0 +1,43 @@
+---
+description: Always stage every file touched by the current task before ending a turn
+alwaysApply: true
+---
+
+# Git staging — always add task files
+
+At the **end of every task** (and before claiming the work is done or asking what to do next), stage **all** files that this task created, modified, deleted, or renamed.
+
+## Required end-of-task checklist
+
+1. Identify every path touched in this task (source, tests, resources, `AGENTS.md`, `spec.md` / `specs/`, `.mobiai/`, Gradle, docs, skills under the repo if any).
+2. Run `git add -- <each-path>` (or `git add -A -- <paths>`) for those files.
+3. Run `git status --short`.
+4. If any task-related change is still unstaged or untracked, stage it and re-check.
+5. Only then finish the response.
+
+## Do stage
+
+- Kotlin/Java, XML/`strings.xml`, Gradle, manifests
+- `AGENTS.md`, `spec.md`, `specs/`, `.mobiai/**`
+- Moves/renames (`git mv` or equivalent) and deletions
+- Test sources under `app/src/test` and `androidTest`
+
+## Do NOT stage
+
+- Secrets: `.env`, `local.properties`, credential JSON, keystores, API keys
+- Pure build junk the task did not intend to version: `app/build/`, `.gradle/` caches, compiler session files under `.kotlin/`
+- Changes the agent did **not** make and that are clearly unrelated WIP belonging to another task
+
+## Conflict with “narrow staging”
+
+If another rule says “never stage unrelated changes”, interpret it as: **do not stage other people’s unrelated WIP**. It does **not** mean “only stage a subset of this task’s files”. For this task’s own edits, staging must be complete.
+
+## Prefer broad path globs for the task
+
+Prefer staging by area once work spans layers, e.g.:
+
+```bash
+git add -- AGENTS.md spec.md .mobiai app/src/main app/src/test
+```
+
+Avoid ending a task after only `git add app/src/main/java/.../OneFile.kt` when the same task also changed docs or other packages.

@@ -2,13 +2,14 @@ package com.marta.habittracker.data.security
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
-import com.marta.habittracker.data.local.database.HabitDatabase
-import com.marta.habittracker.data.local.database.entities.HabitEntity
-import com.marta.habittracker.data.local.database.entities.HabitRecordEntity
+import com.marta.habittracker.data.local.room.HabitDatabase
+import com.marta.habittracker.data.local.room.entities.HabitEntity
+import com.marta.habittracker.data.local.room.entities.HabitRecordEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -33,57 +34,68 @@ class HabitDaoSecurityInstrumentedTest {
     }
 
     @Test
-    fun habitRecordsAreDeletedWhenHabitIsDeleted() = runBlocking {
+    fun softDeletedHabitIsHiddenFromActiveQueries() = runBlocking {
         val dao = database.habitDao()
         val habitId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-        dao.insertHabit(
-            HabitEntity(
-                id = habitId,
-                name = "Meditation",
-                description = "Private habit",
-                daysOfWeek = listOf(DayOfWeek.MONDAY),
-                icon = "🧘",
-                colorHex = "#6750A4",
-                reminderTime = "07:00",
-            ),
+        val habit = HabitEntity(
+            id = habitId,
+            name = "Meditation",
+            description = "Private habit",
+            daysOfWeek = listOf(DayOfWeek.MONDAY),
+            icon = "🧘",
+            colorHex = "#6750A4",
+            reminderTime = "07:00",
         )
-
+        dao.insertHabit(habit)
         dao.upsertHabitRecord(
             HabitRecordEntity(
+                id = "rec-1",
                 habitId = habitId,
                 date = LocalDate.of(2026, 6, 10),
                 isCompleted = true,
             ),
         )
 
-        val habit = dao.getHabitById(habitId).first()!!
-        dao.deleteHabit(habit)
+        dao.insertHabit(habit.copy(deletedAt = System.currentTimeMillis()))
 
-        assertTrue(
-            "Habit records must not remain orphaned after deleting the parent habit",
-            dao.getRecordsForHabit(habitId).first().isEmpty(),
-        )
+        assertNull(dao.getHabitById(habitId).first())
+        assertTrue(dao.getHabitsWithRecords().first().isEmpty())
     }
 
     @Test
     fun upsertHabitRecordDoesNotCreateDuplicateCompletionForSameDay() = runBlocking {
         val dao = database.habitDao()
         val habitId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        val recordId = "cccccccc-cccc-cccc-cccc-cccccccccccc"
         dao.insertHabit(
             HabitEntity(
                 id = habitId,
                 name = "Workout",
                 description = null,
                 daysOfWeek = listOf(DayOfWeek.WEDNESDAY),
-                icon = "🏃",
+                icon = "directions_run",
                 colorHex = "#059669",
                 reminderTime = null,
             ),
         )
         val date = LocalDate.of(2026, 6, 10)
 
-        dao.upsertHabitRecord(HabitRecordEntity(habitId = habitId, date = date, isCompleted = true))
-        dao.upsertHabitRecord(HabitRecordEntity(habitId = habitId, date = date, isCompleted = false))
+        dao.upsertHabitRecord(
+            HabitRecordEntity(
+                id = recordId,
+                habitId = habitId,
+                date = date,
+                isCompleted = true,
+            ),
+        )
+        dao.upsertHabitRecord(
+            HabitRecordEntity(
+                id = recordId,
+                habitId = habitId,
+                date = date,
+                isCompleted = false,
+            ),
+        )
 
         val records = dao.getRecordsForHabit(habitId).first()
 
