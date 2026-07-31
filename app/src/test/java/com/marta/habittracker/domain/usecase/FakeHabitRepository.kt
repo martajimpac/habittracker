@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import java.time.LocalDate
 
-class FakeHabitRepository : HabitRepository {
+class FakeHabitRepository(
+    private val allHabitsWithRecords: List<Habit> = emptyList(),
+) : HabitRepository {
 
     val insertedHabits = mutableListOf<Habit>()
     var insertCalls: Int = 0
@@ -18,7 +20,7 @@ class FakeHabitRepository : HabitRepository {
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> = flowOf(emptyList())
 
-    override fun getAllHabitsWithRecords(): Flow<List<Habit>> = flowOf(emptyList())
+    override fun getAllHabitsWithRecords(): Flow<List<Habit>> = flowOf(allHabitsWithRecords)
 
     override suspend fun toggleHabitCompletion(
         habit: Habit,

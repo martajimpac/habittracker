@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -59,7 +60,7 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitTermsBg
 import com.marta.habittracker.presentation.theme.HabitTermsText
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun RegisterScreen(
     registerViewModel: RegisterViewModel = hiltViewModel(),
@@ -74,13 +75,37 @@ fun RegisterScreen(
         }
     }
 
+    RegisterContent(
+        uiState = uiState,
+        onBack = navigateBack,
+        onNameChanged = registerViewModel::onNameChanged,
+        onEmailChanged = registerViewModel::onEmailChanged,
+        onPasswordChanged = registerViewModel::onPasswordChanged,
+        onTogglePasswordVisibility = registerViewModel::onTogglePasswordVisibility,
+        onTermsChecked = registerViewModel::onTermsChecked,
+        onRegisterClicked = registerViewModel::onRegisterClicked,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RegisterContent(
+    uiState: RegisterUiState,
+    onBack: () -> Unit,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onTermsChecked: (Boolean) -> Unit,
+    onRegisterClicked: () -> Unit,
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
                     navigationIcon = {
                         HabitIconButton(
-                            onClick = navigateBack,
+                            onClick = onBack,
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.register_back),
                         )
@@ -116,7 +141,7 @@ fun RegisterScreen(
                 CustomTextField(
                     label = stringResource(R.string.register_name_label),
                     value = uiState.name,
-                    onValueChange = registerViewModel::onNameChanged,
+                    onValueChange = onNameChanged,
                     placeholder = stringResource(R.string.register_name_placeholder),
                 )
 
@@ -125,7 +150,7 @@ fun RegisterScreen(
                 CustomTextField(
                     label = stringResource(R.string.register_email_label),
                     value = uiState.email,
-                    onValueChange = registerViewModel::onEmailChanged,
+                    onValueChange = onEmailChanged,
                     placeholder = stringResource(R.string.register_email_placeholder),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
@@ -135,10 +160,10 @@ fun RegisterScreen(
                 CustomTextField(
                     label = stringResource(R.string.register_password_label),
                     value = uiState.password,
-                    onValueChange = registerViewModel::onPasswordChanged,
+                    onValueChange = onPasswordChanged,
                     placeholder = stringResource(R.string.register_password_placeholder),
                     trailingIcon = {
-                        IconButton(onClick = registerViewModel::onTogglePasswordVisibility) {
+                        IconButton(onClick = onTogglePasswordVisibility) {
                             Icon(
                                 imageVector = if (uiState.isPasswordVisible) {
                                     Icons.Outlined.VisibilityOff
@@ -165,7 +190,7 @@ fun RegisterScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .background(HabitTermsBg)
-                        .clickable { registerViewModel.onTermsChecked(!uiState.termsAccepted) }
+                        .clickable { onTermsChecked(!uiState.termsAccepted) }
                         .padding(12.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
@@ -190,13 +215,25 @@ fun RegisterScreen(
                         text = buildAnnotatedString {
                             append(stringResource(R.string.register_terms_prefix))
                             append(" ")
-                            withStyle(SpanStyle(color = HabitPrimary, fontWeight = FontWeight.Bold)) {
+                            withStyle(
+                                SpanStyle(
+                                    color = HabitPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    textDecoration = TextDecoration.Underline,
+                                ),
+                            ) {
                                 append(stringResource(R.string.register_terms_of_service))
                             }
                             append(" ")
                             append(stringResource(R.string.register_terms_and))
                             append(" ")
-                            withStyle(SpanStyle(color = HabitPrimary, fontWeight = FontWeight.Bold)) {
+                            withStyle(
+                                SpanStyle(
+                                    color = HabitPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    textDecoration = TextDecoration.Underline,
+                                ),
+                            ) {
                                 append(stringResource(R.string.register_privacy_policy))
                             }
                         },
@@ -224,7 +261,7 @@ fun RegisterScreen(
                             R.string.register_create_account
                         }
                     ),
-                    onClick = registerViewModel::onRegisterClicked,
+                    onClick = onRegisterClicked,
                     enabled = uiState.isRegisterEnabled && !uiState.isLoading,
                     loading = uiState.isLoading,
                     variant = HabitButtonVariant.Primary,

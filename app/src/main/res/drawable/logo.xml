@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Rounded square mark (safe zone for adaptive icon) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,30h40c6.627,0 12,5.373 12,12v40c0,6.627 -5.373,12 -12,12H34c-6.627,0 -12,-5.373 -12,-12V42c0,-6.627 5.373,-12 12,-12z" />
+    <!-- Four-pointed star cutout -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M54,40 L58.2,50.8 L69,55 L58.2,59.2 L54,70 L49.8,59.2 L39,55 L49.8,50.8 Z" />
+</vector>

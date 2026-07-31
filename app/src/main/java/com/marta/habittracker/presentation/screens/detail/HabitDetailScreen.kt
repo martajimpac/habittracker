@@ -60,6 +60,20 @@ fun HabitDetailScreen(
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
+
+    HabitDetailContent(
+        habit = habit,
+        completionRate = completionRate,
+        onBack = onBack,
+    )
+}
+
+@Composable
+fun HabitDetailContent(
+    habit: Habit?,
+    completionRate: Float,
+    onBack: () -> Unit,
+) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
     val accent = parseHabitColor(habit?.colorHex ?: "#6750A4")

@@ -1,5 +1,6 @@
 package com.marta.habittracker.data.repository
 
+import android.util.Log
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.LoginError
@@ -20,6 +21,10 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
 ) : AuthRepository {
+
+    companion object {
+        private const val TAG = "AuthRepository"
+    }
 
     override suspend fun doLogin(
         email: String,
@@ -82,6 +87,21 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentUserEmail(): String {
         return supabase.auth.currentUserOrNull()?.email.orEmpty()
+    }
+
+    override suspend fun signOut(): DataResult<Unit, AppError> {
+        return try {
+            Log.d(TAG, "Sign out started")
+            supabase.auth.signOut()
+            Log.d(TAG, "Sign out finished ok")
+            DataResult.Success(Unit)
+        } catch (_: IOException) {
+            Log.e(TAG, "Sign out failed: network")
+            DataResult.Error(AppError.Common.Network)
+        } catch (e: Exception) {
+            Log.e(TAG, "Sign out failed", e)
+            DataResult.Error(AppError.Common.Unknown)
+        }
     }
 
     private fun mapUser(currentUser: UserInfo): User =

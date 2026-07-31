@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,7 +78,35 @@ fun HomeScreen(
     val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
     val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
 
-    val today = viewModel.today
+    HomeContent(
+        habits = habits,
+        allHabits = allHabits,
+        selectedDate = selectedDate,
+        today = viewModel.today,
+        userDisplayName = userDisplayName,
+        actionErrorRes = actionErrorRes,
+        weekDays = viewModel.weekDays,
+        onAdd = onAdd,
+        onDateSelected = viewModel::onDateSelected,
+        onToggleHabit = viewModel::toggleComplete,
+        onClearActionError = viewModel::clearActionError,
+    )
+}
+
+@Composable
+fun HomeContent(
+    habits: List<Habit>,
+    allHabits: List<Habit>,
+    selectedDate: LocalDate,
+    today: LocalDate,
+    userDisplayName: String,
+    actionErrorRes: Int?,
+    weekDays: List<LocalDate>,
+    onAdd: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
+    onToggleHabit: (Habit) -> Unit,
+    onClearActionError: () -> Unit,
+) {
     val isToday = selectedDate == today
     val isPast = selectedDate.isBefore(today)
     val isFuture = selectedDate.isAfter(today)
@@ -107,9 +136,9 @@ fun HomeScreen(
                 dayLabel = dayLabel,
                 greetingRes = greetingRes,
                 userDisplayName = userDisplayName,
-                weekDays = viewModel.weekDays,
+                weekDays = weekDays,
                 allHabits = allHabits,
-                onDateSelected = viewModel::onDateSelected,
+                onDateSelected = onDateSelected,
             )
         },
         floatingActionButton = {
@@ -143,7 +172,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { viewModel.clearActionError() },
+                                .clickable(onClick = onClearActionError),
                         )
                     }
                 }
@@ -207,7 +236,7 @@ fun HomeScreen(
                             habit = habit,
                             isDone = habit.isCompleted,
                             isToday = isToday,
-                            onToggle = { viewModel.toggleComplete(habit) },
+                            onToggle = { onToggleHabit(habit) },
                         )
                     }
                 }
@@ -591,13 +620,17 @@ private fun HomeDayInfoCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = when {
-                pct == 100 -> "🏆"
-                pct >= 50 -> "📊"
-                else -> "📅"
-            },
-            fontSize = 24.sp,
+        Icon(
+            painter = painterResource(
+                when {
+                    pct == 100 -> R.drawable.ic_onboarding_trophy
+                    pct >= 50 -> R.drawable.ic_onboarding_chart
+                    else -> R.drawable.ic_home_calendar
+                },
+            ),
+            contentDescription = null,
+            tint = HabitPrimary,
+            modifier = Modifier.size(24.dp),
         )
         Column {
             Text(

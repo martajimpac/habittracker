@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.BuildConfig
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.LoginUseCase
@@ -73,8 +74,8 @@ class LoginViewModel @Inject constructor(
 }
 
 data class LoginUiState(
-    val email: String = "",
-    val password: String = "",
+    val email: String = if(BuildConfig.DEBUG) "martajimpac@gmail.com" else "",
+    val password: String = if(BuildConfig.DEBUG) "nalskd1A*" else "",
     val isLoading: Boolean = false,
     val isLoginEnabled: Boolean = false,
     val isUserLogged: Boolean = false,

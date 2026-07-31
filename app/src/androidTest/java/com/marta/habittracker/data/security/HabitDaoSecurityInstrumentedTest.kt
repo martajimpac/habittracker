@@ -42,7 +42,7 @@ class HabitDaoSecurityInstrumentedTest {
             name = "Meditation",
             description = "Private habit",
             daysOfWeek = listOf(DayOfWeek.MONDAY),
-            icon = "🧘",
+            icon = "self_improvement",
             colorHex = "#6750A4",
             reminderTime = "07:00",
         )

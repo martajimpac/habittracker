@@ -22,7 +22,7 @@ class SaveHabitTest {
             name = "Leer",
             description = "30 minutos",
             daysOfWeek = days,
-            icon = "📚",
+            icon = "menu_book",
             colorHex = "#D97706",
             reminderTime = "09:00",
             id = habitId,
@@ -35,7 +35,7 @@ class SaveHabitTest {
         assertEquals("Leer", inserted.name)
         assertEquals("30 minutos", inserted.description)
         assertEquals(setOf(KotlinDayOfWeek.MONDAY, KotlinDayOfWeek.FRIDAY), inserted.daysOfWeek)
-        assertEquals("📚", inserted.icon)
+        assertEquals("menu_book", inserted.icon)
         assertEquals("#D97706", inserted.colorHex)
         assertEquals("09:00", inserted.reminderTime)
     }
@@ -87,7 +87,7 @@ class SaveHabitTest {
             name = "Meditar",
             description = null,
             daysOfWeek = setOf(DayOfWeek.SUNDAY),
-            icon = "🧘",
+            icon = "self_improvement",
             colorHex = "#6750A4",
             reminderTime = null,
             id = "33333333-3333-3333-3333-333333333333",
@@ -112,7 +112,7 @@ class SaveHabitTest {
             name = "Estudiar",
             description = "Kotlin",
             daysOfWeek = days,
-            icon = "🎯",
+            icon = "track_changes",
             colorHex = "#2563EB",
             reminderTime = "20:00",
             id = "44444444-4444-4444-4444-444444444444",

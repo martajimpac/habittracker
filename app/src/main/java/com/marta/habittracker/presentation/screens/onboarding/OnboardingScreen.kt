@@ -16,6 +16,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,10 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitAmber
@@ -43,7 +44,7 @@ import com.marta.habittracker.presentation.theme.HabitTealLight
 import kotlinx.coroutines.launch
 
 data class OnboardingSlide(
-    val emojiRes: Int,
+    val iconRes: Int,
     val titleRes: Int,
     val descriptionRes: Int,
     val gradient: List<Color>,
@@ -62,25 +63,38 @@ fun OnboardingScreen(
 
     val slides = listOf(
         OnboardingSlide(
-            emojiRes = R.string.onboarding_slide1_emoji,
+            iconRes = R.drawable.ic_onboarding_target,
             titleRes = R.string.onboarding_slide1_title,
             descriptionRes = R.string.onboarding_slide1_description,
             gradient = listOf(HabitPrimary, HabitPrimaryLight),
         ),
         OnboardingSlide(
-            emojiRes = R.string.onboarding_slide2_emoji,
+            iconRes = R.drawable.ic_onboarding_chart,
             titleRes = R.string.onboarding_slide2_title,
             descriptionRes = R.string.onboarding_slide2_description,
             gradient = listOf(HabitTeal, HabitTealLight),
         ),
         OnboardingSlide(
-            emojiRes = R.string.onboarding_slide3_emoji,
+            iconRes = R.drawable.ic_onboarding_trophy,
             titleRes = R.string.onboarding_slide3_title,
             descriptionRes = R.string.onboarding_slide3_description,
             gradient = listOf(HabitAmber, HabitAmberLight),
         ),
     )
 
+    OnboardingContent(
+        slides = slides,
+        onSkip = viewModel::completeOnboarding,
+        onComplete = viewModel::completeOnboarding,
+    )
+}
+
+@Composable
+fun OnboardingContent(
+    slides: List<OnboardingSlide>,
+    onSkip: () -> Unit,
+    onComplete: () -> Unit,
+) {
     val pagerState = rememberPagerState(pageCount = { slides.size })
     val scope = rememberCoroutineScope()
 
@@ -94,10 +108,10 @@ fun OnboardingScreen(
             pageIndex = page,
             pageCount = slides.size,
             isLast = page == slides.lastIndex,
-            onSkip = viewModel::completeOnboarding,
+            onSkip = onSkip,
             onContinue = {
                 if (page == slides.lastIndex) {
-                    viewModel.completeOnboarding()
+                    onComplete()
                 } else {
                     scope.launch {
                         pagerState.animateScrollToPage(page + 1)
@@ -147,7 +161,12 @@ private fun OnboardingPage(
                 .background(Color.White.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = stringResource(slide.emojiRes), fontSize = 72.sp)
+            Icon(
+                painter = painterResource(slide.iconRes),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(72.dp),
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))

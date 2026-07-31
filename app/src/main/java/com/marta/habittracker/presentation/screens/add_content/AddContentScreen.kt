@@ -90,7 +90,7 @@ fun AddContentScreen(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun AddContentContent(
+fun AddContentContent(
     uiState: AddContentUiState,
     onBack: () -> Unit,
     onNameChanged: (String) -> Unit,
@@ -181,7 +181,7 @@ private fun AddContentContent(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
+                        .background(if (canSave) Color.White else Color(0xFFCAC4D0))
                         .clickable(enabled = canSave, onClick = onSaveClicked)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
@@ -189,7 +189,7 @@ private fun AddContentContent(
                         text = stringResource(R.string.add_habit_save),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = HabitPrimary,
+                        color = if (canSave) HabitPrimary else Color.White,
                     )
                 }
             }

@@ -20,4 +20,6 @@ interface AuthRepository {
     suspend fun getCurrentUserDisplayName(): String
 
     suspend fun getCurrentUserEmail(): String
+
+    suspend fun signOut(): DataResult<Unit, AppError>
 }

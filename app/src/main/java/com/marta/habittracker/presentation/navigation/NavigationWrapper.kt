@@ -72,7 +72,13 @@ fun NavigationWrapper(
         }
 
         composable<Home> {
-            BottomNavScreen()
+            BottomNavScreen(
+                onSignedOut = {
+                    navController.navigate(Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
         }
     }
 }

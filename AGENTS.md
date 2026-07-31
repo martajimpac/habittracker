@@ -55,6 +55,7 @@ El archivo `spec.md` es la fuente de verdad funcional del proyecto.
 * Los repositorios definidos en `domain` deben exponer modelos de dominio.
 * Las implementaciones de repositorios pertenecen a `data`.
 * Las pantallas Compose no acceden a repositorios directamente; los ViewModels sí pueden usar interfaces de repositorio (y Use Cases cuando existan).
+* Separar siempre `*Screen` (obtener estado del ViewModel y conectar eventos) de `*Content` (toda la UI; recibe UiState/callbacks; sin ViewModel) para facilitar `@Preview`, tests y reutilización.
 * Los DAOs deben utilizar `Flow` para datos observables cuando sea apropiado.
 * Utiliza inyección por constructor con Hilt.
 * No instancies repositorios, DAOs ni dependencias manualmente.

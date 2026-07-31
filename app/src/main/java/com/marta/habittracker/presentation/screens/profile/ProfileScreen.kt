@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,11 +66,28 @@ private data class ProfileMenuItem(
 
 @Composable
 fun ProfileScreen(
+    onSignedOut: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
-    val displayName by viewModel.displayName.collectAsStateWithLifecycle()
-    val email by viewModel.email.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.navigateToLogin.collect {
+            onSignedOut()
+        }
+    }
+
+    ProfileContent(
+        uiState = uiState,
+        onSignOut = viewModel::onSignOutClicked,
+    )
+}
+
+@Composable
+fun ProfileContent(
+    uiState: ProfileUiState,
+    onSignOut: () -> Unit = {},
+) {
     val menuItems = listOf(
         ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, Color(0xFF6750A4)),
         ProfileMenuItem(R.string.profile_goals, Icons.Outlined.TrackChanges, Color(0xFF0D9488)),
@@ -83,10 +101,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(HabitSurface),
     ) {
-        ProfileHeader(
-            displayName = displayName,
-            email = email,
-        )
+        ProfileHeader(uiState = uiState)
 
         Column(
             modifier = Modifier
@@ -107,16 +122,17 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            ProfileSignOutRow(onClick = {})
+            ProfileSignOutRow(onClick = onSignOut)
         }
     }
 }
 
 @Composable
 private fun ProfileHeader(
-    displayName: String,
-    email: String,
+    uiState: ProfileUiState,
 ) {
+    val displayName = uiState.displayName
+    val email = uiState.email
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -168,15 +184,15 @@ private fun ProfileHeader(
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             ProfileStat(
-                value = stringResource(R.string.profile_mock_streak_value),
+                value = uiState.dayStreak.toString(),
                 label = stringResource(R.string.profile_stat_day_streak),
             )
             ProfileStat(
-                value = stringResource(R.string.profile_mock_completed_value),
+                value = uiState.completedCount.toString(),
                 label = stringResource(R.string.profile_stat_completed),
             )
             ProfileStat(
-                value = stringResource(R.string.profile_mock_habits_value),
+                value = uiState.habitsCount.toString(),
                 label = stringResource(R.string.profile_stat_habits),
             )
         }

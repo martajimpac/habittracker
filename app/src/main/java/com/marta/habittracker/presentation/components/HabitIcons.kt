@@ -1,26 +1,15 @@
 package com.marta.habittracker.presentation.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.outlined.Bedtime
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.LocalCafe
-import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.outlined.TrackChanges
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.theme.HabitPrimary
 
@@ -57,20 +46,21 @@ object HabitIconKeys {
     const val DEFAULT = WATER
 }
 
-fun habitIconVector(iconKey: String?): ImageVector = when (iconKey) {
-    HabitIconKeys.WATER, "💧" -> Icons.Outlined.WaterDrop
-    HabitIconKeys.RUN, "🏃" -> Icons.AutoMirrored.Outlined.DirectionsRun
-    HabitIconKeys.BOOK, "📚" -> Icons.AutoMirrored.Outlined.MenuBook
-    HabitIconKeys.MEDITATE, "🧘" -> Icons.Outlined.SelfImprovement
-    HabitIconKeys.FOOD, "🍎" -> Icons.Outlined.Restaurant
-    HabitIconKeys.SLEEP, "😴" -> Icons.Outlined.Bedtime
-    HabitIconKeys.COFFEE, "☕" -> Icons.Outlined.LocalCafe
-    HabitIconKeys.MUSIC, "🎵" -> Icons.Outlined.MusicNote
-    HabitIconKeys.WRITE, "✍️" -> Icons.Outlined.Edit
-    HabitIconKeys.HEART, "❤️" -> Icons.Outlined.FavoriteBorder
-    HabitIconKeys.TARGET, "🎯" -> Icons.Outlined.TrackChanges
-    HabitIconKeys.BOLT, "⚡" -> Icons.Outlined.Bolt
-    else -> Icons.Outlined.WaterDrop
+@DrawableRes
+fun habitIconRes(iconKey: String?): Int = when (iconKey) {
+    HabitIconKeys.WATER -> R.drawable.ic_habit_water_drop
+    HabitIconKeys.RUN -> R.drawable.ic_habit_directions_run
+    HabitIconKeys.BOOK -> R.drawable.ic_habit_menu_book
+    HabitIconKeys.MEDITATE -> R.drawable.ic_habit_self_improvement
+    HabitIconKeys.FOOD -> R.drawable.ic_habit_restaurant
+    HabitIconKeys.SLEEP -> R.drawable.ic_habit_bedtime
+    HabitIconKeys.COFFEE -> R.drawable.ic_habit_local_cafe
+    HabitIconKeys.MUSIC -> R.drawable.ic_habit_music_note
+    HabitIconKeys.WRITE -> R.drawable.ic_habit_edit
+    HabitIconKeys.HEART -> R.drawable.ic_habit_favorite_border
+    HabitIconKeys.TARGET -> R.drawable.ic_habit_track_changes
+    HabitIconKeys.BOLT -> R.drawable.ic_habit_bolt
+    else -> R.drawable.ic_habit_water_drop
 }
 
 @Composable
@@ -82,7 +72,7 @@ fun HabitLineIcon(
     contentDescription: String? = null,
 ) {
     Icon(
-        imageVector = habitIconVector(iconKey),
+        painter = painterResource(habitIconRes(iconKey)),
         contentDescription = contentDescription,
         modifier = modifier.size(size),
         tint = tint,

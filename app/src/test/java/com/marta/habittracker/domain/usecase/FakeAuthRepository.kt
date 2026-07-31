@@ -9,6 +9,7 @@ import com.marta.habittracker.domain.repository.AuthRepository
 class FakeAuthRepository(
     private val loginResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
     private val registerResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
+    private val signOutResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val loggedIn: Boolean = false,
     private val displayName: String = defaultUser.name,
     private val email: String = defaultUser.nickname,
@@ -17,6 +18,8 @@ class FakeAuthRepository(
     var loginCalls: Int = 0
         private set
     var registerCalls: Int = 0
+        private set
+    var signOutCalls: Int = 0
         private set
     var lastLoginEmail: String? = null
         private set
@@ -52,6 +55,11 @@ class FakeAuthRepository(
     override suspend fun getCurrentUserDisplayName(): String = displayName
 
     override suspend fun getCurrentUserEmail(): String = email
+
+    override suspend fun signOut(): DataResult<Unit, AppError> {
+        signOutCalls++
+        return signOutResult
+    }
 
     companion object {
         val defaultUser = User(

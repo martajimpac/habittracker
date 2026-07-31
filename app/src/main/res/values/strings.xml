@@ -4,10 +4,7 @@
     <!-- Onboarding -->
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_continue">Continue</string>
-    <string name="onboarding_get_started">Get Started 🚀</string>
-    <string name="onboarding_slide1_emoji">🎯</string>
-    <string name="onboarding_slide2_emoji">📊</string>
-    <string name="onboarding_slide3_emoji">🏆</string>
+    <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_slide1_title">Build Habits That\nActually Stick</string>
     <string name="onboarding_slide1_description">Track your daily routines and watch consistency transform into lasting change.</string>
     <string name="onboarding_slide2_title">Visualize Your\nProgress</string>
@@ -27,7 +24,6 @@
     <string name="login_signing_in">Signing in…</string>
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_sign_up">Sign up</string>
-    <string name="login_logo_emoji">🎯</string>
     <string name="login_error_unable_to_sign_in">Unable to sign in. Check your credentials.</string>
 
     <!-- Legacy login keys kept for compatibility -->
@@ -84,13 +80,21 @@
     <!-- BottomBar -->
     <string name="tab_home">Home</string>
     <string name="tab_stats">Stats</string>
+    <string name="tab_friends">Friends</string>
     <string name="tab_profile">Profile</string>
+    <string name="tab_new">New</string>
+
+    <!-- Friends -->
+    <string name="friends_title">Friends</string>
+    <string name="friends_add">Add</string>
+    <string name="friends_empty_title">No friends yet</string>
+    <string name="friends_empty_message">Add friends to share streaks and challenge each other.</string>
 
     <!-- Home -->
     <string name="home_today_label">Today · %1$s</string>
     <string name="home_past_label">Past · %1$s</string>
     <string name="home_upcoming_label">Upcoming · %1$s</string>
-    <string name="home_greeting">%1$s, %2$s! 👋</string>
+    <string name="home_greeting">%1$s, %2$s!</string>
     <string name="home_todays_habits">Today\'s Habits</string>
     <string name="home_day_habits">%1$s\'s Habits</string>
     <string name="home_total_count">%1$d total</string>
@@ -102,7 +106,7 @@
     <string name="home_streak_days">%1$d day streak</string>
     <string name="home_time_separator">· %1$s</string>
     <string name="home_keep_it_up">Keep it up!</string>
-    <string name="home_overall_streak">You\'re on a %1$d-day streak overall 🔥</string>
+    <string name="home_overall_streak">You\'re on a %1$d-day streak overall</string>
     <string name="home_perfect_day">Perfect day!</string>
     <string name="home_past_record">Past record</string>
     <string name="home_upcoming_day">Upcoming day</string>
@@ -174,9 +178,6 @@
     <string name="profile_stat_day_streak">Day Streak</string>
     <string name="profile_stat_completed">Completed</string>
     <string name="profile_stat_habits">Habits</string>
-    <string name="profile_mock_streak_value">14</string>
-    <string name="profile_mock_completed_value">89</string>
-    <string name="profile_mock_habits_value">6</string>
 
     <!-- Accessibility / chrome -->
     <string name="cd_toolbar_actions">Toolbar actions</string>

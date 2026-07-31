@@ -52,6 +52,14 @@ fun StatsScreen(
     viewModel: StatsViewModel = hiltViewModel(),
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
+
+    StatsContent(habits = habits)
+}
+
+@Composable
+fun StatsContent(
+    habits: List<Habit>,
+) {
     val today = remember { LocalDate.now() }
     val activityWeeks = remember(habits, today) {
         toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->

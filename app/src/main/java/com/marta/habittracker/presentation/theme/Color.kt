@@ -17,6 +17,9 @@ val HabitOutline = Color(0xFFE8DEF8)
 val HabitTermsBg = Color(0xFFEEE8F4)
 val HabitTermsText = Color(0xFF49454F)
 
+val LoginGradientStart = Color(0xFF2563EB)
+val LoginGradientEnd = Color(0xFF22D3EE)
+
 val Red60 = Color(0xFFF4323E)
 val InstaBlue = Color(0xFF0B5FD5)
 val Gray20 = Color(0xFF152125)

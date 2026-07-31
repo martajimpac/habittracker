@@ -8,9 +8,20 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 
 - Las pantallas Compose solo deben renderizar estado y enviar eventos al ViewModel.
 - Los ViewModels exponen estado observable mediante `StateFlow`.
+- Separar siempre `*Screen` (solo ViewModel + eventos / navegacion) de `*Content` (UI pura con UiState + callbacks, sin ViewModel) para Preview, tests y reutilizacion.
 - El estado de UI no debe contener secretos persistentes por defecto.
 - Las credenciales introducidas por el usuario no deben aparecer en logs ni en representaciones persistentes del estado.
 - El login debe empezar deshabilitado hasta que email y password sean validos.
+- Pantalla Login: fondo con gradiente (azul → cyan), marca `logo` + nombre de app arriba, y el formulario (email, password, acciones existentes) dentro de una card blanca redondeada.
+- Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
+- El drawable `res/drawable/logo.xml` es el logo de la app (login + icono launcher).
+- Bottom navigation (Figma Make): Home, Stats, FAB central "New" (abre crear hábito), Friends, Profile — con labels e iconos; selección con fondo `#EEE8F4` y tint `#6750A4`.
+- Tab Friends (Figma Make — social):
+  - UI alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, bottom sheets (añadir / ver hábitos / crear reto).
+  - Textos en ingles (`strings.xml`).
+  - Android: `FriendsRepository` + `SocialRemoteDataSource` (Supabase); operaciones sociales requieren red (online-first); sin cache Room de friends/challenges en el MVP.
+  - Plan de implementación: `docs/plans/2026-07-31-friends-figma-android.md`.
+  - Fuera de alcance inmediato: notificaciones push, Realtime, cache offline de amigos.
 
 ### Domain
 
@@ -46,23 +57,69 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 
 ### Sync de habitos (Supabase)
 
-- Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS por `user_id = auth.uid()`.
-- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `created_at`, `updated_at`, `deleted_at` (soft delete).
+- Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS (dueño + excepciones sociales abajo).
+- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
 - `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
 - Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
 - Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
 - Room almacena los mismos campos de sync (`updatedAt` / `deletedAt`) para alinear con el remoto.
 - Fuera de alcance: outbox, dual-write offline, WorkManager periodico, UI rica de sync, resolucion manual de conflictos.
 
+### Social (Supabase) — Friends + challenges
+
+Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas nuevas expuestas al Data API.
+
+**Amistad:** solicitud → aceptar/rechazar (no follow unidireccional ni add instantáneo).
+
+**Hábitos visibles a amigos:** privacidad **por hábito** (`habits.is_public`). Amigos `accepted` pueden `SELECT` hábitos públicos (y no soft-deleted) del otro.
+
+**Retos:** mismo hábito semántico (mismo nombre/tema); cada participante tiene su propia fila en `habits`. Progreso y `days_left` se **calculan** desde `habit_records` entre `starts_at` y `ends_at` (no columnas de progreso denormalizadas).
+
+**Tablas:**
+
+1. `profiles`
+   - `id` uuid PK FK `auth.users` ON DELETE CASCADE
+   - `username` text unique not null (búsqueda Add friend)
+   - `display_name` text not null
+   - `avatar_color` text not null default `#6750A4`
+   - `created_at` / `updated_at` timestamptz
+   - Trigger: al crear usuario en `auth.users`, insertar profile (username provisional derivado del email / id)
+
+2. `friendships`
+   - `id` uuid PK
+   - `requester_id`, `addressee_id` uuid FK `profiles`
+   - `status` text check: `pending` | `accepted` | `rejected`
+   - `created_at` / `updated_at`
+   - CHECK `requester_id <> addressee_id`
+   - UNIQUE canónico del par (p.ej. `least(requester_id, addressee_id)`, `greatest(...)`)
+   - RLS: requester/addressee ven sus filas; requester crea `pending`; addressee actualiza status; no deletes arbitrarios de terceros
+
+3. `challenges`
+   - `id` uuid PK
+   - `challenger_id`, `challenged_id` uuid FK `profiles` (deben ser amigos `accepted`)
+   - `challenger_habit_id`, `challenged_habit_id` uuid FK `habits`
+   - `criteria` text check: `streak` | `all_days` | `completion_pct`
+   - `starts_at`, `ends_at` timestamptz not null (`ends_at` > `starts_at`)
+   - `status` text check: `pending` | `active` | `completed` | `declined` | `cancelled`
+   - `created_at` / `updated_at`
+   - RLS: solo participantes leen/actualizan su reto; challenger inserta
+
+4. Lectura de `habit_records` de otro usuario: permitida a amigos solo para hábitos `is_public` del amigo, y/o para el hábito del otro en un challenge `active`/`pending` donde el lector es participante (ventana del reto). Escrituras de records siguen siendo solo del dueño.
+
+**Fuera de alcance (schema social):** push notifications, Realtime obligatorio, chat, Room cache de friends (se define en el plan de app).
+
 ### Profile (tab)
 
 - La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar con iniciales, stats, menu rows, Sign Out).
 - Header usa datos reales del usuario autenticado: display name y email (via `AuthRepository`); avatar = iniciales derivadas del nombre.
-- Stats del header (Day Streak, Completed, Habits) son valores mock fijos por ahora; no se calculan desde habitos.
+- Stats del header (reales, desde `HabitRepository.getAllHabitsWithRecords()`):
+  - **Day Streak:** max streak entre habitos (`calculateStreak` sobre records, igual que Home).
+  - **Completed:** total de records con `isCompleted`.
+  - **Habits:** numero de habitos.
 - Filas de menu: Notifications, Goals & Targets, Reminders, Preferences, Achievements — solo UI; sin navegacion ni acciones.
-- Sign Out es solo UI; sin logout real en este alcance.
+- Sign Out: llama a `AuthRepository.signOut()` (Supabase) y navega a Login limpiando el back stack.
 - Todos los textos de Profile van en ingles (`strings.xml`).
-- `ProfileViewModel` solo expone nombre y email; no maneja clicks de menu ni sign-out.
+- `ProfileViewModel` expone nombre, email, stats y el evento de sign-out; no maneja clicks de menu.
 
 ### Activity heatmap
 
@@ -97,7 +154,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Los tokens deben viajar en el header `Authorization`.
 - Los tokens no deben viajar en URL, query params o bodies innecesarios.
 - Los interceptores no deben escribir tokens ni credenciales en logs.
-- Las politicas RLS de Supabase deben impedir que un usuario autenticado lea o escriba filas de otro `user_id`.
+- Las politicas RLS de Supabase deben impedir lecturas/escrituras indebidas: por defecto solo el dueño (`user_id = auth.uid()`). Excepciones documentadas en Social: amigos pueden leer hábitos `is_public` y records asociados; participantes de un challenge pueden leer el hábito/records del otro necesarios para el progreso.
 
 ### Secretos
 
