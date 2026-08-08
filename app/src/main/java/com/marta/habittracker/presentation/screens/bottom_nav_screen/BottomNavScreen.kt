@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,14 +47,30 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitTermsBg
+import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 
-@Suppress("UnusedParameter")
 @Composable
 fun BottomNavScreen(
     onSignedOut: () -> Unit,
+    initialTabRoute: String? = null,
     bottomNavViewModel: BottomNavViewModel = hiltViewModel(),
 ) {
     val tabNavController = rememberNavController()
+    LaunchedEffect(initialTabRoute) {
+        when (initialTabRoute) {
+            WidgetLaunchExtras.TAB_HOME -> tabNavController.navigate(TabScreens.TabHome) {
+                launchSingleTop = true
+            }
+
+            WidgetLaunchExtras.TAB_STATS -> tabNavController.navigate(TabScreens.TabStats) {
+                launchSingleTop = true
+            }
+
+            WidgetLaunchExtras.TAB_FRIENDS -> tabNavController.navigate(TabScreens.TabFriends) {
+                launchSingleTop = true
+            }
+        }
+    }
     val navStackEntry by tabNavController.currentBackStackEntryAsState()
     val destinationRoute = navStackEntry?.destination?.route.orEmpty()
 

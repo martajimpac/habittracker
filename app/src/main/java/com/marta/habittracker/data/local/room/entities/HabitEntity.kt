@@ -13,6 +13,7 @@ data class HabitEntity(
     val icon: String = "water_drop",
     val colorHex: String = "#6750A4",
     val reminderTime: String? = null,
+    val isPublic: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val deletedAt: Long? = null,

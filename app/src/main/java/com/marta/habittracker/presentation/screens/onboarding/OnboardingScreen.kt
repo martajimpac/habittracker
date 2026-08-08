@@ -20,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.theme.HabitTeal
 import com.marta.habittracker.presentation.theme.HabitTealLight
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 import kotlinx.coroutines.launch
 
 data class OnboardingSlide(
@@ -55,10 +55,8 @@ fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit,
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.navigateToLogin.collect {
-            navigateToLogin()
-        }
+    CollectAsEffect(viewModel.navigateToLogin) {
+        navigateToLogin()
     }
 
     val slides = listOf(

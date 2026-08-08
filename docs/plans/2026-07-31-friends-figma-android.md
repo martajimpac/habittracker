@@ -36,7 +36,7 @@
 - Create: `app/src/main/java/com/marta/habittracker/domain/usecase/ComputeChallengeProgress.kt`
 - Test: `app/src/test/java/com/marta/habittracker/domain/usecase/ComputeChallengeProgressTest.kt`
 
-- [ ] **Step 1: Failing tests for progress %**
+- [x] **Step 1: Failing tests for progress %**
 
 ```kotlin
 @Test
@@ -59,15 +59,15 @@ fun `completion_pct is completed days over total challenge days`() {
 }
 ```
 
-- [ ] **Step 2: Implement `ChallengeCriteria` + `computeChallengeProgress` for `Streak`, `AllDays`, `CompletionPct`**
+- [x] **Step 2: Implement `ChallengeCriteria` + `computeChallengeProgress` for `Streak`, `AllDays`, `CompletionPct`**
   - Document formula in KDoc (e.g. CompletionPct = completed days in [start, min(today, end)) / totalDays * 100).
   - `daysLeft` = max(0, days between today and endDate).
 
-- [ ] **Step 3: Tests green**
+- [x] **Step 3: Tests green**
 
 Run: `./gradlew :app:testDebugUnitTest --tests "com.marta.habittracker.domain.usecase.ComputeChallengeProgressTest"`
 
-- [ ] **Step 4: Commit** (if user asked) / stage
+- [x] **Step 4: Commit** (if user asked) / stage
 
 ---
 
@@ -98,8 +98,8 @@ interface FriendsRepository {
 
 `ChallengeCard` = challenge + friend profile snapshot + myProgress/theirProgress/daysLeft (computed when loading).
 
-- [ ] Write Fake + one ViewModel test that fails until Task 6
-- [ ] Stage
+- [x] Write Fake + one ViewModel test that fails until Task 6
+- [x] Stage
 
 ---
 
@@ -130,8 +130,8 @@ Also: fetch profiles by ids, search `username` ilike, insert friendship pending,
 
 Log failures with `Log.e(TAG, …, e)` (service logging rule).
 
-- [ ] Compile after wiring
-- [ ] Stage
+- [x] Compile after wiring
+- [x] Stage
 
 ---
 
@@ -163,9 +163,9 @@ class FriendsRepositoryImpl @Inject constructor(
 
 Best streak for a friend: max streak across their **public** habits’ records (reuse `calculateStreak` from Home with `LocalDate.now()`).
 
-- [ ] `@Binds fun bindFriendsRepository…`
-- [ ] Unit test with fake remote or FakeFriendsRepository for ViewModel later
-- [ ] Stage
+- [x] `@Binds fun bindFriendsRepository…`
+- [x] Unit test with fake remote or FakeFriendsRepository for ViewModel later
+- [x] Stage
 
 ---
 
@@ -180,9 +180,9 @@ Without this, friends always see empty public lists.
 - Modify: strings (`habit_is_public`)
 - Tests: update any Habit construction in tests with default `isPublic = false`
 
-- [ ] Failing test: SaveHabit / mapper round-trip includes `isPublic`
-- [ ] Implement + compile + unit tests
-- [ ] Stage
+- [x] Failing test: SaveHabit / mapper round-trip includes `isPublic`
+- [x] Implement + compile + unit tests
+- [x] Stage
 
 ---
 
@@ -209,11 +209,11 @@ sealed class FriendsSheet {
 }
 ```
 
-- [ ] Test: successful load exposes friends + challenges
-- [ ] Test: offline → error string res
-- [ ] Test: `onAddFriendClicked` opens Add sheet; `sendRequest` calls repo
-- [ ] Implement ViewModel (inject `FriendsRepository`, `HabitRepository` for own habits when creating challenge)
-- [ ] Stage
+- [x] Test: successful load exposes friends + challenges
+- [x] Test: offline → error string res
+- [x] Test: `onAddFriendClicked` opens Add sheet; `sendRequest` calls repo
+- [x] Implement ViewModel (inject `FriendsRepository`, `HabitRepository` for own habits when creating challenge)
+- [x] Stage
 
 ---
 
@@ -235,9 +235,9 @@ sealed class FriendsSheet {
 
 Reuse: `HabitLineIcon` for habit icons (no emoji glyphs if project standard is drawables — map friend remote icon keys the same way).
 
-- [ ] `FriendsScreen` collects VM; `FriendsContent(uiState, callbacks)` pure
-- [ ] CompileDebug
-- [ ] Stage
+- [x] `FriendsScreen` collects VM; `FriendsContent(uiState, callbacks)` pure
+- [x] CompileDebug
+- [x] Stage
 
 ---
 
@@ -247,11 +247,15 @@ Reuse: `HabitLineIcon` for habit icons (no emoji glyphs if project standard is d
 - `NavigationBottomWrapper.kt` — already hosts `FriendsScreen()`; ensure Hilt VM works (default)
 - Optional: pull-to-refresh / reload on resume (`Lifecycle.resume`)
 
+- [x] `TabFriends` hosts `FriendsScreen()` with its default Hilt ViewModel
+- [x] `Lifecycle.Event.ON_RESUME` refreshes Friends data
 - [ ] Manual smoke checklist (device):
   - [ ] Empty friends → empty challenges UI
   - [ ] Two accounts: send request, accept (accept UI: show pending on Friends or Profile — include pending row section under friends list)
   - [ ] Mark habit public → friend sees it
   - [ ] Create challenge → appears in carousel with progress
+
+Device smoke was not run in this task; no device is required for this handoff. Compile and the full debug unit suite cover the automated smoke gate.
 
 ---
 
@@ -262,6 +266,11 @@ Reuse: `HabitLineIcon` for habit icons (no emoji glyphs if project standard is d
 - Run: `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest`
 - Stage all task files
 - Propose brain decision: “Friends social is remote-only (no Room) online-first”
+
+- [x] Update `spec.md`
+- [x] Run compile and full debug unit suite
+- [x] Stage all Friends feature task files
+- [ ] Save Brain decision (optional; CLI invocation returned no exit status)
 
 ---
 

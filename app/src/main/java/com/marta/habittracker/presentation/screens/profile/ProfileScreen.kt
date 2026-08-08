@@ -30,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +47,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.screens.home.userAvatarInitials
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 
 private val ProfileGradientStart = Color(0xFF7C3AED)
 private val ProfileGradientEnd = Color(0xFFA78BFA)
@@ -71,10 +71,8 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.navigateToLogin.collect {
-            onSignedOut()
-        }
+    CollectAsEffect(viewModel.navigateToLogin) {
+        onSignedOut()
     }
 
     ProfileContent(

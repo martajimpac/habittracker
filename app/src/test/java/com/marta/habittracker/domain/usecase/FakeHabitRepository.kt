@@ -14,9 +14,11 @@ class FakeHabitRepository(
 ) : HabitRepository {
 
     val insertedHabits = mutableListOf<Habit>()
+    val toggledHabits = mutableListOf<Pair<Habit, LocalDate>>()
     var insertCalls: Int = 0
         private set
     var insertResult: DataResult<Unit, AppError> = DataResult.Success(Unit)
+    var toggleResult: DataResult<Unit, AppError> = DataResult.Success(Unit)
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> = flowOf(emptyList())
 
@@ -25,7 +27,10 @@ class FakeHabitRepository(
     override suspend fun toggleHabitCompletion(
         habit: Habit,
         date: LocalDate,
-    ): DataResult<Unit, AppError> = DataResult.Success(Unit)
+    ): DataResult<Unit, AppError> {
+        toggledHabits.add(habit to date)
+        return toggleResult
+    }
 
     override fun getHabitById(id: String): Flow<Habit?> = flowOf(null)
 

@@ -89,6 +89,39 @@
     <string name="friends_add">Add</string>
     <string name="friends_empty_title">No friends yet</string>
     <string name="friends_empty_message">Add friends to share streaks and challenge each other.</string>
+    <string name="friends_active_challenges">Active challenges</string>
+    <string name="friends_empty_challenges">No active challenges yet.</string>
+    <string name="friends_pending_requests">Pending requests</string>
+    <string name="friends_pending_request">Friend request</string>
+    <string name="friends_accept">Accept</string>
+    <string name="friends_decline">Decline</string>
+    <string name="friends_list_title">Friends</string>
+    <string name="friends_me">Me</string>
+    <string name="friends_days_left">%1$d days left</string>
+    <string name="friends_username">@%1$s</string>
+    <string name="friends_best_streak">Best streak: %1$d days</string>
+    <string name="friends_public_habits">%1$d public habits</string>
+    <string name="friends_private_habits">Private</string>
+    <string name="friends_view">View</string>
+    <string name="friends_challenge">Challenge</string>
+    <string name="friends_add_friend">Add friend</string>
+    <string name="friends_search_label">Search friends</string>
+    <string name="friends_search_hint">Search by username</string>
+    <string name="friends_send_request">Send request</string>
+    <string name="friends_request_sent">Friend request sent</string>
+    <string name="friends_public_habits_title">Public habits</string>
+    <string name="friends_no_public_habits">No public habits to show.</string>
+    <string name="friends_create_challenge">Create challenge</string>
+    <string name="friends_challenge_with">Challenge with %1$s</string>
+    <string name="friends_their_habit">Their habit</string>
+    <string name="friends_my_habit">My habit</string>
+    <string name="friends_duration">Duration</string>
+    <string name="friends_duration_days">%1$d days</string>
+    <string name="friends_criteria">Criteria</string>
+    <string name="friends_criteria_streak">Best streak</string>
+    <string name="friends_criteria_all_days">All days</string>
+    <string name="friends_criteria_completion">Completion</string>
+    <string name="friends_send_challenge">Send challenge</string>
 
     <!-- Home -->
     <string name="home_today_label">Today · %1$s</string>
@@ -133,6 +166,7 @@
     <string name="add_habit_choose_color">Choose Color</string>
     <string name="add_habit_reminder_time">Reminder Time</string>
     <string name="add_habit_frequency">Frequency</string>
+    <string name="habit_is_public">Public habit</string>
     <string name="add_habit_create">Create Habit</string>
     <string name="add_habit_error_name_required">Habit name is required.</string>
     <string name="add_habit_error_days_required">Select at least one day of the week.</string>
@@ -185,6 +219,41 @@
     <!-- Notifications -->
     <string name="notification_channel_name">Habit Tracker Notifications</string>
     <string name="notification_default_title">Habit Tracker</string>
+
+    <!-- Habit widget -->
+    <string name="habit_widget_label">Habit glance</string>
+    <string name="habit_widget_config_title">Choose a habit</string>
+    <string name="habit_widget_empty_config">No habits available to add.</string>
+    <string name="habit_widget_configure">Configure</string>
+    <string name="habit_widget_completed">Completed today</string>
+    <string name="habit_widget_not_completed">Not completed today</string>
+    <string name="habit_widget_mark_complete">Complete</string>
+    <string name="habit_widget_mark_incomplete">Mark incomplete</string>
+    <string name="habit_widget_streak">%1$d day streak</string>
+
+    <!-- Challenge widget -->
+    <string name="challenge_widget_label">Challenge glance</string>
+    <string name="challenge_widget_config_title">Choose a challenge</string>
+    <string name="challenge_widget_empty_config">No pending or active challenges available to add.</string>
+    <string name="challenge_widget_configure">Configure challenge</string>
+    <string name="challenge_widget_load_failed">Could not load challenges. Please try again.</string>
+    <string name="challenge_widget_versus">vs %1$s</string>
+    <string name="challenge_widget_progress">You %1$d%% · %2$s %3$d%%</string>
+    <string name="challenge_widget_days_left">%1$d days left</string>
+    <string name="challenge_widget_status_pending">Pending</string>
+    <string name="challenge_widget_status_active">Active</string>
+
+    <!-- Weekly widget -->
+    <string name="weekly_widget_label">Weekly summary</string>
+    <string name="weekly_widget_title">This week</string>
+    <string name="weekly_widget_percent">%1$d%%</string>
+    <string name="weekly_widget_day_mon">Mon</string>
+    <string name="weekly_widget_day_tue">Tue</string>
+    <string name="weekly_widget_day_wed">Wed</string>
+    <string name="weekly_widget_day_thu">Thu</string>
+    <string name="weekly_widget_day_fri">Fri</string>
+    <string name="weekly_widget_day_sat">Sat</string>
+    <string name="weekly_widget_day_sun">Sun</string>
 
     <!-- Legacy tab keys -->
     <string name="tab_add_content">Add</string>

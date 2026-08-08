@@ -11,7 +11,7 @@ import com.marta.habittracker.data.local.room.entities.HabitRecordEntity
         HabitEntity::class,
         HabitRecordEntity::class,
     ],
-    version = 20260723,
+    version = 20260731,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

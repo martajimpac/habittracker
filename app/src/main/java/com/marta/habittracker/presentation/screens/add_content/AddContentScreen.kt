@@ -28,12 +28,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +60,7 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.screens.home.parseHabitColor
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
@@ -71,8 +72,8 @@ fun AddContentScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.habitSaved.collect { onBack() }
+    CollectAsEffect(viewModel.habitSaved) {
+        onBack()
     }
 
     AddContentContent(
@@ -84,6 +85,7 @@ fun AddContentScreen(
         onColorSelected = viewModel::onColorSelected,
         onReminderTimeChanged = viewModel::onReminderTimeChanged,
         onDayToggled = viewModel::onDayToggled,
+        onPublicChanged = viewModel::onPublicChanged,
         onSaveClicked = viewModel::onSaveClicked,
     )
 }
@@ -99,6 +101,7 @@ fun AddContentContent(
     onColorSelected: (String) -> Unit,
     onReminderTimeChanged: (String) -> Unit,
     onDayToggled: (DayOfWeek) -> Unit,
+    onPublicChanged: (Boolean) -> Unit,
     onSaveClicked: () -> Unit,
 ) {
     val selectedColor = parseHabitColor(uiState.colorHex)
@@ -380,6 +383,23 @@ fun AddContentContent(
                         }
                     }
                 }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.habit_is_public),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    color = HabitOnSurface,
+                )
+                Switch(
+                    checked = uiState.isPublic,
+                    onCheckedChange = onPublicChanged,
+                )
             }
 
             uiState.errorMessageRes?.let { messageRes ->

@@ -60,6 +60,7 @@ El archivo `spec.md` es la fuente de verdad funcional del proyecto.
 * Utiliza inyección por constructor con Hilt.
 * No instancies repositorios, DAOs ni dependencias manualmente.
 * Mantén un flujo de datos unidireccional en la UI.
+* **No navegues desde estado persistente** (`UiState` / `StateFlow` con flags tipo `isUserLogged`, `isSaved`, `shouldNavigate`). Usa eventos one-shot (`SharedFlow` / `MutableSharedFlow(extraBufferCapacity = 1)`) y cógelos con lifecycle (`repeatOnLifecycle(STARTED)` o `CollectAsEffect`). Ver skill `android-jetpack-compose`.
 ---
 
 # Estructura del proyecto

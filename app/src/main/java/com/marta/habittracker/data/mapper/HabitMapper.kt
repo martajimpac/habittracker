@@ -24,6 +24,7 @@ class HabitMapper @Inject constructor() {
         icon = icon,
         colorHex = colorHex,
         reminderTime = reminderTime,
+        isPublic = isPublic,
         createdAt = createdAt.toInstant(),
         records = emptyList(),
     )
@@ -39,6 +40,7 @@ class HabitMapper @Inject constructor() {
         icon = icon,
         colorHex = colorHex,
         reminderTime = reminderTime,
+        isPublic = isPublic,
         createdAt = createdAt.toEpochMillis(),
         updatedAt = updatedAt,
         deletedAt = deletedAt,
@@ -52,6 +54,7 @@ class HabitMapper @Inject constructor() {
         icon = habit.icon,
         colorHex = habit.colorHex,
         reminderTime = habit.reminderTime,
+        isPublic = habit.isPublic,
         createdAt = habit.createdAt.toInstant(),
         records = records.filter { it.deletedAt == null }.map { it.toDomain() },
     )

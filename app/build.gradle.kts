@@ -128,6 +128,11 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
 
+    //Glance widgets
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.work.runtime.ktx)
+
     //Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

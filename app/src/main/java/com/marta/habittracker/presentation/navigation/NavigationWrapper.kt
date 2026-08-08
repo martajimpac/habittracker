@@ -19,6 +19,7 @@ import com.marta.habittracker.presentation.screens.onboarding.OnboardingScreen
 
 @Composable
 fun NavigationWrapper(
+    initialTabRoute: String? = null,
     appStartViewModel: AppStartViewModel = hiltViewModel(),
 ) {
     val startDestination by appStartViewModel.startDestination.collectAsStateWithLifecycle()
@@ -73,6 +74,7 @@ fun NavigationWrapper(
 
         composable<Home> {
             BottomNavScreen(
+                initialTabRoute = initialTabRoute,
                 onSignedOut = {
                     navController.navigate(Login) {
                         popUpTo(0) { inclusive = true }

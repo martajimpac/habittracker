@@ -34,6 +34,7 @@ data class AddContentUiState(
     val colorHex: String = HabitColorOptions.first(),
     val reminderTime: String = "08:00",
     val selectedDays: Set<DayOfWeek> = emptySet(),
+    val isPublic: Boolean = false,
     val isSaving: Boolean = false,
     @StringRes val errorMessageRes: Int? = null,
 )
@@ -46,7 +47,7 @@ class AddContentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AddContentUiState())
     val uiState: StateFlow<AddContentUiState> = _uiState.asStateFlow()
 
-    private val _habitSaved = MutableSharedFlow<Unit>()
+    private val _habitSaved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val habitSaved: SharedFlow<Unit> = _habitSaved.asSharedFlow()
 
     fun onNameChanged(name: String) {
@@ -80,6 +81,10 @@ class AddContentViewModel @Inject constructor(
         }
     }
 
+    fun onPublicChanged(isPublic: Boolean) {
+        _uiState.update { it.copy(isPublic = isPublic) }
+    }
+
     fun onSaveClicked() {
         val currentState = _uiState.value
         val validationError = validate(currentState)
@@ -98,6 +103,7 @@ class AddContentViewModel @Inject constructor(
                     icon = currentState.icon,
                     colorHex = currentState.colorHex,
                     reminderTime = currentState.reminderTime.trim().ifBlank { null },
+                    isPublic = currentState.isPublic,
                 )
             ) {
                 is DataResult.Success -> {

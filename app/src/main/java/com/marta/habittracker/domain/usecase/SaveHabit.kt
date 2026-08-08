@@ -20,6 +20,7 @@ class SaveHabit @Inject constructor(
         icon: String,
         colorHex: String,
         reminderTime: String?,
+        isPublic: Boolean = false,
         id: String? = null,
     ): DataResult<String, AppError> {
         val habitId = id ?: UUID.randomUUID().toString()
@@ -32,6 +33,7 @@ class SaveHabit @Inject constructor(
                 icon = icon,
                 colorHex = colorHex,
                 reminderTime = reminderTime,
+                isPublic = isPublic,
                 createdAt = Instant.now(),
                 records = emptyList(),
             ),

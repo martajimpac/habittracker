@@ -29,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +56,7 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.LoginGradientEnd
 import com.marta.habittracker.presentation.theme.LoginGradientStart
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 
 @Composable
 fun LoginScreen(
@@ -66,10 +66,8 @@ fun LoginScreen(
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isUserLogged) {
-        if (uiState.isUserLogged) {
-            navigateToHome()
-        }
+    CollectAsEffect(loginViewModel.navigateToHome) {
+        navigateToHome()
     }
 
     LoginContent(

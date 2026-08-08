@@ -15,6 +15,7 @@ data class Habit(
     val createdAt: Instant,
     val records: List<HabitRecord>,
     val isCompleted: Boolean = false,
+    val isPublic: Boolean = false,
 )
 
 data class HabitRecord(

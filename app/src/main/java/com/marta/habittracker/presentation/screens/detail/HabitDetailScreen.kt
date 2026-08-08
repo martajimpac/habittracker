@@ -50,6 +50,7 @@ import com.marta.habittracker.presentation.components.toHeatmapWeeks
 import com.marta.habittracker.presentation.screens.home.parseHabitColor
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
@@ -60,6 +61,10 @@ fun HabitDetailScreen(
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
+
+    CollectAsEffect(viewModel.habitDeleted) {
+        onBack()
+    }
 
     HabitDetailContent(
         habit = habit,

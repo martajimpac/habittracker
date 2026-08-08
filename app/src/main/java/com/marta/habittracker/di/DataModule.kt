@@ -4,10 +4,12 @@ import com.marta.habittracker.core.DefaultDispatchersProvider
 import com.marta.habittracker.core.network.AndroidNetworkChecker
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.data.repository.AuthRepositoryImpl
+import com.marta.habittracker.data.repository.FriendsRepositoryImpl
 import com.marta.habittracker.data.repository.HabitRepositoryImpl
 import com.marta.habittracker.data.repository.OnboardingRepositoryImpl
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
 import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.OnboardingRepository
 import dagger.Binds
@@ -37,6 +39,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindHabitRepository(impl: HabitRepositoryImpl): HabitRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFriendsRepository(impl: FriendsRepositoryImpl): FriendsRepository
 
     @Binds
     @Singleton

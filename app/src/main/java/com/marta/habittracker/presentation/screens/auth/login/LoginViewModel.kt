@@ -10,8 +10,11 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -25,6 +28,9 @@ class LoginViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    private val _navigateToHome = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val navigateToHome: SharedFlow<Unit> = _navigateToHome.asSharedFlow()
 
     fun onEmailChanged(email: String) {
         _uiState.update { it.copy(email = email, errorMessageRes = null) }
@@ -47,7 +53,8 @@ class LoginViewModel @Inject constructor(
             when (loginUseCase(_uiState.value.email, _uiState.value.password)) {
                 is DataResult.Success -> {
                     syncHabits()
-                    _uiState.update { it.copy(isUserLogged = true, isLoading = false) }
+                    _uiState.update { it.copy(isLoading = false) }
+                    _navigateToHome.emit(Unit)
                 }
                 is DataResult.Error -> {
                     _uiState.update {
@@ -74,17 +81,15 @@ class LoginViewModel @Inject constructor(
 }
 
 data class LoginUiState(
-    val email: String = if(BuildConfig.DEBUG) "martajimpac@gmail.com" else "",
-    val password: String = if(BuildConfig.DEBUG) "nalskd1A*" else "",
+    val email: String = if (BuildConfig.DEBUG) "martajimpac@gmail.com" else "",
+    val password: String = if (BuildConfig.DEBUG) "nalskd1A*" else "",
     val isLoading: Boolean = false,
     val isLoginEnabled: Boolean = false,
-    val isUserLogged: Boolean = false,
     val isPasswordVisible: Boolean = false,
     @StringRes val errorMessageRes: Int? = null,
 ) {
     override fun toString(): String {
         return "LoginUiState(isLoading=$isLoading, isLoginEnabled=$isLoginEnabled, " +
-            "isUserLogged=$isUserLogged, isPasswordVisible=$isPasswordVisible, " +
-            "hasError=${errorMessageRes != null})"
+            "isPasswordVisible=$isPasswordVisible, hasError=${errorMessageRes != null})"
     }
 }

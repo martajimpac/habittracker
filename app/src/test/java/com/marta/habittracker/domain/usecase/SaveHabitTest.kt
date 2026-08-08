@@ -25,6 +25,7 @@ class SaveHabitTest {
             icon = "menu_book",
             colorHex = "#D97706",
             reminderTime = "09:00",
+            isPublic = true,
             id = habitId,
         )
 
@@ -38,6 +39,7 @@ class SaveHabitTest {
         assertEquals("menu_book", inserted.icon)
         assertEquals("#D97706", inserted.colorHex)
         assertEquals("09:00", inserted.reminderTime)
+        assertTrue(inserted.isPublic)
     }
 
     @Test

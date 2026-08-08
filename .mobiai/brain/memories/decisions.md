@@ -117,3 +117,27 @@ Matches Figma (friends list, public habits, active challenges, add-friend reques
 - Profile-level privacy only — rejected (per-habit)
 - Stored progress columns — rejected (computed)
 - Separate friend_requests table — deferred; single friendships.status is enough
+
+## Glance home widgets: habit challenge weekly (Approach A)
+
+- id: glance-widgets-habit-challenge-weekly-20260807
+- type: architecture_decision
+- status: active
+- platform: android
+- area: widgets_glance
+- date: 2026-08-07
+
+### Decision
+Three Jetpack Glance widgets: (1) configurable personal habit with online-first complete toggle + Room reads; (2) configurable challenge view-only with challengeId + local snapshot (no Room for challenges); (3) weekly summary view-only from Room. Configuration via App Widget config activity on add. Updates on habit toggle, app foreground, and periodic 30–60 min refresh.
+
+### Reason
+Matches product choices (complete on habit widget only; challenge/week read-only; classic picker on add; online-first mutations). Snapshot needed because social challenges are remote-only in MVP.
+
+### Alternatives considered
+- Network-only refresh for all widgets — rejected; fragile offline
+- Single multipage widget — rejected; worse UX
+- Offline Room mutations from widget — rejected; breaks online-first sync
+- Configure from Profile/Detail — rejected; config-on-add only for MVP
+
+### Files
+- spec.md

@@ -17,9 +17,11 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - El drawable `res/drawable/logo.xml` es el logo de la app (login + icono launcher).
 - Bottom navigation (Figma Make): Home, Stats, FAB central "New" (abre crear hábito), Friends, Profile — con labels e iconos; selección con fondo `#EEE8F4` y tint `#6750A4`.
 - Tab Friends (Figma Make — social):
-  - UI alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, bottom sheets (añadir / ver hábitos / crear reto).
+  - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, solicitudes pendientes y bottom sheets (añadir / ver hábitos / crear reto).
   - Textos en ingles (`strings.xml`).
-  - Android: `FriendsRepository` + `SocialRemoteDataSource` (Supabase); operaciones sociales requieren red (online-first); sin cache Room de friends/challenges en el MVP.
+  - Android usa el contrato de dominio `FriendsRepository` y `SocialRemoteDataSource` (Supabase); el `FriendsViewModel` expone el estado de la UI y recarga los datos al volver a primer plano.
+  - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
+  - La privacidad se persiste extremo a extremo mediante `Habit.isPublic`, `HabitEntity.isPublic` y `HabitDto.is_public`; por defecto cada hábito es privado.
   - Plan de implementación: `docs/plans/2026-07-31-friends-figma-android.md`.
   - Fuera de alcance inmediato: notificaciones push, Realtime, cache offline de amigos.
 
@@ -130,6 +132,43 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
 - **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados.
 - Leyenda Less → More; etiqueta de hoy con borde sutil opcional.
 - Tab Stats de Detail mantiene el anillo de %% overall (sin cambiar en este alcance).
+
+### Home screen widgets (Jetpack Glance)
+
+Aprobado 2026-08-07. Tres widgets independientes (Approach A).
+
+**Común**
+- Implementación con **Jetpack Glance** + App Widget.
+- Textos en ingles (`strings.xml`).
+- Colores alineados al theme Habit (`HabitPrimary` `#6750A4` / `HabitPrimaryLight`).
+- Actualización: tras completar un hábito, al volver a primer plano la app, y refresh periódico razonable (30–60 min).
+- Configuración: **activity de configuración al añadir** el widget (picker clásico), no ajustes dentro de Profile.
+- Mutaciones desde widget siguen **online-first** (igual que la app): sin red no se escribe Room ni Supabase.
+
+**1. Habit widget (configurable)**
+- Al añadirlo: picker de un hábito propio.
+- Muestra: nombre, icono/color, estado de hoy (y streak si cabe).
+- Acción: completar / descompletar el hábito de hoy vía `HabitRepository` (online-first).
+- Tap en el cuerpo (fuera del toggle): abre la app (Home o detalle del hábito).
+- Lectura de estado: Room (cache).
+
+**2. Challenge widget (configurable, solo lectura)**
+- Al añadirlo: picker de un reto (`pending` / `active`) del usuario.
+- Persistencia local del `challengeId` + **snapshot** (nombres, progresos, días restantes, colores) para pintar sin red (los retos no tienen cache Room en el MVP social).
+- Refresh con red actualiza el snapshot; sin red muestra el último snapshot.
+- Sin toggle de completar en el widget.
+- Tap: abre la app (tab Friends).
+
+**3. Weekly summary widget (sin picker de hábito)**
+- Resumen Lun–Dom de todos los hábitos: por día, % o conteo de hábitos programados completados (misma idea que Stats agregado).
+- Solo lectura; tap abre Stats o Home.
+- Datos desde Room.
+
+**Fuera de alcance (widgets)**
+- Completar desde el widget de reto o del semanal.
+- Configurar widgets desde pantallas Profile/Detail.
+- Offline mutations / outbox desde el widget.
+- Un único widget multipágina.
 
 ## Requisitos de Seguridad
 

@@ -19,6 +19,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.InstaDev">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,6 +27,63 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".presentation.widgets.habit.HabitWidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.InstaDev">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".presentation.widgets.challenge.ChallengeWidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.InstaDev">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".presentation.widgets.habit.HabitWidgetReceiver"
+            android:exported="true"
+            android:label="@string/habit_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habit_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".presentation.widgets.challenge.ChallengeWidgetReceiver"
+            android:exported="true"
+            android:label="@string/challenge_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/challenge_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".presentation.widgets.weekly.WeeklyWidgetReceiver"
+            android:exported="true"
+            android:label="@string/weekly_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weekly_widget_info" />
+        </receiver>
 
         <service
             android:name=".core.MyFirebaseMessagingService"

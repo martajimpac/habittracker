@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +59,7 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitTermsBg
 import com.marta.habittracker.presentation.theme.HabitTermsText
+import com.marta.habittracker.presentation.utils.CollectAsEffect
 
 @Composable
 fun RegisterScreen(
@@ -69,10 +69,8 @@ fun RegisterScreen(
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        registerViewModel.navigateToHome.collect {
-            navigateToHome()
-        }
+    CollectAsEffect(registerViewModel.navigateToHome) {
+        navigateToHome()
     }
 
     RegisterContent(
