@@ -29,13 +29,13 @@ The goal of this project is to explore modern Android development practices whil
 - Streak tracking
 - Performance insights
 
-### Social (Planned)
+### Social
 - Add friends
 - View friends' public habits
 - Challenge friends
 - Shared progress
 
-### Widgets (Planned)
+### Widgets 
 - Home screen widgets
 - Quick habit completion
 - Daily progress overview
@@ -138,30 +138,12 @@ app/
 
 ---
 
-# 🎯 Current Goals
-
-- [x] Authentication
-- [x] Onboarding
-- [x] Modern Compose UI
-- [ ] Habit CRUD
-- [ ] Statistics
-- [ ] Notifications
-- [ ] Home screen widgets
-- [ ] Social features
-- [ ] Offline-first synchronization
-- [ ] Wear OS support
-
----
-
 # 📈 Future Improvements
 
 - Google Sign-In
 - GitHub Sign-In
 - Habit templates
-- Shared challenges
-- Cloud synchronization
 - Backup & Restore
-- Dynamic widgets
 - Material You customization
 
 ---
