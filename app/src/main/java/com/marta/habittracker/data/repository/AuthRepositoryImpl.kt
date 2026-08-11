@@ -74,6 +74,47 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError> {
+        return try {
+            Log.d(TAG, "Password reset request started")
+            supabase.auth.resetPasswordForEmail(
+                email = email,
+                redirectUrl = "habittracker://auth/reset",
+            )
+            Log.d(TAG, "Password reset request finished")
+            DataResult.Success(Unit)
+        } catch (exception: AuthRestException) {
+            Log.e(TAG, "Password reset request failed: auth error", exception)
+            DataResult.Error(mapAuthError(exception.error))
+        } catch (exception: IOException) {
+            Log.e(TAG, "Password reset request failed: network", exception)
+            DataResult.Error(AppError.Common.Network)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Password reset request failed", exception)
+            DataResult.Error(AppError.Common.Unknown)
+        }
+    }
+
+    override suspend fun updatePassword(newPassword: String): DataResult<Unit, AppError> {
+        return try {
+            Log.d(TAG, "Password update started")
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+            Log.d(TAG, "Password update finished")
+            DataResult.Success(Unit)
+        } catch (exception: AuthRestException) {
+            Log.e(TAG, "Password update failed: auth error", exception)
+            DataResult.Error(mapAuthError(exception.error))
+        } catch (exception: IOException) {
+            Log.e(TAG, "Password update failed: network", exception)
+            DataResult.Error(AppError.Common.Network)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Password update failed", exception)
+            DataResult.Error(AppError.Common.Unknown)
+        }
+    }
+
     override suspend fun isLoggedIn(): Boolean {
         return supabase.auth.currentUserOrNull() != null
     }

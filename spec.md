@@ -14,6 +14,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - El login debe empezar deshabilitado hasta que email y password sean validos.
 - Pantalla Login: fondo con gradiente (azul → cyan), marca `logo` + nombre de app arriba, y el formulario (email, password, acciones existentes) dentro de una card blanca redondeada.
 - Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
+- Password reset (aprobado 2026-08-08): ver § Password reset (deep link).
 - El drawable `res/drawable/logo.xml` es el logo de la app (login + icono launcher).
 - Bottom navigation (Figma Make): Home, Stats, FAB central "New" (abre crear hábito), Friends, Profile — con labels e iconos; selección con fondo `#EEE8F4` y tint `#6750A4`.
 - Tab Friends (Figma Make — social):
@@ -42,9 +43,35 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Los tokens de autenticacion deben enviarse en headers seguros, no en query params ni logs.
 - Habitos y registros se sincronizan con Supabase (online-first): Supabase es la fuente de verdad en escrituras; Room es cache de lectura (tambien offline).
 
+### Password reset (deep link)
+
+Aprobado 2026-08-08.
+
+**Flujo**
+1. Login → "Forgot password?" → pantalla **Forgot password** (email; precargar el email ya escrito en Login si existe).
+2. La app solicita el reset vía Supabase Auth (`resetPasswordForEmail`) con  
+   `redirectTo = habittracker://auth/reset`.
+3. Tras enviar, mostrar mensaje genérico de éxito (no revelar si el email está registrado) y volver a Login (evento one-shot `SharedFlow`, no flags sticky).
+4. El usuario abre el enlace del correo → custom scheme abre la app → se importa la sesión de recovery desde la URI.
+5. Pantalla **Reset password**: nueva password + confirmación; validación local con `PasswordValidator`.
+6. Al guardar con éxito: actualizar password (`updateUser`) → **signOut** de la sesión recovery → navegar a **Login** con mensaje de éxito.
+
+**Técnico**
+- Custom scheme: `habittracker://auth/reset` (intent-filter en `MainActivity` / deep link de Navigation).
+- Configuración manual en Supabase Dashboard → Auth → Redirect URLs: incluir `habittracker://auth/reset`.
+- Capas: métodos en `AuthRepository` (+ use cases si aportan); Screens/ViewModels Screen/Content; strings EN en `strings.xml`.
+- Logs: no registrar tokens del deep link ni passwords; email solo truncado si hace falta.
+
+**Fuera de alcance**
+- Página web intermedia / hosting propio de reset.
+- Android App Links (`https://`).
+- Cambio de password desde Profile estando ya logueado.
+- iOS.
+
 ## Requisitos Funcionales Basicos
 
 - El usuario puede iniciar sesion con email y password validos.
+- El usuario puede solicitar un reset de password por email y definir una nueva password en la app tras abrir el deep link del correo.
 - El usuario puede visualizar habitos por fecha.
 - El usuario puede marcar y desmarcar un habito como completado.
 - El usuario puede consultar el detalle e historial de un habito.
@@ -54,7 +81,10 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
 - Escritura (crear, completar, editar, borrar): requiere conexion a internet. Sin red, la operacion no modifica Room ni Supabase y la UI muestra un error de "sin internet" (`strings.xml`).
 - Con red: la escritura va primero a Supabase; solo si el remoto OK se actualiza Room. Si falla el remoto: log (`Log.e`), error en UI, Room no cambia.
-- El id del habito es un UUID generado en el cliente (String), compartido entre Room y Supabase (sin `remoteId` separado).
+- Los IDs generados en el cliente (hábitos, habit_records, friendships, challenges y cualquier otro PK/FK creado en app) son **UUIDv7** (`String`), compartidos entre Room y Supabase (sin `remoteId` separado).
+- Generación centralizada vía helper (`newId()` / equivalente) usando `kotlin.uuid.Uuid.generateV7()` (opt-in `ExperimentalUuidApi`); no usar `UUID.randomUUID()` (v4) para IDs nuevos.
+- IDs ya persistidos (p. ej. v4 históricos) **no se migran**; solo los IDs creados a partir de este cambio usan v7.
+- Schema Postgres `uuid` sin cambios; v7 es un UUID de 128 bits válido.
 - Detalle de diseno: `docs/designs/2026-07-21-add-habit-figma-design.md`.
 
 ### Sync de habitos (Supabase)

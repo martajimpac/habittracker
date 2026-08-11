@@ -6,10 +6,27 @@ import kotlinx.serialization.Serializable
 object Onboarding
 
 @Serializable
-object Login
+data class Login(
+    val message: LoginMessage? = null,
+)
+
+@Serializable
+enum class LoginMessage {
+    PasswordResetRequestSent,
+    PasswordUpdated,
+    ResetLinkInvalid,
+}
 
 @Serializable
 object Register
+
+@Serializable
+data class ForgotPassword(
+    val email: String = "",
+)
+
+@Serializable
+object ResetPassword
 
 @Serializable
 object Home

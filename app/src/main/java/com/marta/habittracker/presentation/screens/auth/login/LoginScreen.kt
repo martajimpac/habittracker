@@ -51,6 +51,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.navigation.LoginMessage
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
@@ -61,7 +62,9 @@ import com.marta.habittracker.presentation.utils.CollectAsEffect
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
+    message: LoginMessage? = null,
     navigateToRegister: () -> Unit,
+    navigateToForgotPassword: (String) -> Unit,
     navigateToHome: () -> Unit,
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
@@ -76,8 +79,9 @@ fun LoginScreen(
         onPasswordChanged = loginViewModel::onPasswordChanged,
         onTogglePasswordVisibility = loginViewModel::onTogglePasswordVisibility,
         onClickSelected = loginViewModel::onClickSelected,
-        onForgotPassword = { /* UI only */ },
+        onForgotPassword = { navigateToForgotPassword(uiState.email) },
         onNavigateToRegister = navigateToRegister,
+        messageRes = message?.toStringRes(),
     )
 }
 
@@ -90,6 +94,7 @@ fun LoginContent(
     onClickSelected: () -> Unit,
     onForgotPassword: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    messageRes: Int? = null,
 ) {
     Box(
         modifier = Modifier
@@ -155,6 +160,16 @@ fun LoginContent(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                messageRes?.let { successMessageRes ->
+                    Text(
+                        text = stringResource(successMessageRes),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 CustomTextField(
                     label = stringResource(R.string.login_email_label),
@@ -257,4 +272,10 @@ fun LoginContent(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
+}
+
+private fun LoginMessage.toStringRes(): Int = when (this) {
+    LoginMessage.PasswordResetRequestSent -> R.string.login_password_reset_request_sent
+    LoginMessage.PasswordUpdated -> R.string.login_password_updated
+    LoginMessage.ResetLinkInvalid -> R.string.login_password_reset_link_invalid
 }

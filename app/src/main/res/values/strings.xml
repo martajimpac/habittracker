@@ -25,6 +25,26 @@
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_sign_up">Sign up</string>
     <string name="login_error_unable_to_sign_in">Unable to sign in. Check your credentials.</string>
+    <string name="login_password_reset_request_sent">If an account exists for that email, we sent password reset instructions.</string>
+    <string name="login_password_updated">Your password has been updated. Please sign in.</string>
+    <string name="login_password_reset_link_invalid">This password reset link is invalid or has expired. Request a new link.</string>
+
+    <!-- Forgot password -->
+    <string name="forgot_password_back">Back</string>
+    <string name="forgot_password_title">Forgot password?</string>
+    <string name="forgot_password_subtitle">Enter your email and we’ll send you instructions to reset your password.</string>
+    <string name="forgot_password_email_label">Email</string>
+    <string name="forgot_password_send">Send reset link</string>
+    <string name="forgot_password_sending">Sending…</string>
+
+    <!-- Reset password -->
+    <string name="reset_password_title">Set a new password</string>
+    <string name="reset_password_subtitle">Choose a strong password to secure your account.</string>
+    <string name="reset_password_new_label">New password</string>
+    <string name="reset_password_confirm_label">Confirm new password</string>
+    <string name="reset_password_save">Update password</string>
+    <string name="reset_password_saving">Updating…</string>
+    <string name="reset_password_error_passwords_do_not_match">Passwords do not match.</string>
 
     <!-- Legacy login keys kept for compatibility -->
     <string name="login_screen_header_text_spain">Español (España)</string>

@@ -9,6 +9,8 @@ import com.marta.habittracker.domain.repository.AuthRepository
 class FakeAuthRepository(
     private val loginResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
     private val registerResult: DataResult<User, AppError> = DataResult.Success(defaultUser),
+    private val requestPasswordResetResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
+    private val updatePasswordResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val signOutResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val loggedIn: Boolean = false,
     private val displayName: String = defaultUser.name,
@@ -19,6 +21,10 @@ class FakeAuthRepository(
         private set
     var registerCalls: Int = 0
         private set
+    var requestPasswordResetCalls: Int = 0
+        private set
+    var updatePasswordCalls: Int = 0
+        private set
     var signOutCalls: Int = 0
         private set
     var lastLoginEmail: String? = null
@@ -28,6 +34,10 @@ class FakeAuthRepository(
     var lastRegisterEmail: String? = null
         private set
     var lastRegisterPassword: String? = null
+        private set
+    var lastPasswordResetEmail: String? = null
+        private set
+    var lastUpdatedPassword: String? = null
         private set
 
     override suspend fun doLogin(
@@ -48,6 +58,18 @@ class FakeAuthRepository(
         lastRegisterEmail = email
         lastRegisterPassword = password
         return registerResult
+    }
+
+    override suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError> {
+        requestPasswordResetCalls++
+        lastPasswordResetEmail = email
+        return requestPasswordResetResult
+    }
+
+    override suspend fun updatePassword(newPassword: String): DataResult<Unit, AppError> {
+        updatePasswordCalls++
+        lastUpdatedPassword = newPassword
+        return updatePasswordResult
     }
 
     override suspend fun isLoggedIn(): Boolean = loggedIn

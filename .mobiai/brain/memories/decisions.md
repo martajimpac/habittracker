@@ -141,3 +141,31 @@ Matches product choices (complete on habit widget only; challenge/week read-only
 
 ### Files
 - spec.md
+
+## Password reset via custom-scheme deep link (no web page)
+
+- id: password-reset-deeplink
+- type: architecture_decision
+- status: active
+- platform: android
+- area: auth
+- date: 2026-08-10
+
+### Decision
+Password reset uses Supabase `resetPasswordForEmail` with `redirectTo = habittracker://auth/reset`. Opening the email deep link imports the recovery session in-app (`handleDeeplinks`); user sets a new password on a dedicated Reset screen; then sign out and return to Login. Forgot password is a dedicated screen (not a dialog). No intermediate web page; no App Links for MVP.
+
+### Reason
+Matches product choice (in-app only), reuses existing Auth/Clean Architecture patterns, and keeps security messaging generic (no email enumeration). Sign-out after update avoids leaving a recovery session logged in.
+
+### Alternatives considered
+- Email + Supabase-hosted web reset page — rejected; user wants deep link to app
+- Android App Links (https) — deferred; custom scheme is faster MVP
+- Stay logged in / navigate Home after reset — rejected; prefer Login for clarity/security
+- Forgot as dialog on Login — rejected; dedicated screen clearer for errors/copy
+
+### Files
+- spec.md
+- docs/plans/2026-08-10-password-reset-deeplink.md
+- app/src/main/java/com/marta/habittracker/di/SupabaseModule.kt
+- app/src/main/java/com/marta/habittracker/data/repository/AuthRepositoryImpl.kt
+- app/src/main/java/com/marta/habittracker/presentation/screens/auth/

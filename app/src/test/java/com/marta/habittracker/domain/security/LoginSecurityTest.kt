@@ -52,6 +52,12 @@ class LoginSecurityTest {
             return DataResult.Error(AppError.Common.Unknown)
         }
 
+        override suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError> =
+            DataResult.Success(Unit)
+
+        override suspend fun updatePassword(newPassword: String): DataResult<Unit, AppError> =
+            DataResult.Success(Unit)
+
         override suspend fun isLoggedIn(): Boolean = false
 
         override suspend fun getCurrentUserDisplayName(): String = "Secure User"
