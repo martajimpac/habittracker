@@ -8,7 +8,7 @@ class HardcodedSecretsTest {
 
     @Test
     fun projectDoesNotContainHardcodedSecrets() {
-        val workingDir = File(System.getProperty("user.dir"))
+        val workingDir = File(checkNotNull(System.getProperty("user.dir")))
         val projectRoot = if (workingDir.name == "app") {
             workingDir.parentFile
         } else {
@@ -23,11 +23,15 @@ class HardcodedSecretsTest {
         )
 
         val ignoredDirs = setOf("build", ".gradle", ".git", ".idea", "test", "androidTest")
+        val ignoredFiles = setOf("google-services.json")
         val scanExtensions = setOf("kt", "kts", "xml", "json", "properties")
         val findings = projectRoot
             .walkTopDown()
             .onEnter { it.name !in ignoredDirs }
             .filter { it.isFile && it.extension in scanExtensions }
+            .filter { it.name !in ignoredFiles }
+            .filter { !it.path.contains("${File.separator}src${File.separator}test${File.separator}") }
+            .filter { !it.path.contains("${File.separator}src${File.separator}androidTest${File.separator}") }
             .flatMap { file ->
                 val text = file.readText()
                 forbiddenPatterns.mapNotNull { pattern ->

@@ -19,6 +19,22 @@ El archivo `spec.md` es la fuente de verdad funcional del proyecto.
 
 ---
 
+## UI copy (strings)
+
+* All user-facing text lives in `app/src/main/res/values/strings.xml` (and locale variants).
+* Compose uses `stringResource`; ViewModels expose `@StringRes` IDs or resolve via `Context.getString`.
+* Domain and repositories must not hardcode user-visible messages.
+* See `.cursor/rules/android-strings.mdc` for the full always-on rule.
+
+## Services / logging
+
+* Android Services, FCM, workers, and remote/data failure paths must log with `android.util.Log` and a stable `TAG`.
+* Failures use `Log.e(TAG, message, throwable)`; never swallow exceptions silently.
+* Never log secrets or sensitive credentials (see Security below).
+* See `.cursor/rules/android-service-logging.mdc` for the full always-on rule.
+
+---
+
 ## Arquitectura del Proyecto
 
 * **Modelo:** Clean Architecture con flujo de datos unidireccional.
@@ -30,16 +46,6 @@ El archivo `spec.md` es la fuente de verdad funcional del proyecto.
 * **Acceso remoto:** Supabase.
 * **Asincronía:** Kotlin Coroutines y Flow.
 
-Respeta las responsabilidades de cada capa:
-
-```text
-presentation → domain ← data
-```
-
-La capa `domain` no debe depender de `data` ni de `presentation`.
-
-Los modelos específicos de infraestructura, como Room Entities o DTOs, no deben escapar de la capa `data`.
-
 ---
 
 ## Reglas Específicas del Proyecto
@@ -48,12 +54,138 @@ Los modelos específicos de infraestructura, como Room Entities o DTOs, no deben
 * Realiza el mapping de `Entity` y `DTO` a modelos de dominio dentro de la capa `data`.
 * Los repositorios definidos en `domain` deben exponer modelos de dominio.
 * Las implementaciones de repositorios pertenecen a `data`.
+* Las pantallas Compose no acceden a repositorios directamente; los ViewModels sí pueden usar interfaces de repositorio (y Use Cases cuando existan).
+* Separar siempre `*Screen` (obtener estado del ViewModel y conectar eventos) de `*Content` (toda la UI; recibe UiState/callbacks; sin ViewModel) para facilitar `@Preview`, tests y reutilización.
 * Los DAOs deben utilizar `Flow` para datos observables cuando sea apropiado.
 * Utiliza inyección por constructor con Hilt.
 * No instancies repositorios, DAOs ni dependencias manualmente.
 * Mantén un flujo de datos unidireccional en la UI.
+* **No navegues desde estado persistente** (`UiState` / `StateFlow` con flags tipo `isUserLogged`, `isSaved`, `shouldNavigate`). Usa eventos one-shot (`SharedFlow` / `MutableSharedFlow(extraBufferCapacity = 1)`) y cógelos con lifecycle (`repeatOnLifecycle(STARTED)` o `CollectAsEffect`). Ver skill `android-jetpack-compose`.
+---
+
+# Estructura del proyecto
+
+El proyecto sigue una **Clean Architecture** organizada por capas y por funcionalidades.
+
+## Estructura principal
+
+```text
+app/
+├── core/
+├── data/
+├── domain/
+├── presentation/
+└── di/
+```
+
+## core
+
+Contiene código compartido e infraestructura que no pertenece exclusivamente a ninguna capa.
+
+Ejemplos:
+
+* Utilidades.
+* Extensiones.
+* `DefaultDispatchersProvider`.
+* Constantes.
+* Clases base.
+* Servicios, Workers y Receivers compartidos.
+
+No colocar en `core` clases relacionadas con acceso a datos, lógica de negocio o UI.
 
 ---
+
+## data
+
+Contiene únicamente la implementación del acceso a datos y las dependencias externas.
+
+Ejemplos:
+
+* Implementaciones de repositorios.
+* DataSources.
+* Room.
+* DataStore.
+* Supabase.
+* APIs.
+* DTOs.
+* Entidades de base de datos.
+* Mappers entre modelos de datos y dominio.
+
+### Organización
+
+```text
+data/
+├── local/
+│   ├── room/
+│   └── datastore/
+├── remote/
+├── repository/
+└── mapper/
+```
+
+### DataStore
+
+Todo el acceso a `DataStore` debe encapsularse dentro de `data/local/datastore`.
+
+No acceder directamente a `DataStore` desde un `ViewModel`, caso de uso o repositorio.
+
+Crear uno o varios `DataSource` responsables de leer y escribir preferencias.
+
+---
+
+## domain
+
+Contiene únicamente la lógica de negocio.
+
+Ejemplos:
+
+* Entidades.
+* Casos de uso.
+* Interfaces de repositorios.
+* Interfaces compartidas como `DispatchersProvider`.
+
+El dominio no debe depender de `data` ni de `presentation`.
+
+---
+
+## presentation
+
+La capa de presentación está organizada por funcionalidades (feature-first).
+
+Cada pantalla debe contener todo lo relacionado con ella:
+
+* `Screen`
+* `ViewModel`
+* Componentes exclusivos de esa pantalla
+
+Los componentes reutilizables deben ubicarse en:
+
+```text
+presentation/
+├── components/
+├── navigation/
+├── theme/
+└── utils/
+```
+
+---
+
+## di
+
+Toda la configuración de Hilt debe estar centralizada en la carpeta raíz `di`.
+
+No crear carpetas `di` dentro de `data`, `domain`, `presentation` ni de ninguna otra carpeta.
+
+---
+
+## Reglas generales
+
+* Organizar el código por responsabilidad y por funcionalidad.
+* Mantener juntas todas las clases relacionadas con una misma pantalla.
+* Antes de crear una carpeta nueva, comprobar si ya existe una ubicación adecuada.
+* Cada clase debe ubicarse en la capa responsable según Clean Architecture.
+* No acceder directamente a tecnologías concretas (Room, DataStore, Supabase, Retrofit, etc.) desde la capa de presentación ni desde el dominio.
+* Encapsular siempre el acceso a tecnologías externas mediante DataSources y repositorios.
 
 ## Seguridad
 

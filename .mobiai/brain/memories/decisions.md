@@ -6,3 +6,166 @@ Append entries with: mobiai brain save decision
 Each entry should record: title, status (active|deprecated), platform,
 area, date, decision, reason, files.
 -->
+
+## ViewModels may use repositories; Compose screens may not
+
+- id: viewmodels-may-use-repositories
+- type: architecture_decision
+- status: active
+- platform: android
+- area: architecture
+- date: 2026-07-22
+
+### Decision
+Compose screens never access repositories directly; ViewModels may use domain repository interfaces (and Use Cases when present).
+
+### Reason
+Matches how the app already works (Home/AppStart/Profile ViewModels inject repos) and keeps Composables free of data-layer dependencies without forcing a Use Case for every screen.
+
+### Alternatives considered
+- UI never accesses repositories (including forbidding ViewModel → repo) — rejected; too strict vs current code and unwanted by the team
+- Compose screens may inject repositories directly — rejected; blurs presentation boundaries
+
+### Files
+- AGENTS.md
+- .mobiai/brain/config.json
+
+## Offline-first habit sync dual-write + LWW
+
+- id: offline-first-habit-sync-dual-write-lww
+- type: architecture_decision
+- status: deprecated
+- platform: android
+- area: sync_persistence
+- date: 2026-07-23
+
+### Decision
+~~Habit sync uses offline-first dual-write…~~ **Deprecated 2026-07-23** — replaced by online-first (see below). Offline mutations risked being stranded or confusing vs pull; product chose to require network for all writes.
+
+### Reason
+(Original) UI already reads Room offline…
+
+### Alternatives considered
+(Original alternatives)
+
+### Files
+- spec.md
+- app/src/main/java/com/marta/habittracker/data/repository/HabitRepositoryImpl.kt
+
+## Online-first habit sync (read cache offline)
+
+- id: online-first-habit-sync-read-cache
+- type: architecture_decision
+- status: active
+- platform: android
+- area: sync_persistence
+- date: 2026-07-23
+
+### Decision
+Habit mutations (create, update, toggle complete, delete) require internet. Order: connectivity check → Supabase write → Room cache update. Without network, show a user-facing "no internet" error and do not change Room. Reads use Room cache and work offline. Pull on authenticated login/app start refreshes Room from Supabase (remote is source of truth). Same client UUID PK in Room and Supabase.
+
+### Reason
+Avoids lost/overwritten offline edit queues without building an outbox. Still allows browsing cached habits without connectivity.
+
+### Alternatives considered
+- Offline-first dual-write + LWW — rejected; pending local changes vs pull was confusing and needed push-after-merge
+- Outbox + worker — more correct offline writes, deferred as unnecessary if writes require network
+- Block reads offline too — rejected; user wants cached read-only offline
+
+### Files
+- spec.md
+- docs/plans/2026-07-23-habit-sync-supabase.md
+- app/src/main/java/com/marta/habittracker/data/repository/HabitRepositoryImpl.kt
+
+## Friends tab MVP is UI-only empty state
+
+- id: friends-tab-mvp-is-ui-only-empty-state-20260730-124350
+- type: architecture_decision
+- status: active
+- platform: android
+- area: friends_ui
+- date: 2026-07-30
+
+### Decision
+Friends tab MVP is UI-only empty state: Figma Make header (title + compact gradient Add button with no-op click) and centered empty copy. No ViewModel, repository, Supabase, friend list, challenges, or bottom sheets.
+
+### Reason
+Product chose empty-state-first before social backend.
+
+### Alternatives considered
+- Full Figma friends list + sheets with mock data — deferred
+- Pure centered empty without header Add — rejected
+- Add bottom sheet UI without backend — deferred
+
+## Friends social schema: profiles friendships challenges is_public
+
+- id: friends-social-schema-profiles-friendships-challenges-is-pub-20260731-105933
+- type: architecture_decision
+- status: active
+- platform: android
+- area: supabase_social
+- date: 2026-07-31
+
+### Decision
+Full Figma Friends backend on Supabase: profiles + friendships (request/accept) + habits.is_public + challenges with two habit FKs (same semantic habit). Progress computed from habit_records between starts_at/ends_at. RLS: owner CRUD; accepted friends SELECT public habits; challenge participants read peer records for progress.
+
+### Reason
+Matches Figma (friends list, public habits, active challenges, add-friend requests) without denormalized progress columns.
+
+### Alternatives considered
+- Instant friendship / follow — rejected
+- Profile-level privacy only — rejected (per-habit)
+- Stored progress columns — rejected (computed)
+- Separate friend_requests table — deferred; single friendships.status is enough
+
+## Glance home widgets: habit challenge weekly (Approach A)
+
+- id: glance-widgets-habit-challenge-weekly-20260807
+- type: architecture_decision
+- status: active
+- platform: android
+- area: widgets_glance
+- date: 2026-08-07
+
+### Decision
+Three Jetpack Glance widgets: (1) configurable personal habit with online-first complete toggle + Room reads; (2) configurable challenge view-only with challengeId + local snapshot (no Room for challenges); (3) weekly summary view-only from Room. Configuration via App Widget config activity on add. Updates on habit toggle, app foreground, and periodic 30–60 min refresh.
+
+### Reason
+Matches product choices (complete on habit widget only; challenge/week read-only; classic picker on add; online-first mutations). Snapshot needed because social challenges are remote-only in MVP.
+
+### Alternatives considered
+- Network-only refresh for all widgets — rejected; fragile offline
+- Single multipage widget — rejected; worse UX
+- Offline Room mutations from widget — rejected; breaks online-first sync
+- Configure from Profile/Detail — rejected; config-on-add only for MVP
+
+### Files
+- spec.md
+
+## Password reset via custom-scheme deep link (no web page)
+
+- id: password-reset-deeplink
+- type: architecture_decision
+- status: active
+- platform: android
+- area: auth
+- date: 2026-08-10
+
+### Decision
+Password reset uses Supabase `resetPasswordForEmail` with `redirectTo = habittracker://auth/reset`. Opening the email deep link imports the recovery session in-app (`handleDeeplinks`); user sets a new password on a dedicated Reset screen; then sign out and return to Login. Forgot password is a dedicated screen (not a dialog). No intermediate web page; no App Links for MVP.
+
+### Reason
+Matches product choice (in-app only), reuses existing Auth/Clean Architecture patterns, and keeps security messaging generic (no email enumeration). Sign-out after update avoids leaving a recovery session logged in.
+
+### Alternatives considered
+- Email + Supabase-hosted web reset page — rejected; user wants deep link to app
+- Android App Links (https) — deferred; custom scheme is faster MVP
+- Stay logged in / navigate Home after reset — rejected; prefer Login for clarity/security
+- Forgot as dialog on Login — rejected; dedicated screen clearer for errors/copy
+
+### Files
+- spec.md
+- docs/plans/2026-08-10-password-reset-deeplink.md
+- app/src/main/java/com/marta/habittracker/di/SupabaseModule.kt
+- app/src/main/java/com/marta/habittracker/data/repository/AuthRepositoryImpl.kt
+- app/src/main/java/com/marta/habittracker/presentation/screens/auth/

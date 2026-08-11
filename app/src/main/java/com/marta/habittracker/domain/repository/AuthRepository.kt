@@ -14,4 +14,16 @@ interface AuthRepository {
         email: String,
         password: String,
     ): DataResult<User, AppError>
+
+    suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError>
+
+    suspend fun updatePassword(newPassword: String): DataResult<Unit, AppError>
+
+    suspend fun isLoggedIn(): Boolean
+
+    suspend fun getCurrentUserDisplayName(): String
+
+    suspend fun getCurrentUserEmail(): String
+
+    suspend fun signOut(): DataResult<Unit, AppError>
 }

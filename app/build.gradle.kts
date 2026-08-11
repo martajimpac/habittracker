@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -5,9 +7,9 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.google.services)
 }
-
-import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
@@ -21,7 +23,7 @@ room {
 
 android {
     namespace = "com.marta.habittracker"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.marta.habittracker"
@@ -60,6 +62,7 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            freeCompilerArgs.add("-Xdeprecation")
         }
     }
     buildFeatures {
@@ -67,6 +70,9 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 
 }
 
@@ -90,6 +96,7 @@ dependencies {
     //DI
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation)
+    implementation(libs.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.compiler)
 
@@ -107,11 +114,24 @@ dependencies {
     //Icons
     implementation(libs.androidx.compose.material.icons.extended)
 
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     //Supabase
     implementation(libs.postgrest)
     implementation(libs.auth)
     implementation(libs.storage)
     implementation(libs.ktor.client.android)
+
+    //Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
+
+    //Glance widgets
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.work.runtime.ktx)
 
     //Testing
     testImplementation(libs.junit)

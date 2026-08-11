@@ -1,0 +1,47 @@
+---
+description: Services and remote/background work must log failures clearly for fast diagnosis
+alwaysApply: true
+---
+
+# Services — always log for fast failure diagnosis
+
+When creating or changing **services** (Android `Service` / `FirebaseMessagingService`, WorkManager workers, push/notification handlers, remote API clients, repository methods that talk to network/disk and can fail), **always** add structured logging so a failure is obvious in Logcat within seconds.
+
+## Required
+
+- Use `android.util.Log` (project standard today). Do **not** introduce Timber or another logger unless the user explicitly asks.
+- Define a private `TAG` in a `companion object` (short, stable, ≤23 chars when targeting older APIs).
+- Log **entry/exit of important operations** at `Log.d` or `Log.i` (e.g. message received, sync started, token refreshed).
+- On every failure path: `Log.e(TAG, "what failed + why", throwable)` — include the exception when available.
+- On recoverable / unexpected-but-continued paths: `Log.w(TAG, "…", throwable?)`.
+- Messages must answer: **what** ran, **what** failed, and **enough context** to find the bug (operation name, resource id if safe, HTTP/status code if applicable).
+
+## Pattern
+
+```kotlin
+companion object {
+    private const val TAG = "HabitSyncService"
+}
+
+try {
+    Log.d(TAG, "Sync started")
+    // work…
+    Log.d(TAG, "Sync finished ok")
+} catch (e: Exception) {
+    Log.e(TAG, "Sync failed", e)
+    throw e // or map to domain error — still log first
+}
+```
+
+## Forbidden
+
+- Silent `catch` blocks (`catch (_: Exception) {}` or empty bodies) in services / remote code.
+- Logging **secrets**: passwords, tokens, API keys, full auth headers, session cookies.
+- Logging unnecessary PII (full email/phone) when a truncated or user-id is enough.
+- `println` / `System.out` instead of `Log`.
+
+## Scope reminder
+
+- Domain layer stays free of Android `Log` when possible; prefer logging at **service / data / remote** boundaries.
+- UI errors shown to users still go through `strings.xml` — logs are for developers, not user copy.
+- See `AGENTS.md` security notes: never put credentials in logs.
