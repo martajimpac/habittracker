@@ -9,14 +9,13 @@ import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -46,8 +45,8 @@ class HabitDetailViewModel @Inject constructor(
     private val _actionErrorRes = MutableStateFlow<Int?>(null)
     val actionErrorRes: StateFlow<Int?> = _actionErrorRes.asStateFlow()
 
-    private val _habitDeleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val habitDeleted: SharedFlow<Unit> = _habitDeleted.asSharedFlow()
+    private val _habitDeleted = Channel<Unit>(Channel.BUFFERED)
+    val habitDeleted = _habitDeleted.receiveAsFlow()
 
     fun deleteHabit() {
         viewModelScope.launch {
@@ -55,7 +54,7 @@ class HabitDetailViewModel @Inject constructor(
             when (val result = repository.deleteHabit(current)) {
                 is DataResult.Success -> {
                     _actionErrorRes.value = null
-                    _habitDeleted.emit(Unit)
+                    _habitDeleted.send(Unit)
                 }
                 is DataResult.Error -> {
                     _actionErrorRes.value = result.error.toUserMessageRes()

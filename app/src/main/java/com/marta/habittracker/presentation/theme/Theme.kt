@@ -16,28 +16,47 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColorScheme = darkColorScheme(
     primary = HabitPrimaryLight,
     onPrimary = Color.White,
+
+    secondary = HabitSecondaryLight,
+    onSecondary = Color.White,
+
     background = Gray20,
-    onBackground = Gray70,
+    onBackground = Color.White,
+
     surface = Gray20,
     onSurface = Color.White,
-    onSurfaceVariant = Color.White,
-    tertiary = Red60
+
+    surfaceVariant = Gray30,
+    onSurfaceVariant = Gray70,
+
+    outline = Gray50,
+
+    error = ErrorColor,
+    onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = HabitPrimary,
     onPrimary = Color.White,
+
+    secondary = HabitSecondary,
+    onSecondary = Color.White,
+
     background = HabitSurface,
     onBackground = HabitOnSurface,
+
     surface = HabitSurface,
     onSurface = HabitOnSurface,
+
+    surfaceVariant = HabitSurfaceVariant,
     onSurfaceVariant = HabitOnSurfaceVariant,
-    tertiary = Red60
+
+    outline = HabitOutline,
+
+    error = ErrorColorLight,
+    onError = Color.White
 )
 
-val LocalStateColors = staticCompositionLocalOf<StateColors> {
-    error("No StateColors provided")
-}
 
 @Composable
 fun InstaDevTheme(
@@ -55,15 +74,8 @@ fun InstaDevTheme(
         else -> LightColorScheme
     }
 
-    val stateColors = if (darkTheme) {
-        DarkStateColors
-    } else {
-        LightStateColors
-    }
 
-    CompositionLocalProvider(
-        LocalStateColors provides stateColors
-    ) {
+    CompositionLocalProvider() {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

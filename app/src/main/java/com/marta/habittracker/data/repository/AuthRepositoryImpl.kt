@@ -116,7 +116,14 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isLoggedIn(): Boolean {
-        return supabase.auth.currentUserOrNull() != null
+        return try {
+            val user = supabase.auth.currentUserOrNull()
+            Log.d(TAG, "isLoggedIn check: ${if (user != null) "YES (${user.email})" else "NO"}")
+            user != null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking login status", e)
+            false
+        }
     }
 
     override suspend fun getCurrentUserDisplayName(): String {

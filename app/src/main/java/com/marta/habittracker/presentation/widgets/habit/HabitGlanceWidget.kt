@@ -26,8 +26,8 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.habitIconRes
 import com.marta.habittracker.presentation.screens.home.calculateStreak
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
 import com.marta.habittracker.presentation.theme.HabitSurface
+import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.android.EntryPointAccessors
@@ -50,11 +50,15 @@ class HabitGlanceWidget : GlanceAppWidget() {
         val openAppAction = actionStartActivity(
             WidgetLaunchExtras.openHomeIntent(context, habit?.id),
         )
+        val toggleAction = actionRunCallback<ToggleHabitAction>(
+            parameters = androidx.glance.action.actionParametersOf(
+                ToggleHabitAction.appWidgetIdKey to appWidgetId,
+            ),
+        )
 
         provideContent {
             HabitWidgetContent(
                 habit = habit,
-                appWidgetId = appWidgetId,
                 configureText = context.getString(R.string.habit_widget_configure),
                 completedText = context.getString(R.string.habit_widget_completed),
                 notCompletedText = context.getString(R.string.habit_widget_not_completed),
@@ -69,15 +73,15 @@ class HabitGlanceWidget : GlanceAppWidget() {
                     }
                 }.orEmpty(),
                 openAppAction = openAppAction,
+                toggleAction = toggleAction,
             )
         }
     }
 }
 
 @Composable
-private fun HabitWidgetContent(
+internal fun HabitWidgetContent(
     habit: Habit?,
-    appWidgetId: Int,
     configureText: String,
     completedText: String,
     notCompletedText: String,
@@ -85,6 +89,7 @@ private fun HabitWidgetContent(
     markIncompleteText: String,
     streakText: String,
     openAppAction: androidx.glance.action.Action,
+    toggleAction: androidx.glance.action.Action,
 ) {
     val accent = habit?.let { parseHabitColor(it.colorHex) }
     Column(
@@ -121,11 +126,7 @@ private fun HabitWidgetContent(
             }
             Button(
                 text = if (habit.isCompleted) markIncompleteText else markCompleteText,
-                onClick = actionRunCallback<ToggleHabitAction>(
-                    parameters = androidx.glance.action.actionParametersOf(
-                        ToggleHabitAction.appWidgetIdKey to appWidgetId,
-                    ),
-                ),
+                onClick = toggleAction,
             )
         }
     }

@@ -27,9 +27,7 @@ fun NavigationBottomWrapper(
     NavHost(modifier = modifier, navController = navHostController, startDestination = TabHome) {
 
         composable<TabHome> {
-            HomeScreen(
-                onAdd = { navHostController.navigate(TabAddContent) },
-            )
+            HomeScreen()
         }
 
         composable<TabStats> { StatsScreen() }

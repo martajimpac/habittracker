@@ -8,6 +8,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 
 - Las pantallas Compose solo deben renderizar estado y enviar eventos al ViewModel.
 - Los ViewModels exponen estado observable mediante `StateFlow`.
+- Eventos one-shot (navegación, diálogos, snackbars, abrir pantallas): siempre `Channel(Channel.BUFFERED)` + `receiveAsFlow()` y `ObserveAsEvents` en Compose. Prohibido flags sticky en `UiState`, `SharedFlow`/`CollectAsEffect` para eventos nuevos, y `collectAsState*` sobre flujos de eventos. Ver `.cursor/rules/android-one-shot-events.mdc` y `.cursor/skills/android-one-shot-events/`.
 - Separar siempre `*Screen` (solo ViewModel + eventos / navegacion) de `*Content` (UI pura con UiState + callbacks, sin ViewModel) para Preview, tests y reutilizacion.
 - El estado de UI no debe contener secretos persistentes por defecto.
 - Las credenciales introducidas por el usuario no deben aparecer en logs ni en representaciones persistentes del estado.
@@ -76,7 +77,7 @@ Aprobado 2026-08-08.
 - El usuario puede marcar y desmarcar un habito como completado.
 - El usuario puede consultar el detalle e historial de un habito.
 - El usuario puede eliminar habitos y sus registros asociados.
-- El usuario puede crear un habito con nombre, descripcion opcional, icono, color, hora de recordatorio opcional y dias de la semana.
+- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), hora de recordatorio opcional y dias de la semana.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
 - Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
 - Escritura (crear, completar, editar, borrar): requiere conexion a internet. Sin red, la operacion no modifica Room ni Supabase y la UI muestra un error de "sin internet" (`strings.xml`).
@@ -174,6 +175,7 @@ Aprobado 2026-08-07. Tres widgets independientes (Approach A).
 - Actualización: tras completar un hábito, al volver a primer plano la app, y refresh periódico razonable (30–60 min).
 - Configuración: **activity de configuración al añadir** el widget (picker clásico), no ajustes dentro de Profile.
 - Mutaciones desde widget siguen **online-first** (igual que la app): sin red no se escribe Room ni Supabase.
+- **Previews (2026-10-08):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) y un `@Preview` de Glance (`androidx.glance.preview`, source set `debug`) en Android Studio. Datos de muestra; no cambian la lógica. No hay un cuarto widget.
 
 **1. Habit widget (configurable)**
 - Al añadirlo: picker de un hábito propio.

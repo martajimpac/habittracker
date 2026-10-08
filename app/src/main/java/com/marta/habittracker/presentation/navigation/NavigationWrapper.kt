@@ -21,7 +21,7 @@ import com.marta.habittracker.presentation.screens.auth.register.RegisterScreen
 import com.marta.habittracker.presentation.screens.auth.reset_password.ResetPasswordScreen
 import com.marta.habittracker.presentation.screens.bottom_nav_screen.BottomNavScreen
 import com.marta.habittracker.presentation.screens.onboarding.OnboardingScreen
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun NavigationWrapper(
@@ -46,7 +46,7 @@ fun NavigationWrapper(
         AppStartDestination.Home -> Home
     }
 
-    CollectAsEffect(authDeeplinkViewModel.events) { event ->
+    ObserveAsEvents(flow = authDeeplinkViewModel.events) { event ->
         when (event) {
             AuthDeeplinkEvent.NavigateToResetPassword -> {
                 navController.navigate(ResetPassword) {

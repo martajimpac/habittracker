@@ -4,9 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.repository.OnboardingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,13 +14,13 @@ class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
 ) : ViewModel() {
 
-    private val _navigateToLogin = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val navigateToLogin: SharedFlow<Unit> = _navigateToLogin.asSharedFlow()
+    private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
+    val navigateToLogin = _navigateToLogin.receiveAsFlow()
 
     fun completeOnboarding() {
         viewModelScope.launch {
             onboardingRepository.setCompleted()
-            _navigateToLogin.emit(Unit)
+            _navigateToLogin.send(Unit)
         }
     }
 }

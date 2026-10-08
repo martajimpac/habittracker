@@ -10,9 +10,13 @@ import com.marta.habittracker.R
 
 val NunitoFontFamily = FontFamily(
     Font(R.font.nunito_regular, FontWeight.Normal),
+    Font(R.font.nunito_regular, FontWeight.Medium),
+    Font(R.font.nunito_bold, FontWeight.SemiBold),
     Font(R.font.nunito_bold, FontWeight.Bold),
     Font(R.font.nunito_extrabold, FontWeight.ExtraBold),
 )
+
+private val defaultTypography = Typography()
 
 val Typography = Typography(
     displayLarge = TextStyle(
@@ -22,6 +26,8 @@ val Typography = Typography(
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp,
     ),
+    displayMedium = defaultTypography.displayMedium.copy(fontFamily = NunitoFontFamily),
+    displaySmall = defaultTypography.displaySmall.copy(fontFamily = NunitoFontFamily),
     headlineLarge = TextStyle(
         fontFamily = NunitoFontFamily,
         fontWeight = FontWeight.ExtraBold,
@@ -35,6 +41,7 @@ val Typography = Typography(
         fontSize = 24.sp,
         lineHeight = 30.sp,
     ),
+    headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = NunitoFontFamily),
     titleLarge = TextStyle(
         fontFamily = NunitoFontFamily,
         fontWeight = FontWeight.Bold,

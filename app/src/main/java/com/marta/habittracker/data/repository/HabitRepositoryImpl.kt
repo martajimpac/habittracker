@@ -1,6 +1,7 @@
 package com.marta.habittracker.data.repository
 
 import android.util.Log
+import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.core.toEpochMillis
 import com.marta.habittracker.data.local.room.HabitDao
@@ -17,7 +18,6 @@ import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +66,7 @@ class HabitRepositoryImpl @Inject constructor(
             updatedAt = now,
             deletedAt = null,
         ) ?: HabitRecordEntity(
-            id = UUID.randomUUID().toString(),
+            id = IdGenerator.newId(),
             habitId = habit.id,
             date = date,
             isCompleted = newCompleted,

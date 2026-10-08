@@ -1,8 +1,10 @@
 package com.marta.habittracker.presentation.screens.add_content
 
+import androidx.compose.ui.graphics.Color
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.SaveHabit
+import com.marta.habittracker.presentation.theme.HabitColor1
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -70,7 +72,7 @@ class AddContentViewModelTest {
         viewModel.onNameChanged("Morning Run")
         viewModel.onDescriptionChanged("Park loop")
         viewModel.onIconSelected("directions_run")
-        viewModel.onColorSelected("#059669")
+        viewModel.onColorSelected(HabitColor1)
         viewModel.onReminderTimeChanged("07:30")
         viewModel.onDayToggled(DayOfWeek.MONDAY)
         viewModel.onDayToggled(DayOfWeek.WEDNESDAY)
@@ -81,7 +83,7 @@ class AddContentViewModelTest {
         assertEquals("Morning Run", inserted.name)
         assertEquals("Park loop", inserted.description)
         assertEquals("directions_run", inserted.icon)
-        assertEquals("#059669", inserted.colorHex)
+        assertEquals("#F04F45", inserted.colorHex)
         assertEquals("07:30", inserted.reminderTime)
         assertTrue(inserted.id.isNotBlank())
         assertTrue(saved)

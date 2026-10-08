@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,13 +58,12 @@ import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.HabitSurface
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import java.time.DayOfWeek
 import java.time.format.TextStyle
-import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
+import com.marta.habittracker.presentation.utils.HabitColorOptions
 
 @Composable
 fun AddContentScreen(
@@ -72,7 +72,7 @@ fun AddContentScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(viewModel.habitSaved) {
+    ObserveAsEvents(flow = viewModel.habitSaved) {
         onBack()
     }
 
@@ -98,13 +98,13 @@ fun AddContentContent(
     onNameChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onIconSelected: (String) -> Unit,
-    onColorSelected: (String) -> Unit,
+    onColorSelected: (Color) -> Unit,
     onReminderTimeChanged: (String) -> Unit,
     onDayToggled: (DayOfWeek) -> Unit,
     onPublicChanged: (Boolean) -> Unit,
     onSaveClicked: () -> Unit,
 ) {
-    val selectedColor = parseHabitColor(uiState.colorHex)
+    val selectedColor = uiState.color
     val canSave = uiState.name.isNotBlank() && uiState.selectedDays.isNotEmpty() && !uiState.isSaving
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -149,10 +149,10 @@ fun AddContentContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)),
+                    HabitPrimary,
                 )
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -161,9 +161,9 @@ fun AddContentContent(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.2f))
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.25f))
                         .clickable(onClick = onBack),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -171,30 +171,16 @@ fun AddContentContent(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.add_habit_close),
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
                 Text(
                     text = stringResource(R.string.add_habit_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier.weight(1f),
                 )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (canSave) Color.White else Color(0xFFCAC4D0))
-                        .clickable(enabled = canSave, onClick = onSaveClicked)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.add_habit_save),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = if (canSave) HabitPrimary else Color.White,
-                    )
-                }
             }
         }
 
@@ -211,16 +197,15 @@ fun AddContentContent(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(96.dp)
-                        .shadow(8.dp, RoundedCornerShape(32.dp))
-                        .clip(RoundedCornerShape(32.dp))
-                        .background(selectedColor.copy(alpha = 0.12f)),
+                        .size(100.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(selectedColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     HabitLineIcon(
                         iconKey = uiState.icon,
                         tint = selectedColor,
-                        size = 48.dp,
+                        size = 52.dp,
                     )
                 }
             }
@@ -239,11 +224,11 @@ fun AddContentContent(
                 placeholder = stringResource(R.string.add_habit_description_placeholder),
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = stringResource(R.string.add_habit_choose_icon),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     color = HabitOnSurface,
                 )
                 HabitIconOptions.chunked(6).forEach { rowIcons ->
@@ -257,14 +242,14 @@ fun AddContentContent(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(18.dp))
                                     .background(
-                                        if (selected) selectedColor.copy(alpha = 0.15f) else HabitField,
+                                        if (selected) selectedColor.copy(alpha = 0.12f) else HabitField,
                                     )
                                     .border(
                                         width = 2.dp,
                                         color = if (selected) selectedColor else Color.Transparent,
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = RoundedCornerShape(18.dp),
                                     )
                                     .clickable { onIconSelected(icon) },
                                 contentAlignment = Alignment.Center,
@@ -272,7 +257,7 @@ fun AddContentContent(
                                 HabitLineIcon(
                                     iconKey = icon,
                                     tint = if (selected) selectedColor else HabitOnSurfaceVariant,
-                                    size = 22.dp,
+                                    size = 24.dp,
                                 )
                             }
                         }
@@ -283,36 +268,52 @@ fun AddContentContent(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = stringResource(R.string.add_habit_choose_color),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     color = HabitOnSurface,
                 )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    HabitColorOptions.forEach { hex ->
-                        val color = parseHabitColor(hex)
-                        val selected = uiState.colorHex == hex
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .clickable { onColorSelected(hex) },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (selected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp),
-                                )
+                HabitColorOptions.chunked(6).forEach { rowColors ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        rowColors.forEach { color ->
+                            val selected = uiState.color == color
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .shadow(if (selected) 6.dp else 3.dp, CircleShape)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .border(
+                                            width = if (selected) 3.dp else 0.dp,
+                                            color = Color.White,
+                                            shape = CircleShape,
+                                        )
+                                        .clickable { onColorSelected(color) },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (selected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    }
+                                }
                             }
+                        }
+                        repeat(6 - rowColors.size) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -320,22 +321,22 @@ fun AddContentContent(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.add_habit_reminder_time),
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Bold,
                         color = HabitOnSurface,
                     )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(HabitField)
                             .clickable { showTimePicker = true }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -343,34 +344,34 @@ fun AddContentContent(
                         Text(
                             text = uiState.reminderTime,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = HabitOnSurface,
                         )
                     }
                 }
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.add_habit_frequency),
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Bold,
                         color = HabitOnSurface,
                     )
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         DayOfWeek.entries.forEach { day ->
                             val selected = uiState.selectedDays.contains(day)
-                            val label = day.getDisplayName(TextStyle.NARROW, Locale.getDefault())
+                            val label = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale)
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(if (selected) HabitPrimary else HabitField)
                                     .clickable { onDayToggled(day) }
-                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                    .padding(horizontal = 9.dp, vertical = 9.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
@@ -386,14 +387,18 @@ fun AddContentContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(HabitField.copy(alpha = 0.5f))
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = stringResource(R.string.habit_is_public),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     color = HabitOnSurface,
                 )
                 Switch(
@@ -407,18 +412,20 @@ fun AddContentContent(
                     text = stringResource(messageRes),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
             }
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(58.dp)
+                    .shadow(if (canSave) 6.dp else 2.dp, RoundedCornerShape(16.dp))
                     .clip(RoundedCornerShape(16.dp))
                     .background(
                         if (canSave) {
                             Brush.linearGradient(
-                                listOf(selectedColor, selectedColor.copy(alpha = 0.67f)),
+                                listOf(selectedColor, selectedColor.copy(alpha = 0.7f)),
                             )
                         } else {
                             Brush.linearGradient(listOf(Color(0xFFCAC4D0), Color(0xFFCAC4D0)))
@@ -429,13 +436,30 @@ fun AddContentContent(
             ) {
                 Text(
                     text = stringResource(R.string.add_habit_create),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun AddContentContentPreview() {
+    AddContentContent(
+        uiState = AddContentUiState(),
+        onBack = {},
+        onNameChanged = {},
+        onDescriptionChanged = {},
+        onIconSelected = {},
+        onColorSelected = {},
+        onReminderTimeChanged = {},
+        onDayToggled = {},
+        onPublicChanged = {},
+        onSaveClicked = {},
+    )
 }

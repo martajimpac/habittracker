@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,7 +35,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun ResetPasswordScreen(
@@ -43,7 +44,7 @@ fun ResetPasswordScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(viewModel.navigateToLogin) {
+    ObserveAsEvents(flow = viewModel.navigateToLogin) {
         navigateToLogin()
     }
 
@@ -168,4 +169,15 @@ fun ResetPasswordContent(
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun ResetPasswordContentPreview() {
+    ResetPasswordContent(
+        uiState = ResetPasswordUiState(),
+        onNewPasswordChanged = {},
+        onConfirmPasswordChanged = {},
+        onSubmit = {},
+    )
 }

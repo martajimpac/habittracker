@@ -1,23 +1,22 @@
 package com.marta.habittracker.presentation.auth
 
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthDeeplinkCoordinator @Inject constructor() {
 
-    private val _events = MutableSharedFlow<AuthDeeplinkEvent>(extraBufferCapacity = 1)
-    val events: SharedFlow<AuthDeeplinkEvent> = _events.asSharedFlow()
+    private val _events = Channel<AuthDeeplinkEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     fun onResetLinkHandled() {
-        _events.tryEmit(AuthDeeplinkEvent.NavigateToResetPassword)
+        _events.trySend(AuthDeeplinkEvent.NavigateToResetPassword)
     }
 
     fun onResetLinkFailed() {
-        _events.tryEmit(AuthDeeplinkEvent.ResetLinkFailed)
+        _events.trySend(AuthDeeplinkEvent.ResetLinkFailed)
     }
 }
 

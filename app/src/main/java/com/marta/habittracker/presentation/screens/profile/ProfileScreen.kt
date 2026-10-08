@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.profile
 
+import android.R.style.Theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -47,10 +49,10 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.screens.home.userAvatarInitials
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
-private val ProfileGradientStart = Color(0xFF7C3AED)
-private val ProfileGradientEnd = Color(0xFFA78BFA)
+
 private val ProfileHeaderMuted = Color(0xFFE9D5FF)
 private val ProfileMenuBorder = Color(0x146750A4)
 private val ProfileChevron = Color(0xFFCAC4D0)
@@ -71,7 +73,7 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(viewModel.navigateToLogin) {
+    ObserveAsEvents(flow = viewModel.navigateToLogin) {
         onSignedOut()
     }
 
@@ -87,11 +89,9 @@ fun ProfileContent(
     onSignOut: () -> Unit = {},
 ) {
     val menuItems = listOf(
-        ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, Color(0xFF6750A4)),
-        ProfileMenuItem(R.string.profile_goals, Icons.Outlined.TrackChanges, Color(0xFF0D9488)),
-        ProfileMenuItem(R.string.profile_reminders, Icons.Outlined.CalendarMonth, Color(0xFFD97706)),
-        ProfileMenuItem(R.string.profile_preferences, Icons.Outlined.Settings, Color(0xFF7C3AED)),
-        ProfileMenuItem(R.string.profile_achievements, Icons.Outlined.EmojiEvents, Color(0xFF059669)),
+        ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, MaterialTheme.colorScheme.primary),
+        ProfileMenuItem(R.string.profile_goals, Icons.Outlined.TrackChanges, MaterialTheme.colorScheme.primary),
+        ProfileMenuItem(R.string.profile_preferences, Icons.Outlined.Settings, MaterialTheme.colorScheme.primary),
     )
 
     Column(
@@ -135,9 +135,7 @@ private fun ProfileHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(ProfileGradientStart, ProfileGradientEnd),
-                ),
+                HabitPrimary,
             )
             .statusBarsPadding()
             .padding(horizontal = 20.dp)
@@ -306,4 +304,18 @@ private fun ProfileSignOutRow(
             color = ProfileSignOut,
         )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun ProfileContentPreview() {
+    ProfileContent(
+        uiState = ProfileUiState(
+            displayName = "John Doe",
+            email = "john@example.com",
+            dayStreak = 7,
+            completedCount = 42,
+            habitsCount = 5,
+        ),
+    )
 }

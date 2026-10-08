@@ -9,12 +9,11 @@ import com.marta.habittracker.domain.PasswordValidator
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.usecase.UpdatePassword
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,8 +26,8 @@ class ResetPasswordViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ResetPasswordUiState())
     val uiState: StateFlow<ResetPasswordUiState> = _uiState.asStateFlow()
 
-    private val _navigateToLogin = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val navigateToLogin: SharedFlow<Unit> = _navigateToLogin.asSharedFlow()
+    private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
+    val navigateToLogin = _navigateToLogin.receiveAsFlow()
 
     fun onNewPasswordChanged(password: String) {
         _uiState.update {
@@ -57,7 +56,7 @@ class ResetPasswordViewModel @Inject constructor(
             when (val result = updatePassword(state.newPassword)) {
                 is DataResult.Success -> {
                     _uiState.update { it.copy(isLoading = false) }
-                    _navigateToLogin.emit(Unit)
+                    _navigateToLogin.send(Unit)
                 }
 
                 is DataResult.Error -> {

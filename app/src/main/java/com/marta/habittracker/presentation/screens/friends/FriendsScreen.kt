@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -70,7 +71,6 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 
-private val FriendsBackground = Color(0xFFF6F0FF)
 
 @Composable
 fun FriendsScreen(
@@ -109,7 +109,7 @@ fun FriendsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FriendsBackground),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         FriendsHeader(onAddFriend = onAddFriend)
         if (uiState.isLoading) {
@@ -568,7 +568,7 @@ private fun FriendsAddButton(onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+            .background(HabitPrimaryLight)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -580,3 +580,11 @@ private fun FriendsAddButton(onClick: () -> Unit) {
 }
 
 private fun String.toComposeColor(): Color = runCatching { Color(parseColor(this)) }.getOrDefault(HabitPrimary)
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun FriendsContentPreview() {
+    FriendsContent(
+        uiState = FriendsUiState(),
+    )
+}

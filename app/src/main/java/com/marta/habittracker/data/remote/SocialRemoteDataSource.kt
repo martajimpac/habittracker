@@ -1,6 +1,7 @@
 package com.marta.habittracker.data.remote
 
 import android.util.Log
+import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.data.remote.dto.ChallengeDto
 import com.marta.habittracker.data.remote.dto.ChallengeInsertDto
 import com.marta.habittracker.data.remote.dto.FriendRequestDto
@@ -14,7 +15,6 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -103,7 +103,7 @@ class SocialRemoteDataSource @Inject constructor(
             val friendship = supabase.from(TABLE_FRIENDSHIPS)
                 .insert(
                     FriendRequestDto(
-                        id = UUID.randomUUID().toString(),
+                        id = IdGenerator.newId(),
                         requesterId = requesterId,
                         addresseeId = addresseeId,
                     ),
@@ -182,7 +182,7 @@ class SocialRemoteDataSource @Inject constructor(
             val challenge = supabase.from(TABLE_CHALLENGES)
                 .insert(
                     ChallengeInsertDto(
-                        id = UUID.randomUUID().toString(),
+                        id = IdGenerator.newId(),
                         challengerId = challengerId,
                         challengedId = challengedId,
                         challengerHabitId = challengerHabitId,

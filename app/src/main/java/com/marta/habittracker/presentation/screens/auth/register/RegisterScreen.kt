@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,9 +58,8 @@ import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
-import com.marta.habittracker.presentation.theme.HabitTermsBg
-import com.marta.habittracker.presentation.theme.HabitTermsText
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun RegisterScreen(
@@ -69,7 +69,7 @@ fun RegisterScreen(
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(registerViewModel.navigateToHome) {
+    ObserveAsEvents(flow = registerViewModel.navigateToHome) {
         navigateToHome()
     }
 
@@ -187,7 +187,7 @@ fun RegisterContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(HabitTermsBg)
+                        .background(HabitSurfaceVariant)
                         .clickable { onTermsChecked(!uiState.termsAccepted) }
                         .padding(12.dp),
                     verticalAlignment = Alignment.Top,
@@ -236,7 +236,6 @@ fun RegisterContent(
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = HabitTermsText,
                     )
                 }
 
@@ -273,4 +272,19 @@ fun RegisterContent(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun RegisterContentPreview() {
+    RegisterContent(
+        uiState = RegisterUiState(),
+        onBack = {},
+        onNameChanged = {},
+        onEmailChanged = {},
+        onPasswordChanged = {},
+        onTogglePasswordVisibility = {},
+        onTermsChecked = {},
+        onRegisterClicked = {},
+    )
 }

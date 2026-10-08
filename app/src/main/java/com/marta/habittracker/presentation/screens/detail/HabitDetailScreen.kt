@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,10 +48,10 @@ import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.habitDayIntensity
 import com.marta.habittracker.presentation.components.toHeatmapWeeks
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.parseHabitColor
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
@@ -62,7 +63,7 @@ fun HabitDetailScreen(
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
 
-    CollectAsEffect(viewModel.habitDeleted) {
+    ObserveAsEvents(flow = viewModel.habitDeleted) {
         onBack()
     }
 
@@ -266,4 +267,14 @@ fun SettingsTab() {
     ) {
         Text(stringResource(R.string.detail_edit_habit))
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HabitDetailContentPreview() {
+    HabitDetailContent(
+        habit = null,
+        completionRate = 75f,
+        onBack = {},
+    )
 }

@@ -3,6 +3,7 @@
     android:configure="com.marta.habittracker.presentation.widgets.challenge.ChallengeWidgetConfigActivity"
     android:minWidth="110dp"
     android:minHeight="110dp"
+    android:previewLayout="@layout/challenge_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

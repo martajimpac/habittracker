@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,9 +56,7 @@ import com.marta.habittracker.presentation.navigation.LoginMessage
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.LoginGradientEnd
-import com.marta.habittracker.presentation.theme.LoginGradientStart
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun LoginScreen(
@@ -69,7 +68,7 @@ fun LoginScreen(
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(loginViewModel.navigateToHome) {
+    ObserveAsEvents(flow = loginViewModel.navigateToHome) {
         navigateToHome()
     }
 
@@ -100,9 +99,7 @@ fun LoginContent(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(LoginGradientStart, LoginGradientEnd),
-                ),
+                MaterialTheme.colorScheme.primary,
             ),
     ) {
         Column(
@@ -137,7 +134,6 @@ fun LoginContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(12.dp, RoundedCornerShape(24.dp))
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.White)
                     .padding(horizontal = 20.dp, vertical = 28.dp),
@@ -278,4 +274,18 @@ private fun LoginMessage.toStringRes(): Int = when (this) {
     LoginMessage.PasswordResetRequestSent -> R.string.login_password_reset_request_sent
     LoginMessage.PasswordUpdated -> R.string.login_password_updated
     LoginMessage.ResetLinkInvalid -> R.string.login_password_reset_link_invalid
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun LoginContentPreview() {
+    LoginContent(
+        uiState = LoginUiState(),
+        onEmailChanged = {},
+        onPasswordChanged = {},
+        onTogglePasswordVisibility = {},
+        onClickSelected = {},
+        onForgotPassword = {},
+        onNavigateToRegister = {},
+    )
 }

@@ -10,15 +10,6 @@ import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import java.time.LocalDate
 
-fun parseHabitColor(colorHex: String): Color {
-    val cleaned = colorHex.removePrefix("#").trim()
-    if (cleaned.length != 6) return HabitPrimary
-    return runCatching {
-        Color(("FF$cleaned").toLong(16))
-    }.getOrDefault(HabitPrimary)
-}
-
-fun habitAccentColor(habit: Habit): Color = parseHabitColor(habit.colorHex)
 
 @Composable
 fun habitTimeLabel(habit: Habit): String =

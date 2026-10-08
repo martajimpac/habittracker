@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,12 +40,12 @@ import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.globalDayIntensity
 import com.marta.habittracker.presentation.components.toHeatmapWeeks
 import com.marta.habittracker.presentation.screens.home.calculateStreak
-import com.marta.habittracker.presentation.screens.home.habitAccentColor
 import com.marta.habittracker.presentation.screens.home.habitTimeLabel
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
+import com.marta.habittracker.presentation.utils.habitAccentColor
 import java.time.LocalDate
 
 @Composable
@@ -175,4 +176,10 @@ private fun StatsHabitRow(habit: Habit) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun StatsContentPreview() {
+    StatsContent(habits = emptyList())
 }

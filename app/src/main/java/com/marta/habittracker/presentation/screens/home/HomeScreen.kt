@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -56,12 +57,12 @@ import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.HabitSurface
-import com.marta.habittracker.presentation.theme.HabitTermsBg
-import com.marta.habittracker.presentation.theme.HabitTermsText
+import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.components.HabitFab
 import com.marta.habittracker.presentation.components.ProgressRing
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
+import com.marta.habittracker.presentation.utils.habitAccentColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -69,7 +70,6 @@ import java.util.Locale
 
 @Composable
 fun HomeScreen(
-    onAdd: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
@@ -86,7 +86,6 @@ fun HomeScreen(
         userDisplayName = userDisplayName,
         actionErrorRes = actionErrorRes,
         weekDays = viewModel.weekDays,
-        onAdd = onAdd,
         onDateSelected = viewModel::onDateSelected,
         onToggleHabit = viewModel::toggleComplete,
         onClearActionError = viewModel::clearActionError,
@@ -102,7 +101,6 @@ fun HomeContent(
     userDisplayName: String,
     actionErrorRes: Int?,
     weekDays: List<LocalDate>,
-    onAdd: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onToggleHabit: (Habit) -> Unit,
     onClearActionError: () -> Unit,
@@ -117,10 +115,17 @@ fun HomeContent(
     val pct = completionPercent(completedCount, totalCount)
     val greetingRes = remember { greetingForHour(java.time.LocalTime.now().hour) }
     val dateLabel = remember(selectedDate) {
-        selectedDate.format(DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH))
+        val locale = Locale.getDefault()
+        if (locale.language == "es") {
+            selectedDate.format(DateTimeFormatter.ofPattern("d 'de' MMMM", locale))
+        } else {
+            selectedDate.format(DateTimeFormatter.ofPattern("MMMM d", locale))
+        }
     }
     val dayLabel = remember(selectedDate) {
-        selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+        val locale = Locale.getDefault()
+        selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
     val overallStreak = remember(allHabits) {
         allHabits.maxOfOrNull { calculateStreak(it.records) } ?: 0
@@ -140,15 +145,6 @@ fun HomeContent(
                 allHabits = allHabits,
                 onDateSelected = onDateSelected,
             )
-        },
-        floatingActionButton = {
-            if (isToday) {
-                HabitFab(
-                    onClick = onAdd,
-                    icon = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.home_add_habit),
-                )
-            }
         },
         containerColor = HabitSurface,
     ) { innerPadding ->
@@ -568,7 +564,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Brush.horizontalGradient(listOf(HabitTermsBg, HabitOutline)))
+            .background(Brush.horizontalGradient(listOf(HabitSurfaceVariant, HabitOutline)))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -597,7 +593,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
             Text(
                 text = stringResource(R.string.home_overall_streak, overallStreak),
                 style = MaterialTheme.typography.labelSmall,
-                color = HabitTermsText,
+                color = HabitOnSurfaceVariant,
             )
         }
     }
@@ -658,4 +654,21 @@ private fun HomeDayInfoCard(
             )
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HomeContentPreview() {
+    HomeContent(
+        habits = emptyList(),
+        allHabits = emptyList(),
+        selectedDate = LocalDate.now(),
+        today = LocalDate.now(),
+        userDisplayName = "John",
+        actionErrorRes = null,
+        weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
+        onDateSelected = {},
+        onToggleHabit = {},
+        onClearActionError = {},
+    )
 }

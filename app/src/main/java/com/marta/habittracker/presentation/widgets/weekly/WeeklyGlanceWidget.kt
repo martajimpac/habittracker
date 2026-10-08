@@ -67,7 +67,7 @@ class WeeklyGlanceWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun WeeklyWidgetContent(
+internal fun WeeklyWidgetContent(
     cells: List<WeeklyWidgetDayCell>,
     title: String,
     percentFormat: String,

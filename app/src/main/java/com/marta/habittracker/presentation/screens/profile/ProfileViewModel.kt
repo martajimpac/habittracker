@@ -7,13 +7,12 @@ import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -39,8 +38,8 @@ class ProfileViewModel @Inject constructor(
         )
     }
 
-    private val _navigateToLogin = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val navigateToLogin: SharedFlow<Unit> = _navigateToLogin.asSharedFlow()
+    private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
+    val navigateToLogin = _navigateToLogin.receiveAsFlow()
 
     val uiState: StateFlow<ProfileUiState> = combine(
         authFlow,
@@ -63,7 +62,7 @@ class ProfileViewModel @Inject constructor(
     fun onSignOutClicked() {
         viewModelScope.launch {
             when (authRepository.signOut()) {
-                is DataResult.Success -> _navigateToLogin.emit(Unit)
+                is DataResult.Success -> _navigateToLogin.send(Unit)
                 is DataResult.Error -> Unit
             }
         }
