@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,9 +46,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
+import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
-import com.marta.habittracker.presentation.screens.home.userAvatarInitials
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
@@ -69,9 +69,14 @@ private data class ProfileMenuItem(
 @Composable
 fun ProfileScreen(
     onSignedOut: () -> Unit,
+    onPreferences: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     ObserveAsEvents(flow = viewModel.navigateToLogin) {
         onSignedOut()
@@ -80,6 +85,7 @@ fun ProfileScreen(
     ProfileContent(
         uiState = uiState,
         onSignOut = viewModel::onSignOutClicked,
+        onPreferences = onPreferences,
     )
 }
 
@@ -87,6 +93,7 @@ fun ProfileScreen(
 fun ProfileContent(
     uiState: ProfileUiState,
     onSignOut: () -> Unit = {},
+    onPreferences: () -> Unit = {},
 ) {
     val menuItems = listOf(
         ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, MaterialTheme.colorScheme.primary),
@@ -114,7 +121,11 @@ fun ProfileContent(
                     label = stringResource(item.labelRes),
                     icon = item.icon,
                     tint = item.tint,
-                    onClick = {},
+                    onClick = if (item.labelRes == R.string.profile_preferences) {
+                        onPreferences
+                    } else {
+                        {}
+                    },
                 )
             }
 
@@ -142,20 +153,13 @@ private fun ProfileHeader(
             .padding(top = 8.dp, bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = userAvatarInitials(displayName),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Black,
-                color = Color.White,
-            )
-        }
+        ProfileAvatar(
+            avatarUrl = uiState.avatarUrl,
+            displayName = displayName,
+            avatarColor = uiState.avatarColor,
+            size = 80.dp,
+            contentDescription = stringResource(R.string.cd_profile_avatar),
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -313,9 +317,12 @@ private fun ProfileContentPreview() {
         uiState = ProfileUiState(
             displayName = "John Doe",
             email = "john@example.com",
+            avatarUrl = null,
+            avatarColor = "#6750A4",
             dayStreak = 7,
             completedCount = 42,
             habitsCount = 5,
         ),
+        onPreferences = {},
     )
 }

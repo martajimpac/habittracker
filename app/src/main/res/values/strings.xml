@@ -82,6 +82,7 @@
     <string name="error_common_unauthorized">You do not have permission to access.</string>
     <string name="error_common_unknown">Could not complete the operation. Please try again.</string>
     <string name="error_no_internet">No internet connection. Try again when you are online.</string>
+    <string name="error_preferences_invalid_display_name">Enter a name between 1 and 40 characters.</string>
     <string name="error_sync_failed">Could not sync habits. Please try again.</string>
 
     <!-- Legacy register keys -->
@@ -227,6 +228,21 @@
     <string name="profile_goals">Goals &amp; targets</string>
     <string name="profile_reminders">Reminders</string>
     <string name="profile_preferences">Preferences</string>
+    <string name="preferences_display_name_label">Display name</string>
+    <string name="preferences_save">Save</string>
+    <string name="preferences_saving">Saving…</string>
+    <string name="preferences_back">Back</string>
+    <string name="preferences_change_photo">Change photo</string>
+    <string name="preferences_remove_photo">Remove photo</string>
+    <string name="preferences_avatar_cd">Profile photo</string>
+    <string name="preferences_delete_account">Delete account</string>
+    <string name="preferences_delete_title">Delete account</string>
+    <string name="preferences_delete_explanation">This permanently deletes your account, habits, and profile photo. This cannot be undone. Type DELETE to confirm.</string>
+    <string name="preferences_delete_confirm_label">Type DELETE to confirm</string>
+    <string name="preferences_delete_confirm_token" translatable="false">DELETE</string>
+    <string name="preferences_delete_confirm_action">Delete account</string>
+    <string name="preferences_delete_cancel">Cancel</string>
+    <string name="preferences_delete_deleting">Deleting…</string>
     <string name="profile_achievements">Achievements</string>
     <string name="profile_sign_out">Sign Out</string>
     <string name="profile_stat_day_streak">Day streak</string>
@@ -235,6 +251,7 @@
 
     <!-- Accessibility / chrome -->
     <string name="cd_toolbar_actions">Toolbar actions</string>
+    <string name="cd_profile_avatar">Profile photo</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Habit Tracker Notifications</string>

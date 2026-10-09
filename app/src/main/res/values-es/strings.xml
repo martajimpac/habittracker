@@ -83,6 +83,7 @@
     <string name="error_common_unauthorized">No tienes permiso para acceder.</string>
     <string name="error_common_unknown">No se pudo completar la operación. Inténtalo de nuevo.</string>
     <string name="error_no_internet">Sin conexión a internet. Inténtalo cuando estés conectado.</string>
+    <string name="error_preferences_invalid_display_name">Introduce un nombre de 1 a 40 caracteres.</string>
     <string name="error_sync_failed">No se pudo sincronizar los hábitos. Por favor, inténtalo de nuevo.</string>
 
     <!-- Legacy register keys -->
@@ -228,6 +229,21 @@
     <string name="profile_goals">Objetivos y metas</string>
     <string name="profile_reminders">Recordatorios</string>
     <string name="profile_preferences">Preferencias</string>
+    <string name="preferences_display_name_label">Nombre visible</string>
+    <string name="preferences_save">Guardar</string>
+    <string name="preferences_saving">Guardando…</string>
+    <string name="preferences_back">Atrás</string>
+    <string name="preferences_change_photo">Cambiar foto</string>
+    <string name="preferences_remove_photo">Quitar foto</string>
+    <string name="preferences_avatar_cd">Foto de perfil</string>
+    <string name="preferences_delete_account">Eliminar cuenta</string>
+    <string name="preferences_delete_title">Eliminar cuenta</string>
+    <string name="preferences_delete_explanation">Esto elimina tu cuenta, hábitos y foto de perfil de forma permanente. No se puede deshacer. Escribe DELETE para confirmar.</string>
+    <string name="preferences_delete_confirm_label">Escribe DELETE para confirmar</string>
+    <string name="preferences_delete_confirm_token" translatable="false">DELETE</string>
+    <string name="preferences_delete_confirm_action">Eliminar cuenta</string>
+    <string name="preferences_delete_cancel">Cancelar</string>
+    <string name="preferences_delete_deleting">Eliminando…</string>
     <string name="profile_achievements">Logros</string>
     <string name="profile_sign_out">Cerrar sesión</string>
     <string name="profile_stat_day_streak">Racha de días</string>
@@ -236,6 +252,7 @@
 
     <!-- Accessibility / chrome -->
     <string name="cd_toolbar_actions">Acciones de barra de herramientas</string>
+    <string name="cd_profile_avatar">Foto de perfil</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Notificaciones de Habit Tracker</string>

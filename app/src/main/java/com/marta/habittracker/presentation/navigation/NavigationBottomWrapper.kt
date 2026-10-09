@@ -6,15 +6,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.marta.habittracker.presentation.navigation.TabScreens.TabAddContent
+import com.marta.habittracker.presentation.navigation.TabScreens.TabDeleteAccount
 import com.marta.habittracker.presentation.navigation.TabScreens.TabDetail
 import com.marta.habittracker.presentation.navigation.TabScreens.TabFriends
 import com.marta.habittracker.presentation.navigation.TabScreens.TabHome
+import com.marta.habittracker.presentation.navigation.TabScreens.TabPreferences
 import com.marta.habittracker.presentation.navigation.TabScreens.TabProfile
 import com.marta.habittracker.presentation.navigation.TabScreens.TabStats
 import com.marta.habittracker.presentation.screens.add_content.AddContentScreen
+import com.marta.habittracker.presentation.screens.deleteaccount.DeleteAccountScreen
 import com.marta.habittracker.presentation.screens.detail.HabitDetailScreen
 import com.marta.habittracker.presentation.screens.friends.FriendsScreen
 import com.marta.habittracker.presentation.screens.home.HomeScreen
+import com.marta.habittracker.presentation.screens.preferences.PreferencesScreen
 import com.marta.habittracker.presentation.screens.profile.ProfileScreen
 import com.marta.habittracker.presentation.screens.stats.StatsScreen
 
@@ -41,7 +45,24 @@ fun NavigationBottomWrapper(
         }
 
         composable<TabProfile> {
-            ProfileScreen(onSignedOut = onSignedOut)
+            ProfileScreen(
+                onSignedOut = onSignedOut,
+                onPreferences = { navHostController.navigate(TabPreferences) },
+            )
+        }
+
+        composable<TabPreferences> {
+            PreferencesScreen(
+                onBack = { navHostController.popBackStack() },
+                onDeleteAccount = { navHostController.navigate(TabDeleteAccount) },
+            )
+        }
+
+        composable<TabDeleteAccount> {
+            DeleteAccountScreen(
+                onBack = { navHostController.popBackStack() },
+                onSignedOut = onSignedOut,
+            )
         }
 
         composable<TabDetail> {

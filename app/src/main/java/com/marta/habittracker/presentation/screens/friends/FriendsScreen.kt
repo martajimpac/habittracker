@@ -1,6 +1,5 @@
 package com.marta.habittracker.presentation.screens.friends
 
-import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -66,6 +65,8 @@ import com.marta.habittracker.domain.model.Friendship
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ProfileAvatar
+import com.marta.habittracker.presentation.components.toComposeColor
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
@@ -324,7 +325,13 @@ private fun FriendRow(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(profile = profile)
+        ProfileAvatar(
+            avatarUrl = profile.avatarUrl,
+            displayName = profile.displayName,
+            avatarColor = profile.avatarColor,
+            size = 48.dp,
+            contentDescription = stringResource(R.string.cd_profile_avatar),
+        )
         Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(profile.displayName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = HabitOnSurface)
             Text(
@@ -356,21 +363,6 @@ private fun FriendRow(
 }
 
 @Composable
-private fun Avatar(profile: Profile) {
-    Box(
-        modifier = Modifier.size(48.dp).clip(CircleShape).background(profile.avatarColor.toComposeColor()),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = profile.displayName.split(" ").filter(String::isNotBlank).take(2).joinToString("") { it.first().uppercase() },
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-            fontWeight = FontWeight.Black,
-        )
-    }
-}
-
-@Composable
 private fun AddFriendSheet(
     uiState: FriendsUiState,
     onQueryChanged: (String) -> Unit,
@@ -390,7 +382,13 @@ private fun AddFriendSheet(
         }
         uiState.searchResults.forEach { profile ->
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Avatar(profile)
+                ProfileAvatar(
+                    avatarUrl = profile.avatarUrl,
+                    displayName = profile.displayName,
+                    avatarColor = profile.avatarColor,
+                    size = 48.dp,
+                    contentDescription = stringResource(R.string.cd_profile_avatar),
+                )
                 Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text(profile.displayName, fontWeight = FontWeight.Bold, color = HabitOnSurface)
                     Text(stringResource(R.string.friends_username, profile.username), color = HabitOnSurfaceVariant)
@@ -578,8 +576,6 @@ private fun FriendsAddButton(onClick: () -> Unit) {
         Text(stringResource(R.string.friends_add), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }
-
-private fun String.toComposeColor(): Color = runCatching { Color(parseColor(this)) }.getOrDefault(HabitPrimary)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

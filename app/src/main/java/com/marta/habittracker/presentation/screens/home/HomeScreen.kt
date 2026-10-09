@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
@@ -76,7 +78,13 @@ fun HomeScreen(
     val allHabits by viewModel.allHabits.collectAsStateWithLifecycle()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
+    val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
+    val avatarColor by viewModel.avatarColor.collectAsStateWithLifecycle()
     val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshDisplayName()
+    }
 
     HomeContent(
         habits = habits,
@@ -84,6 +92,8 @@ fun HomeScreen(
         selectedDate = selectedDate,
         today = viewModel.today,
         userDisplayName = userDisplayName,
+        avatarUrl = avatarUrl,
+        avatarColor = avatarColor,
         actionErrorRes = actionErrorRes,
         weekDays = viewModel.weekDays,
         onDateSelected = viewModel::onDateSelected,
@@ -99,6 +109,8 @@ fun HomeContent(
     selectedDate: LocalDate,
     today: LocalDate,
     userDisplayName: String,
+    avatarUrl: String?,
+    avatarColor: String,
     actionErrorRes: Int?,
     weekDays: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
@@ -141,6 +153,8 @@ fun HomeContent(
                 dayLabel = dayLabel,
                 greetingRes = greetingRes,
                 userDisplayName = userDisplayName,
+                avatarUrl = avatarUrl,
+                avatarColor = avatarColor,
                 weekDays = weekDays,
                 allHabits = allHabits,
                 onDateSelected = onDateSelected,
@@ -262,6 +276,8 @@ private fun HomeHeader(
     dayLabel: String,
     greetingRes: Int,
     userDisplayName: String,
+    avatarUrl: String?,
+    avatarColor: String,
     weekDays: List<LocalDate>,
     allHabits: List<Habit>,
     onDateSelected: (LocalDate) -> Unit,
@@ -304,20 +320,13 @@ private fun HomeHeader(
                     color = Color.White,
                 )
             }
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = userAvatarInitials(userDisplayName),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                )
-            }
+            ProfileAvatar(
+                avatarUrl = avatarUrl,
+                displayName = userDisplayName,
+                avatarColor = avatarColor,
+                size = 40.dp,
+                contentDescription = stringResource(R.string.cd_profile_avatar),
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -665,6 +674,8 @@ private fun HomeContentPreview() {
         selectedDate = LocalDate.now(),
         today = LocalDate.now(),
         userDisplayName = "John",
+        avatarUrl = null,
+        avatarColor = "#6750A4",
         actionErrorRes = null,
         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
         onDateSelected = {},

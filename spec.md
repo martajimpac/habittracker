@@ -115,6 +115,7 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
    - `username` text unique not null (búsqueda Add friend)
    - `display_name` text not null
    - `avatar_color` text not null default `#6750A4`
+   - `avatar_url` text nullable (path o URL pública del avatar en Storage; null = iniciales)
    - `created_at` / `updated_at` timestamptz
    - Trigger: al crear usuario en `auth.users`, insertar profile (username provisional derivado del email / id)
 
@@ -143,16 +144,27 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
 
 ### Profile (tab)
 
-- La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar con iniciales, stats, menu rows, Sign Out).
-- Header usa datos reales del usuario autenticado: display name y email (via `AuthRepository`); avatar = iniciales derivadas del nombre.
+- La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar, stats, menu rows, Sign Out).
+- Header usa datos reales: `display_name` y `avatar_url` desde `profiles` (no Auth `user_metadata`); email via `AuthRepository`. Si `avatar_url` es null, avatar = iniciales derivadas del display name (y `avatar_color` de fondo).
 - Stats del header (reales, desde `HabitRepository.getAllHabitsWithRecords()`):
   - **Day Streak:** max streak entre habitos (`calculateStreak` sobre records, igual que Home).
   - **Completed:** total de records con `isCompleted`.
   - **Habits:** numero de habitos.
-- Filas de menu: Notifications, Goals & Targets, Reminders, Preferences, Achievements — solo UI; sin navegacion ni acciones.
+- Filas de menu: Notifications y Goals — solo UI, sin navegacion. **Preferences** navega a la pantalla Preferencias.
 - Sign Out: llama a `AuthRepository.signOut()` (Supabase) y navega a Login limpiando el back stack.
 - Todos los textos de Profile van en ingles (`strings.xml`).
-- `ProfileViewModel` expone nombre, email, stats y el evento de sign-out; no maneja clicks de menu.
+- `ProfileViewModel` expone nombre, email, avatar, stats y el evento de sign-out; Preferences maneja sus propios clicks.
+
+### Preferences (desde Profile)
+
+Aprobado 2026-10-08.
+
+- Pantalla `PreferencesScreen` / `PreferencesContent` (type-safe nav desde la fila Preferences).
+- **Display name:** editar `profiles.display_name`. Trim, no vacio, max 40 caracteres. Guardar online-first; sin red: error UI, no se escribe. Al exito: volver o refrescar; Profile y Home leen el mismo `profiles.display_name`.
+- **Avatar:** Photo Picker de Android (solo galeria, sin camara). Subir a Supabase Storage bucket `avatars` path `{userId}/avatar`; persistir URL/path en `profiles.avatar_url`. Quitar foto pone `avatar_url` null y borra el objeto. Preview circular sin editor de recorte. Online-first.
+- **Delete account:** boton separado. Navega a pantalla de confirmacion: el usuario debe escribir exactamente `DELETE` (token fijo, no se traduce); el boton de borrar se habilita solo entonces. Edge Function (service role) elimina `auth.users` (CASCADE a `profiles` y FKs) y el objeto de Storage. Exito: Login con back stack vacio. Online-first.
+- Eventos one-shot: `Channel` + `ObserveAsEvents`.
+- Fuera de alcance: username, camara, notificaciones, cambio de password, widgets, enviar el Name del registro a Auth metadata.
 
 ### Activity heatmap
 

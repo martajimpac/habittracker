@@ -9,19 +9,24 @@ import com.marta.habittracker.data.remote.dto.FriendshipDto
 import com.marta.habittracker.data.remote.dto.FriendshipStatusUpdateDto
 import com.marta.habittracker.data.remote.dto.HabitDto
 import com.marta.habittracker.data.remote.dto.HabitRecordDto
+import com.marta.habittracker.data.remote.dto.ProfileAvatarUrlUpdateDto
 import com.marta.habittracker.data.remote.dto.ProfileDto
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
+import io.ktor.http.ContentType
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 
 @Singleton
 class SocialRemoteDataSource @Inject constructor(
     private val supabase: SupabaseClient,
-) {
+) : ProfileRemote {
 
     fun requireUserId(): String =
         supabase.auth.currentUserOrNull()?.id
@@ -43,6 +48,132 @@ class SocialRemoteDataSource @Inject constructor(
             profiles
         } catch (e: Exception) {
             Log.e(TAG, "fetchProfilesByIds failed count=${ids.size}", e)
+            throw e
+        }
+    }
+
+    override suspend fun fetchProfileById(id: String): ProfileDto? {
+        return try {
+            Log.d(TAG, "fetchProfileById started")
+            val profile = fetchProfilesByIds(listOf(id)).firstOrNull()
+            Log.d(TAG, "fetchProfileById finished found=${profile != null}")
+            profile
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchProfileById failed", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateMyProfile(displayName: String?, avatarUrl: String?): ProfileDto {
+        val userId = requireUserId()
+        return try {
+            Log.d(TAG, "updateMyProfile started")
+            val updated = supabase.from(TABLE_PROFILES)
+                .update({
+                    if (displayName != null) {
+                        set("display_name", displayName)
+                    }
+                    if (avatarUrl != null) {
+                        set("avatar_url", avatarUrl)
+                    }
+                }) {
+                    select()
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingle<ProfileDto>()
+            Log.d(TAG, "updateMyProfile finished")
+            updated
+        } catch (e: Exception) {
+            Log.e(TAG, "updateMyProfile failed", e)
+            throw e
+        }
+    }
+
+    override suspend fun uploadAvatar(jpegBytes: ByteArray): ProfileDto {
+        val userId = requireUserId()
+        val path = avatarObjectPath(userId)
+        return try {
+            Log.d(TAG, "uploadAvatar started")
+            val bucket = supabase.storage.from(BUCKET_AVATARS)
+            bucket.upload(path, jpegBytes) {
+                upsert = true
+                contentType = ContentType.Image.JPEG
+            }
+            val publicUrl = cacheBustAvatarUrl(
+                publicUrl = bucket.publicUrl(path),
+                versionMillis = Instant.now().toEpochMilli(),
+            )
+            val updated = updateAvatarUrl(publicUrl)
+            Log.d(TAG, "uploadAvatar finished")
+            updated
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "uploadAvatar failed", e)
+            throw e
+        }
+    }
+
+    override suspend fun clearAvatar(): ProfileDto {
+        val userId = requireUserId()
+        val path = avatarObjectPath(userId)
+        return try {
+            Log.d(TAG, "clearAvatar started")
+            try {
+                supabase.storage.from(BUCKET_AVATARS).delete(path)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "clearAvatar storage delete failed; still nulling avatar_url", e)
+            }
+            val updated = updateAvatarUrl(null)
+            Log.d(TAG, "clearAvatar finished")
+            updated
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "clearAvatar failed", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteAccount() {
+        try {
+            Log.d(TAG, "deleteAccount started")
+            supabase.functions.invoke(FUNCTION_DELETE_ACCOUNT)
+            Log.d(TAG, "deleteAccount finished")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteAccount failed", e)
+            throw e
+        }
+    }
+
+    /**
+     * Always writes avatar_url, including SQL null. Name-only updates must use
+     * [updateMyProfile] which omits the column when avatarUrl is null.
+     */
+    private suspend fun updateAvatarUrl(url: String?): ProfileDto {
+        val userId = requireUserId()
+        return try {
+            Log.d(TAG, "updateAvatarUrl started")
+            val updated = supabase.from(TABLE_PROFILES)
+                .update(ProfileAvatarUrlUpdateDto(url)) {
+                    select()
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingle<ProfileDto>()
+            Log.d(TAG, "updateAvatarUrl finished")
+            updated
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "updateAvatarUrl failed", e)
             throw e
         }
     }
@@ -273,5 +404,10 @@ class SocialRemoteDataSource @Inject constructor(
         private const val TABLE_HABITS = "habits"
         private const val TABLE_RECORDS = "habit_records"
         private const val PROFILE_SEARCH_LIMIT = 20L
+        private const val BUCKET_AVATARS = "avatars"
+        private const val AVATAR_FILE_NAME = "avatar.jpg"
+        private const val FUNCTION_DELETE_ACCOUNT = "delete-account"
+
+        private fun avatarObjectPath(userId: String): String = "$userId/$AVATAR_FILE_NAME"
     }
 }

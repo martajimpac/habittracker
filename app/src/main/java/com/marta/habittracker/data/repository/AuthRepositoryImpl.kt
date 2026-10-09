@@ -126,6 +126,10 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getCurrentUserId(): String? {
+        return supabase.auth.currentUserOrNull()?.id
+    }
+
     override suspend fun getCurrentUserDisplayName(): String {
         val user = supabase.auth.currentUserOrNull() ?: return ""
         val metadataName = user.userMetadata?.get("name")?.toString()?.trim().orEmpty()

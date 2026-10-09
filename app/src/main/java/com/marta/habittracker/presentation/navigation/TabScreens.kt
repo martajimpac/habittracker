@@ -20,5 +20,11 @@ sealed class TabScreens {
     data object TabProfile : TabScreens()
 
     @Serializable
+    data object TabPreferences : TabScreens()
+
+    @Serializable
+    data object TabDeleteAccount : TabScreens()
+
+    @Serializable
     data class TabDetail(val habitId: String) : TabScreens()
 }
