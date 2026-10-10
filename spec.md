@@ -17,7 +17,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
 - Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
 - Password reset (aprobado 2026-08-08): ver § Password reset (deep link).
 - El drawable `res/drawable/logo.xml` es el logo de la app (login + icono launcher).
-- Bottom navigation (Figma Make): Home, Stats, FAB central "New" (abre crear hábito), Friends, Profile — con labels e iconos; selección con fondo `#EEE8F4` y tint `#6750A4`.
+- Bottom navigation: ver § Material 3 chrome (NavigationBar + theme). No hay FAB de alta.
 - Tab Friends (Figma Make — social):
   - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, solicitudes pendientes y bottom sheets (añadir / ver hábitos / crear reto).
   - Textos en ingles (`strings.xml`).
@@ -25,7 +25,37 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
   - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
   - La privacidad se persiste extremo a extremo mediante `Habit.isPublic`, `HabitEntity.isPublic` y `HabitDto.is_public`; por defecto cada hábito es privado.
   - Plan de implementación: `docs/plans/2026-07-31-friends-figma-android.md`.
-  - Fuera de alcance inmediato: notificaciones push, Realtime, cache offline de amigos.
+  - Fuera de alcance inmediato: Realtime y cache offline de amigos. El push al crear un reto está en § Challenge push + detail.
+
+### Material 3 chrome (NavigationBar + theme)
+
+Aprobado 2026-10-09.
+
+**Objetivo:** que el chrome (barras y fondos de pantalla) se lea como Material 3 actual, sin rediseñar cards de contenido ni añadir FAB.
+
+**NavigationBar**
+- `NavigationBar` + cinco `NavigationBarItem` iguales: Home, Stats, **Nuevo**, Friends, Profile (Nuevo en el centro).
+- Mismo tamaño, misma píldora de selección e icono Add para Nuevo. Sin estilo `primaryContainer` permanente distinto.
+- Nuevo no es un destino persistente: navega a crear hábito (`TabAddContent`). Al volver, permanece seleccionada la tab anterior (Home/Stats/Friends/Profile), no Nuevo.
+- La barra se oculta en Crear, Detalle de hábito, Detalle de reto, Preferencias y Borrar cuenta.
+- Sin `FloatingActionButton` / `HabitFab` para el alta. Copy y `contentDescription` de Nuevo: `tab_new` (`strings.xml`).
+
+**Theme**
+- Completar `lightColorScheme` y `darkColorScheme` con roles M3: `primaryContainer` / `onPrimaryContainer`, `secondaryContainer` / `onSecondaryContainer`, `tertiary` / `onTertiary` / `tertiaryContainer`, `errorContainer` / `onErrorContainer`, y `surfaceContainerLowest` … `surfaceContainerHighest` (más `surfaceContainer` / `surfaceContainerHigh` / `Low` según el scheme).
+- Marca: navy actual (`HabitPrimary` `#021C4B`, `HabitPrimaryLight` `#1D4EA6`). No volver al púrpura `#6750A4` del mock Figma Make antiguo.
+- Dynamic color **apagado** (`InstaDevTheme(dynamicColor = false)`). Nunito y `shapes` sin cambio.
+
+**Chrome (sí) vs contenido (no)**
+- Sí: `Scaffold.containerColor`, `TopAppBar` colors, fondos de pantalla (Home, Stats, Friends, Profile, Add, Auth, Preferences, Delete, Detalle) → `MaterialTheme.colorScheme.surface` / `surfaceContainer` (y `onSurface` en títulos de barra). `NavigationBar` usa tokens del scheme, no `Color.White` ni `HabitSurface` sueltos.
+- No: cards de hábitos, heatmap, `HabitField` / botones custom, widgets Glance, chips, SearchBar, motion scheme, progreso determinado de retos (`LinearProgressIndicator`).
+- Cargando (indeterminado): `HabitLoadingIndicator` → `CircularWavyProgressIndicator` con `colorScheme.primary` (Material3 `1.5.0-beta01`; el BOM 2026.06.01 aún pincha 1.4). No sustituye el anillo de % de Detalle ni las barras de retos.
+
+**Capas / tests**
+- Solo `presentation/theme` y pantallas Compose (Screen/Content). Sin dominio, Room ni tests de ViewModel nuevos.
+- Previews de la barra (ítem seleccionado + Nuevo) y theme light/dark.
+
+**Fuera de alcance**
+- FAB; quinto destino “siempre seleccionado” en Nuevo; dynamic color; Compose Styles alpha; `WideNavigationRail`; rediseño Figma de contenido.
 
 ### Domain
 
@@ -77,7 +107,7 @@ Aprobado 2026-08-08.
 - El usuario puede marcar y desmarcar un habito como completado.
 - El usuario puede consultar el detalle e historial de un habito.
 - El usuario puede eliminar habitos y sus registros asociados.
-- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), hora de recordatorio opcional y dias de la semana.
+- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
 - Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
 - Escritura (crear, completar, editar, borrar): requiere conexion a internet. Sin red, la operacion no modifica Room ni Supabase y la UI muestra un error de "sin internet" (`strings.xml`).
@@ -97,6 +127,44 @@ Aprobado 2026-08-08.
 - Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
 - Room almacena los mismos campos de sync (`updatedAt` / `deletedAt`) para alinear con el remoto.
 - Fuera de alcance: outbox, dual-write offline, WorkManager periodico, UI rica de sync, resolucion manual de conflictos.
+
+### Habit reminders (local notifications)
+
+Aprobado 2026-10-09.
+
+**Producto**
+- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, solo en los `days_of_week` del hábito.
+- Fuente de verdad: `habits.reminder_time` (`HH:mm` o null). `null` = interruptor off (no hay alarma). No hay columna extra de “enabled”.
+- Hábitos **ya guardados** con `reminder_time` no null se tratan como recordatorio on (`rescheduleAll` al actualizar la app). No hay migración masiva a `null`. Quien no quiera aviso lo apaga en Detalle → Settings.
+- **Crear hábito:** interruptor Recordatorio **apagado por defecto**. Al encenderlo se muestra el time picker (inicial `08:00` si no había hora). Al apagarlo, al guardar se persiste `reminder_time = null`.
+- **Detalle → Settings:** el mismo interruptor + hora; se puede cambiar o apagar después. Al **borrar** el hábito se cancelan sus alarmas.
+- Al pulsar la notificación: abre el **detalle** de ese hábito. Sin acción “Completar” en la notificación.
+- Si ese día el hábito **ya está completado** (record en Room): no se muestra la notificación; sí se programa la siguiente ocurrencia.
+- Profile → Notifications sigue siendo solo UI, sin navegación. Preferencias no gestiona recordatorios de hábitos.
+
+**Técnico**
+- Dominio libre de APIs Android. Puerto `HabitReminderScheduler`: `schedule(habit)`, `cancel(habitId)`, `rescheduleAll()`. Implementación con `AlarmManager.setExactAndAllowWhileIdle`.
+- Una alarma por hábito, hacia la **próxima** fecha/hora válida. Tras disparar (haga o no notify) se programa la siguiente.
+- Programar/cancelar solo **después** de un save/delete OK (online-first: si falla la red, no queda alarma de un hábito no persistido).
+- `BOOT_COMPLETED` y cambio de zona horaria / hora del sistema → `rescheduleAll()` desde Room (hábitos no soft-deleted con `reminder_time` no null).
+- Permisos: `POST_NOTIFICATIONS` (API 33+) y `SCHEDULE_EXACT_ALARM` (API 31+). Si el usuario deniega, error en UI (`strings.xml`), interruptor off, no se persiste hora. Sin crash si más tarde quita el permiso en Ajustes.
+- Canal de notificación **distinto** del de FCM. `notificationId` estable por `habitId` (varios hábitos a la misma hora no se pisan; no usar `notify(0)` compartido).
+- Título = nombre del hábito; cuerpo desde `strings.xml` (EN + ES).
+- Logs: `Log.d`/`Log.e` en scheduler/receiver; no PII innecesaria.
+
+**Tests**
+- Cálculo de próxima ocurrencia (hora ya pasada hoy → siguiente día de la frecuencia).
+- Skip notify si ya completado hoy.
+- ViewModel: off → `reminderTime` null; on → `HH:mm`; permiso denegado → error y off.
+- Scheduler con fake del puerto: schedule / cancel / rescheduleAll.
+- No se exigen tests instrumentados de que el OS dispare la alarma.
+
+**Fuera de alcance**
+- FCM / push de servidor para recordatorios de hábitos. `MyFirebaseMessagingService` queda para el push de retos (§ Challenge push + detail), no para estos recordatorios locales.
+- WorkManager periódico como reloj de hábitos.
+- Completar el hábito desde la notificación.
+- Pantalla global de notificaciones en Profile.
+- iOS.
 
 ### Social (Supabase) — Friends + challenges
 
@@ -140,7 +208,51 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
 
 4. Lectura de `habit_records` de otro usuario: permitida a amigos solo para hábitos `is_public` del amigo, y/o para el hábito del otro en un challenge `active`/`pending` donde el lector es participante (ventana del reto). Escrituras de records siguen siendo solo del dueño.
 
-**Fuera de alcance (schema social):** push notifications, Realtime obligatorio, chat, Room cache de friends (se define en el plan de app).
+**Fuera de alcance:** Realtime obligatorio, chat, Room cache de friends. El aviso push al crear un reto y la pantalla para aceptarlo o rechazarlo están en § Challenge push + detail.
+
+### Challenge push + detail
+
+Aprobado 2026-10-10.
+
+**Producto**
+- Al crear un reto (`INSERT` en `challenges`, `status = pending`), la persona retada recibe una notificación del sistema aunque la app esté cerrada.
+- El texto se resuelve en el dispositivo con `strings.xml` (EN + ES): título fijo y cuerpo con el `display_name` de quien reta.
+- Pulsar la notificación abre el detalle de ese reto (`challengeId`).
+- La tarjeta de retos en Amigos abre la misma pantalla.
+- El detalle es online-first y muestra hábito, criterio, progreso propio, progreso del otro, días restantes y estado.
+- Quien fue retado, con el reto en `pending`: **Aceptar** pasa a `active` y se queda en la pantalla, ya sin botones; **Rechazar** pasa a `declined` y vuelve a Amigos. La lista recarga en `ON_RESUME` y deja de mostrar `declined`.
+- Quien retó, o un reto que no está `pending`: solo lectura. No se puede cancelar el reto.
+- Sin red, reto inexistente o si quien abre no es participante: error en UI y el estado no cambia. Un rechazo que falla no navega atrás.
+- Sin sesión al abrir la notificación: se muestra Login y el `challengeId` no se reabre después de entrar.
+- Quien retó no recibe un push cuando el otro acepta o rechaza.
+- La barra inferior se oculta en esta pantalla, igual que en el detalle de hábito.
+- No hay un permiso de notificaciones nuevo. Si `POST_NOTIFICATIONS` está denegado, el reto se crea igual y no hay aviso en la bandeja.
+
+**Técnico**
+- Tabla `device_tokens`: `token` text PK, `user_id` uuid FK `profiles` ON DELETE CASCADE, `updated_at` timestamptz. RLS: `authenticated` solo puede `DELETE` de sus filas (`user_id = auth.uid()`). No hay `SELECT`/`INSERT`/`UPDATE` para el cliente.
+- El guardado lo hace la Edge Function `register-device-token`, con el JWT del usuario y escritura con service role. Así un token que quedó de otra sesión en el mismo dispositivo se reasigna: un `UPDATE` con RLS no podría tocar la fila del usuario anterior.
+- Al cerrar sesión se borra antes el token de esta instalación, con la sesión todavía válida. Si el borrado falla, se registra el error y el sign-out sigue; el próximo `register-device-token` reasigna el token.
+- Se registra el token al haber sesión (arranque autenticado, login y registro) y cuando Firebase lo renueva. El token no se escribe en logs.
+- Un webhook de `INSERT` en `public.challenges` llama a la Edge Function `notify-challenge`. La función exige el header `x-webhook-secret` igual al secreto `CHALLENGE_WEBHOOK_SECRET`. Con service role lee los tokens del `challenged_id` y el `display_name` del retador, y envía un data message FCM HTTP v1 de prioridad alta: `type=challenge_created`, `challengeId`, `challengerName`. La cuenta de servicio de Firebase es el secreto `FIREBASE_SERVICE_ACCOUNT`. Si no hay tokens, el reto queda creado y no hay push. Un fallo de Firebase no deshace el insert.
+- `MyFirebaseMessagingService` pinta la notificación en el canal existente `habit_tracker_notifications`. El `notificationId` es el hash de `"challenge:" + challengeId` y nunca es 0. El `PendingIntent` abre `MainActivity` con el extra de `challengeId`, en el mismo estilo que `WidgetLaunchExtras` para hábitos.
+- Ruta `TabChallengeDetail(challengeId)`. `FriendsRepository.getChallenge(id)` y `respondToChallenge(id, accept)`.
+- El dominio no depende de Android ni de textos de UI. Los errores visibles usan `@StringRes`.
+- RLS de `challenges` sigue permitiendo que cualquier participante actualice la fila. Qué botones se muestran lo decide la app.
+
+**Tests**
+- ViewModel del detalle: retado + `pending` puede aceptar y rechazar; aceptar deja `active` y no navega; rechazar con éxito emite volver atrás; aceptar o rechazar con error (incluida la red) no navega y muestra el error; el retador no tiene acciones.
+- Repositorio: sin red, `getChallenge` y `respondToChallenge` devuelven `AppError.Common.Network` y no escriben en remoto.
+- El id de notificación de un reto no es 0 y se calcula con el prefijo `challenge:`, distinto del id de recordatorio de un hábito.
+- No se exigen tests instrumentados del webhook ni de que FCM entregue el mensaje.
+
+**Fuera de alcance**
+- Push al retador cuando aceptan o rechazan.
+- Cancelar un reto.
+- Endurecer la RLS para impedir transiciones de estado que la app no ofrece.
+- Realtime, chat, cache Room de amigos.
+- Pantalla global de notificaciones en Profile.
+- FCM para recordatorios de hábitos.
+- iOS.
 
 ### Profile (tab)
 
@@ -164,7 +276,7 @@ Aprobado 2026-10-08.
 - **Avatar:** Photo Picker de Android (solo galeria, sin camara). Subir a Supabase Storage bucket `avatars` path `{userId}/avatar`; persistir URL/path en `profiles.avatar_url`. Quitar foto pone `avatar_url` null y borra el objeto. Preview circular sin editor de recorte. Online-first.
 - **Delete account:** boton separado. Navega a pantalla de confirmacion: el usuario debe escribir exactamente `DELETE` (token fijo, no se traduce); el boton de borrar se habilita solo entonces. Edge Function (service role) elimina `auth.users` (CASCADE a `profiles` y FKs) y el objeto de Storage. Exito: Login con back stack vacio. Online-first.
 - Eventos one-shot: `Channel` + `ObserveAsEvents`.
-- Fuera de alcance: username, camara, notificaciones, cambio de password, widgets, enviar el Name del registro a Auth metadata.
+- Fuera de alcance: username, camara, notificaciones globales de Profile, cambio de password, widgets, enviar el Name del registro a Auth metadata. Recordatorios por hábito: § Habit reminders.
 
 ### Activity heatmap
 
@@ -252,6 +364,7 @@ Aprobado 2026-08-07. Tres widgets independientes (Approach A).
 - Unit tests o scripts de seguridad para deteccion de secretos hardcodeados.
 - Instrumented tests de Room para validar integridad referencial y unicidad de registros.
 - Unit tests del comportamiento online-first: sin red las mutaciones fallan sin tocar Room; con remoto OK se actualiza cache.
+- Chrome M3 (2026-10-09): Previews de `NavigationBar` y schemes light/dark; no exige tests de ViewModel nuevos.
 
 ## CI/CD
 
