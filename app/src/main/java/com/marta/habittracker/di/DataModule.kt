@@ -1,6 +1,8 @@
 package com.marta.habittracker.di
 
 import com.marta.habittracker.core.DefaultDispatchersProvider
+import com.marta.habittracker.core.push.DeviceTokenRegistration
+import com.marta.habittracker.core.push.DeviceTokenRegistrar
 import com.marta.habittracker.core.network.AndroidNetworkChecker
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.data.remote.ProfileRemote
@@ -59,6 +61,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindProfileRepository(impl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDeviceTokenRegistration(impl: DeviceTokenRegistrar): DeviceTokenRegistration
 
     companion object {
         @Provides

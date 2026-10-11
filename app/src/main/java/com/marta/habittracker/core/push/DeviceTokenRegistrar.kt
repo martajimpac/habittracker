@@ -13,9 +13,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 @Singleton
 class DeviceTokenRegistrar @Inject constructor(
     private val socialRemoteDataSource: SocialRemoteDataSource,
-) {
+) : DeviceTokenRegistration {
 
-    suspend fun registerCurrentToken() {
+    override suspend fun registerCurrentToken() {
         try {
             val token = fetchFirebaseToken()
             socialRemoteDataSource.registerDeviceToken(token)
@@ -26,7 +26,7 @@ class DeviceTokenRegistrar @Inject constructor(
         }
     }
 
-    suspend fun clearCurrentToken() {
+    override suspend fun clearCurrentToken() {
         try {
             val token = fetchFirebaseToken()
             socialRemoteDataSource.deleteDeviceToken(token)

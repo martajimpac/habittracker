@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.BuildConfig
-import com.marta.habittracker.core.push.DeviceTokenRegistrar
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.OnboardingRepository
 import com.marta.habittracker.domain.usecase.SyncHabits
@@ -21,7 +21,7 @@ class AppStartViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val authRepository: AuthRepository,
     private val syncHabits: SyncHabits,
-    private val deviceTokenRegistrar: DeviceTokenRegistrar,
+    private val deviceTokenRegistration: DeviceTokenRegistration,
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<AppStartDestination?>(null)
@@ -59,7 +59,7 @@ class AppStartViewModel @Inject constructor(
             if (isLoggedIn) {
                 Log.d(TAG, "User is logged in, syncing habits...")
                 syncHabits()
-                deviceTokenRegistrar.registerCurrentToken()
+                deviceTokenRegistration.registerCurrentToken()
             }
         }
     }

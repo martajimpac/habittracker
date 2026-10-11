@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.BuildConfig
 import com.marta.habittracker.R
-import com.marta.habittracker.core.push.DeviceTokenRegistrar
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
@@ -24,7 +24,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val syncHabits: SyncHabits,
-    private val deviceTokenRegistrar: DeviceTokenRegistrar,
+    private val deviceTokenRegistration: DeviceTokenRegistration,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -54,7 +54,7 @@ class LoginViewModel @Inject constructor(
             when (loginUseCase(_uiState.value.email, _uiState.value.password)) {
                 is DataResult.Success -> {
                     syncHabits()
-                    deviceTokenRegistrar.registerCurrentToken()
+                    deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
                     _navigateToHome.send(Unit)
                 }
