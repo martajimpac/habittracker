@@ -4,6 +4,7 @@ import android.util.Log
 import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.data.remote.dto.ChallengeDto
 import com.marta.habittracker.data.remote.dto.ChallengeInsertDto
+import com.marta.habittracker.data.remote.dto.ChallengeStatusUpdateDto
 import com.marta.habittracker.data.remote.dto.FriendRequestDto
 import com.marta.habittracker.data.remote.dto.FriendshipDto
 import com.marta.habittracker.data.remote.dto.FriendshipStatusUpdateDto
@@ -325,6 +326,48 @@ class SocialRemoteDataSource @Inject constructor(
             challenges
         } catch (e: Exception) {
             Log.e(TAG, "fetchChallengesForUser failed statuses=${statuses.size}", e)
+            throw e
+        }
+    }
+
+    suspend fun fetchChallengeById(id: String): ChallengeDto? {
+        return try {
+            Log.d(TAG, "fetchChallengeById started id=$id")
+            val challenge = supabase.from(TABLE_CHALLENGES)
+                .select(Columns.ALL) {
+                    filter {
+                        eq("id", id)
+                    }
+                }
+                .decodeSingleOrNull<ChallengeDto>()
+            Log.d(TAG, "fetchChallengeById finished id=$id found=${challenge != null}")
+            challenge
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchChallengeById failed id=$id", e)
+            throw e
+        }
+    }
+
+    suspend fun updateChallengeStatus(
+        id: String,
+        status: String,
+    ): ChallengeDto {
+        return try {
+            Log.d(TAG, "updateChallengeStatus started id=$id status=$status")
+            val challenge = supabase.from(TABLE_CHALLENGES)
+                .update(ChallengeStatusUpdateDto(status)) {
+                    select()
+                    filter {
+                        eq("id", id)
+                    }
+                }
+                .decodeSingle<ChallengeDto>()
+            Log.d(TAG, "updateChallengeStatus finished id=$id")
+            challenge
+        } catch (e: Exception) {
+            Log.e(TAG, "updateChallengeStatus failed id=$id status=$status", e)
             throw e
         }
     }
