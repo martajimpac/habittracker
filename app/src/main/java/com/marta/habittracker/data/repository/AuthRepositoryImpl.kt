@@ -17,6 +17,7 @@ import io.github.jan.supabase.auth.user.UserInfo
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -148,6 +149,8 @@ class AuthRepositoryImpl @Inject constructor(
             Log.d(TAG, "Sign out started")
             try {
                 deviceTokenRegistration.clearCurrentToken()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "clearCurrentToken before sign-out failed", e)
             }
@@ -157,6 +160,8 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (_: IOException) {
             Log.e(TAG, "Sign out failed: network")
             DataResult.Error(AppError.Common.Network)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Sign out failed", e)
             DataResult.Error(AppError.Common.Unknown)
