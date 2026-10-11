@@ -2,6 +2,7 @@ package com.marta.habittracker.presentation.utils
 
 import androidx.compose.ui.graphics.Color
 import com.marta.habittracker.presentation.theme.HabitColor1
+import com.marta.habittracker.presentation.theme.HabitColor12
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,6 +23,7 @@ class ColorUtilsTest {
     fun `habit color options starts with color 1 and follows rainbow hue order`() {
         assertEquals(HabitColor1, HabitColorOptions.first())
         assertEquals("#F04F45", HabitColor1.toHex())
+        assertEquals("#BE184F", HabitColor12.toHex())
 
         val hues = HabitColorOptions.map { hueDegrees(it) }
         hues.zipWithNext().forEach { (previous, next) ->

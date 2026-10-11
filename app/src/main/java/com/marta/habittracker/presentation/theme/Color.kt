@@ -49,7 +49,7 @@ val HabitColor8 = Color(0xFF3A98EA)
 val HabitColor9 = Color(0xFF4949CC)
 val HabitColor10 = Color(0xFF8650B8)
 val HabitColor11 = Color(0xFFEC5995)
-val HabitColor12 = Color(0xFFBE185D)
+val HabitColor12 = Color(0xFFBE184F)
 
 
 
