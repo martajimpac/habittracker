@@ -152,6 +152,36 @@ class SocialRemoteDataSource @Inject constructor(
         }
     }
 
+    suspend fun registerDeviceToken(token: String) {
+        try {
+            Log.d(TAG, "registerDeviceToken started")
+            supabase.functions.invoke(FUNCTION_REGISTER_DEVICE_TOKEN, body = mapOf("token" to token))
+            Log.d(TAG, "registerDeviceToken finished")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "registerDeviceToken failed", e)
+            throw e
+        }
+    }
+
+    suspend fun deleteDeviceToken(token: String) {
+        try {
+            Log.d(TAG, "deleteDeviceToken started")
+            supabase.from(TABLE_DEVICE_TOKENS).delete {
+                filter {
+                    eq("token", token)
+                }
+            }
+            Log.d(TAG, "deleteDeviceToken finished")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteDeviceToken failed", e)
+            throw e
+        }
+    }
+
     /**
      * Always writes avatar_url, including SQL null. Name-only updates must use
      * [updateMyProfile] which omits the column when avatarUrl is null.
@@ -407,6 +437,8 @@ class SocialRemoteDataSource @Inject constructor(
         private const val BUCKET_AVATARS = "avatars"
         private const val AVATAR_FILE_NAME = "avatar.jpg"
         private const val FUNCTION_DELETE_ACCOUNT = "delete-account"
+        private const val FUNCTION_REGISTER_DEVICE_TOKEN = "register-device-token"
+        private const val TABLE_DEVICE_TOKENS = "device_tokens"
 
         private fun avatarObjectPath(userId: String): String = "$userId/$AVATAR_FILE_NAME"
     }

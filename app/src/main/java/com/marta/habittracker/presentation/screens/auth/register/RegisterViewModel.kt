@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marta.habittracker.core.push.DeviceTokenRegistrar
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.RegisterUseCase
 import com.marta.habittracker.presentation.utils.toUserMessageRes
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
+    private val deviceTokenRegistrar: DeviceTokenRegistrar,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -59,6 +61,7 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = registerUseCase(state.email.trim(), state.password)) {
                 is DataResult.Success -> {
+                    deviceTokenRegistrar.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
                     _navigateToHome.send(Unit)
                 }

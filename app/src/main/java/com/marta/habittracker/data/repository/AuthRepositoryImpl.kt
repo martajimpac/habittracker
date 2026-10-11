@@ -7,6 +7,7 @@ import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.model.RegisterError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.UserMode
+import com.marta.habittracker.core.push.DeviceTokenRegistrar
 import com.marta.habittracker.domain.repository.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -20,6 +21,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
+    private val deviceTokenRegistrar: DeviceTokenRegistrar,
 ) : AuthRepository {
 
     companion object {
@@ -144,6 +146,11 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signOut(): DataResult<Unit, AppError> {
         return try {
             Log.d(TAG, "Sign out started")
+            try {
+                deviceTokenRegistrar.clearCurrentToken()
+            } catch (e: Exception) {
+                Log.e(TAG, "clearCurrentToken before sign-out failed", e)
+            }
             supabase.auth.signOut()
             Log.d(TAG, "Sign out finished ok")
             DataResult.Success(Unit)
