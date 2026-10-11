@@ -143,11 +143,18 @@ class ChallengeDetailViewModelTest {
         )
         advanceUntilIdle()
 
+        val events = mutableListOf<ChallengeDetailEvent>()
+        val collectJob = backgroundScope.launch {
+            viewModel.events.collect { events.add(it) }
+        }
+
         viewModel.onDecline()
         advanceUntilIdle()
 
         assertEquals(R.string.error_no_internet, viewModel.uiState.value.errorRes)
         assertEquals(1, friendsRepository.respondCalls)
+        assertTrue(events.isEmpty())
+        collectJob.cancel()
     }
 
     @Test
