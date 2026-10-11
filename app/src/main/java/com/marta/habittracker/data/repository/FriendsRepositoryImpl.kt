@@ -133,6 +133,19 @@ class FriendsRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun getChallenge(challengeId: String): DataResult<ChallengeCard, AppError> {
+        Log.w(TAG, "getChallenge not implemented yet challengeId=$challengeId")
+        return DataResult.Error(AppError.Common.Unknown)
+    }
+
+    override suspend fun respondToChallenge(
+        challengeId: String,
+        accept: Boolean,
+    ): DataResult<ChallengeCard, AppError> {
+        Log.w(TAG, "respondToChallenge not implemented yet challengeId=$challengeId accept=$accept")
+        return DataResult.Error(AppError.Common.Unknown)
+    }
+
     override suspend fun getPendingFriendRequests(): DataResult<List<Friendship>, AppError> =
         runOnline(OP_PENDING_REQUESTS) {
             val userId = socialRemote.requireUserId()
