@@ -82,6 +82,8 @@
     <string name="error_common_unauthorized">You do not have permission to access.</string>
     <string name="error_common_unknown">Could not complete the operation. Please try again.</string>
     <string name="error_no_internet">No internet connection. Try again when you are online.</string>
+    <string name="challenge_detail_error">Couldn\'t load this challenge</string>
+    <string name="challenge_respond_error">Couldn\'t update this challenge</string>
     <string name="error_preferences_invalid_display_name">Enter a name between 1 and 40 characters.</string>
     <string name="error_sync_failed">Could not sync habits. Please try again.</string>
 

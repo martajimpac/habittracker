@@ -83,6 +83,8 @@
     <string name="error_common_unauthorized">No tienes permiso para acceder.</string>
     <string name="error_common_unknown">No se pudo completar la operación. Inténtalo de nuevo.</string>
     <string name="error_no_internet">Sin conexión a internet. Inténtalo cuando estés conectado.</string>
+    <string name="challenge_detail_error">No se ha podido abrir el reto</string>
+    <string name="challenge_respond_error">No se ha podido actualizar el reto</string>
     <string name="error_preferences_invalid_display_name">Introduce un nombre de 1 a 40 caracteres.</string>
     <string name="error_sync_failed">No se pudo sincronizar los hábitos. Por favor, inténtalo de nuevo.</string>
 
