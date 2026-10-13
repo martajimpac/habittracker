@@ -147,6 +147,18 @@
     <string name="friends_criteria_completion">Completado</string>
     <string name="friends_send_challenge">Enviar desafío</string>
 
+    <!-- Challenge detail -->
+    <string name="challenge_detail_title">Reto</string>
+    <string name="challenge_accept">Aceptar</string>
+    <string name="challenge_decline">Rechazar</string>
+    <string name="challenge_status_pending">Pendiente</string>
+    <string name="challenge_status_active">En curso</string>
+    <string name="challenge_status_completed">Completado</string>
+    <string name="challenge_status_declined">Rechazado</string>
+    <string name="challenge_status_cancelled">Cancelado</string>
+    <string name="challenge_push_title">Nuevo reto</string>
+    <string name="challenge_push_body">%1$s te ha retado</string>
+
     <!-- Home -->
     <string name="home_today_label">Hoy · %1$s</string>
     <string name="home_past_label">Pasado · %1$s</string>

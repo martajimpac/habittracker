@@ -146,6 +146,18 @@
     <string name="friends_criteria_completion">Completion</string>
     <string name="friends_send_challenge">Send challenge</string>
 
+    <!-- Challenge detail -->
+    <string name="challenge_detail_title">Challenge</string>
+    <string name="challenge_accept">Accept</string>
+    <string name="challenge_decline">Decline</string>
+    <string name="challenge_status_pending">Pending</string>
+    <string name="challenge_status_active">Active</string>
+    <string name="challenge_status_completed">Completed</string>
+    <string name="challenge_status_declined">Declined</string>
+    <string name="challenge_status_cancelled">Cancelled</string>
+    <string name="challenge_push_title">New challenge</string>
+    <string name="challenge_push_body">%1$s challenged you</string>
+
     <!-- Home -->
     <string name="home_today_label">Today · %1$s</string>
     <string name="home_past_label">Past · %1$s</string>

@@ -27,4 +27,7 @@ sealed class TabScreens {
 
     @Serializable
     data class TabDetail(val habitId: String) : TabScreens()
+
+    @Serializable
+    data class TabChallengeDetail(val challengeId: String) : TabScreens()
 }

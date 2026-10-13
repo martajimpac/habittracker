@@ -75,6 +75,7 @@ import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 
 @Composable
 fun FriendsScreen(
+    onOpenChallenge: (String) -> Unit = {},
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +84,7 @@ fun FriendsScreen(
     }
     FriendsContent(
         uiState = uiState,
+        onOpenChallenge = onOpenChallenge,
         onAddFriend = viewModel::onAddFriendClicked,
         onDismissSheet = viewModel::onDismissSheet,
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
@@ -98,6 +100,7 @@ fun FriendsScreen(
 @Composable
 fun FriendsContent(
     uiState: FriendsUiState,
+    onOpenChallenge: (String) -> Unit = {},
     onAddFriend: () -> Unit = {},
     onDismissSheet: () -> Unit = {},
     onSearchQueryChanged: (String) -> Unit = {},
@@ -120,6 +123,7 @@ fun FriendsContent(
         } else {
             FriendsBody(
                 uiState = uiState,
+                onOpenChallenge = onOpenChallenge,
                 onRespondToRequest = onRespondToRequest,
                 onViewFriend = onViewFriend,
                 onCreateChallenge = onCreateChallenge,
@@ -177,6 +181,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
 @Composable
 private fun FriendsBody(
     uiState: FriendsUiState,
+    onOpenChallenge: (String) -> Unit,
     onRespondToRequest: (String, Boolean) -> Unit,
     onViewFriend: (String) -> Unit,
     onCreateChallenge: (String) -> Unit,
@@ -193,7 +198,12 @@ private fun FriendsBody(
                 FriendsInlineEmpty(R.string.friends_empty_challenges)
             } else {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(uiState.challenges, key = { it.challenge.id }) { ChallengeCard(it) }
+                    items(uiState.challenges, key = { it.challenge.id }) { card ->
+                        ChallengeCard(
+                            card = card,
+                            onClick = { onOpenChallenge(card.challenge.id) },
+                        )
+                    }
                 }
             }
         }
@@ -230,13 +240,17 @@ private fun FriendsBody(
 }
 
 @Composable
-private fun ChallengeCard(card: ChallengeCard) {
+private fun ChallengeCard(
+    card: ChallengeCard,
+    onClick: () -> Unit = {},
+) {
     val cardColor = card.habitColorHex.toComposeColor()
     Column(
         modifier = Modifier
             .width(220.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(Brush.linearGradient(listOf(cardColor, HabitPrimaryLight)))
+            .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

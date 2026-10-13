@@ -81,7 +81,8 @@ fun BottomNavScreen(
         destinationRoute.contains(TabScreens.TabAddContent::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabDetail::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabPreferences::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabDeleteAccount::class.qualifiedName.toString())
+            destinationRoute.contains(TabScreens.TabDeleteAccount::class.qualifiedName.toString()) ||
+            destinationRoute.contains(TabScreens.TabChallengeDetail::class.qualifiedName.toString())
 
     BottomNavContent(
         selectedTab = selectedTab,
