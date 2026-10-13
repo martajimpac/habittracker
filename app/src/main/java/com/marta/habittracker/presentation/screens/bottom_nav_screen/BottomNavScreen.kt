@@ -52,10 +52,32 @@ import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 fun BottomNavScreen(
     onSignedOut: () -> Unit,
     initialTabRoute: String? = null,
+    initialHabitId: String? = null,
+    onHabitIdConsumed: () -> Unit = {},
+    initialChallengeId: String? = null,
+    onChallengeIdConsumed: () -> Unit = {},
     bottomNavViewModel: BottomNavViewModel = hiltViewModel(),
 ) {
     val tabNavController = rememberNavController()
-    LaunchedEffect(initialTabRoute) {
+    LaunchedEffect(initialTabRoute, initialHabitId, initialChallengeId) {
+        val habitId = initialHabitId
+        if (!habitId.isNullOrBlank()) {
+            tabNavController.navigate(TabScreens.TabDetail(habitId)) {
+                popUpTo(TabScreens.TabHome) { inclusive = false }
+                launchSingleTop = true
+            }
+            onHabitIdConsumed()
+            return@LaunchedEffect
+        }
+        val challengeId = initialChallengeId
+        if (!challengeId.isNullOrBlank()) {
+            tabNavController.navigate(TabScreens.TabChallengeDetail(challengeId)) {
+                popUpTo(TabScreens.TabHome) { inclusive = false }
+                launchSingleTop = true
+            }
+            onChallengeIdConsumed()
+            return@LaunchedEffect
+        }
         when (initialTabRoute) {
             WidgetLaunchExtras.TAB_HOME -> tabNavController.navigate(TabScreens.TabHome) {
                 launchSingleTop = true

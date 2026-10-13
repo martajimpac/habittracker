@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,10 @@ import com.marta.habittracker.presentation.utils.ObserveAsEvents
 @Composable
 fun NavigationWrapper(
     initialTabRoute: String? = null,
+    initialHabitId: String? = null,
+    onHabitIdConsumed: () -> Unit = {},
+    initialChallengeId: String? = null,
+    onChallengeIdConsumed: () -> Unit = {},
     appStartViewModel: AppStartViewModel = hiltViewModel(),
     authDeeplinkViewModel: AuthDeeplinkViewModel = hiltViewModel(),
 ) {
@@ -44,6 +49,12 @@ fun NavigationWrapper(
         AppStartDestination.Onboarding -> Onboarding
         AppStartDestination.Login -> Login()
         AppStartDestination.Home -> Home
+    }
+
+    if (destination != AppStartDestination.Home && !initialChallengeId.isNullOrBlank()) {
+        LaunchedEffect(destination) {
+            onChallengeIdConsumed()
+        }
     }
 
     ObserveAsEvents(flow = authDeeplinkViewModel.events) { event ->
@@ -124,6 +135,10 @@ fun NavigationWrapper(
         composable<Home> {
             BottomNavScreen(
                 initialTabRoute = initialTabRoute,
+                initialHabitId = initialHabitId,
+                onHabitIdConsumed = onHabitIdConsumed,
+                initialChallengeId = initialChallengeId,
+                onChallengeIdConsumed = onChallengeIdConsumed,
                 onSignedOut = {
                     navController.navigate(Login()) {
                         popUpTo(0) { inclusive = true }

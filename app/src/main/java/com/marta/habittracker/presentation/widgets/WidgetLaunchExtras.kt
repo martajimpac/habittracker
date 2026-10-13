@@ -7,6 +7,7 @@ import com.marta.habittracker.MainActivity
 object WidgetLaunchExtras {
     const val EXTRA_BOTTOM_TAB = "extra_bottom_tab"
     const val EXTRA_HABIT_ID = "extra_habit_id"
+    const val EXTRA_CHALLENGE_ID = "extra_challenge_id"
 
     const val TAB_HOME = "home"
     const val TAB_STATS = "stats"
@@ -21,10 +22,24 @@ object WidgetLaunchExtras {
 
     fun openStatsIntent(context: Context): Intent = launchIntent(context, TAB_STATS)
 
+    fun openChallengeIntent(context: Context, challengeId: String): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra(EXTRA_CHALLENGE_ID, challengeId)
+        }
+
     fun tabFromIntent(intent: Intent?): String? =
         intent?.getStringExtra(EXTRA_BOTTOM_TAB)?.takeIf {
             it == TAB_HOME || it == TAB_STATS || it == TAB_FRIENDS
         }
+
+    fun habitIdFromIntent(intent: Intent?): String? =
+        intent?.getStringExtra(EXTRA_HABIT_ID)?.takeIf { it.isNotBlank() }
+
+    fun challengeIdFromIntent(intent: Intent?): String? =
+        intent?.getStringExtra(EXTRA_CHALLENGE_ID)?.takeIf { it.isNotBlank() }
 
     private fun launchIntent(context: Context, tab: String): Intent =
         Intent(context, MainActivity::class.java).apply {

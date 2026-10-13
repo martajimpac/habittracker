@@ -27,14 +27,24 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var authDeeplinkCoordinator: AuthDeeplinkCoordinator
 
     private var initialTab by mutableStateOf<String?>(null)
+    private var initialHabitId by mutableStateOf<String?>(null)
+    private var initialChallengeId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialTab = WidgetLaunchExtras.tabFromIntent(intent)
+        if (savedInstanceState == null) {
+            applyLaunchExtras(intent)
+        }
         enableEdgeToEdge()
         setContent {
             InstaDevTheme {
-                NavigationWrapper(initialTabRoute = initialTab)
+                NavigationWrapper(
+                    initialTabRoute = initialTab,
+                    initialHabitId = initialHabitId,
+                    onHabitIdConsumed = { consumeHabitId() },
+                    initialChallengeId = initialChallengeId,
+                    onChallengeIdConsumed = { consumeChallengeId() },
+                )
             }
         }
         handleAuthDeeplink(intent)
@@ -43,8 +53,33 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        initialTab = WidgetLaunchExtras.tabFromIntent(intent)
+        applyLaunchExtras(intent)
         handleAuthDeeplink(intent)
+    }
+
+    private fun applyLaunchExtras(intent: Intent?) {
+        initialHabitId = WidgetLaunchExtras.habitIdFromIntent(intent)
+        initialChallengeId = if (initialHabitId == null) {
+            WidgetLaunchExtras.challengeIdFromIntent(intent)
+        } else {
+            null
+        }
+        initialTab = if (initialHabitId == null && initialChallengeId == null) {
+            WidgetLaunchExtras.tabFromIntent(intent)
+        } else {
+            null
+        }
+    }
+
+    private fun consumeHabitId() {
+        initialHabitId = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_HABIT_ID)
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
+    }
+
+    private fun consumeChallengeId() {
+        initialChallengeId = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_CHALLENGE_ID)
     }
 
     override fun onResume() {
