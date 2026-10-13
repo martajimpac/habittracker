@@ -58,8 +58,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    override fun onRegistered(token: String) {
-        super.onRegistered(token)
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
         serviceScope.launch {
             try {
                 val registration = EntryPointAccessors.fromApplication(
