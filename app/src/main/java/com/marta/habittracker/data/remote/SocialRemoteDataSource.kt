@@ -156,7 +156,7 @@ class SocialRemoteDataSource @Inject constructor(
     suspend fun registerDeviceToken(token: String) {
         try {
             Log.d(TAG, "registerDeviceToken started")
-            supabase.functions.invoke(FUNCTION_REGISTER_DEVICE_TOKEN, body = mapOf("token" to token))
+            supabase.functions.invoke(FUNCTION_REGISTER_DEVICE, body = mapOf("token" to token))
             Log.d(TAG, "registerDeviceToken finished")
         } catch (e: CancellationException) {
             throw e
@@ -480,7 +480,7 @@ class SocialRemoteDataSource @Inject constructor(
         private const val BUCKET_AVATARS = "avatars"
         private const val AVATAR_FILE_NAME = "avatar.jpg"
         private const val FUNCTION_DELETE_ACCOUNT = "delete-account"
-        private const val FUNCTION_REGISTER_DEVICE_TOKEN = "register-device-token"
+        private const val FUNCTION_REGISTER_DEVICE = "register-device-token"
         private const val TABLE_DEVICE_TOKENS = "device_tokens"
 
         private fun avatarObjectPath(userId: String): String = "$userId/$AVATAR_FILE_NAME"

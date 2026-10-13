@@ -23,12 +23,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
@@ -61,7 +58,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        serviceScope.launch {
+        tokenRefreshScope.launch {
             try {
                 val registration = EntryPointAccessors.fromApplication(
                     applicationContext,
@@ -74,11 +71,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 Log.e(TAG, "registerCurrentToken failed", e)
             }
         }
-    }
-
-    override fun onDestroy() {
-        serviceScope.cancel()
-        super.onDestroy()
     }
 
     private fun sendChallengeNotification(title: String, body: String, challengeId: String) {
@@ -150,6 +142,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     companion object {
+        private val tokenRefreshScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         private const val TAG = "MyFirebaseMsgService"
         private const val NOTIFICATION_CHANNEL_ID = "habit_tracker_notifications"
         private const val CHALLENGE_CREATED_TYPE = "challenge_created"

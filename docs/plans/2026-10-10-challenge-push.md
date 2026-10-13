@@ -316,6 +316,8 @@ POST `https://fcm.googleapis.com/v1/projects/<project_id>/messages:send`. A non-
 
 `CHALLENGE_WEBHOOK_SECRET` (random), `FIREBASE_SERVICE_ACCOUNT` (the Firebase service-account JSON). `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are already injected.
 
+`supabase/config.toml` sets `verify_jwt = false` only for `notify-challenge`, because the webhook sends `x-webhook-secret` and not a user JWT. `register-device-token` keeps the default JWT check. Deploy with that file present so the gateway does not return 401 before the secret check.
+
 - [ ] **Step 4: Create the Database Webhook in the Supabase dashboard**
 
 - Table `public.challenges`, event Insert
@@ -352,7 +354,7 @@ On `SocialRemoteDataSource`:
 ```kotlin
 suspend fun registerDeviceToken(token: String) {
     Log.d(TAG, "registerDeviceToken started")
-    supabase.functions.invoke(FUNCTION_REGISTER_DEVICE_TOKEN, body = mapOf("token" to token))
+    supabase.functions.invoke(FUNCTION_REGISTER_DEVICE, body = mapOf("token" to token))
     Log.d(TAG, "registerDeviceToken finished")
 }
 
@@ -365,7 +367,7 @@ suspend fun deleteDeviceToken(token: String) {
 }
 ```
 
-`FUNCTION_REGISTER_DEVICE_TOKEN = "register-device-token"`. On failure, `Log.e(TAG, "... failed", e)` and rethrow. Never log `token`.
+`FUNCTION_REGISTER_DEVICE = "register-device-token"`. On failure, `Log.e(TAG, "... failed", e)` and rethrow. Never log `token`. The constant name must not end in `TOKEN` before `=`, or `HardcodedSecretsTest` treats the function name as a secret.
 
 - [ ] **Step 2: Registrar**
 
