@@ -67,6 +67,7 @@ fun BottomNavScreen(
                 launchSingleTop = true
             }
             onHabitIdConsumed()
+            onChallengeIdConsumed()
             return@LaunchedEffect
         }
         val challengeId = initialChallengeId

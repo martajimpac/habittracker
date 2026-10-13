@@ -6,10 +6,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -51,10 +53,15 @@ fun NavigationWrapper(
         AppStartDestination.Home -> Home
     }
 
-    if (destination != AppStartDestination.Home && !initialChallengeId.isNullOrBlank()) {
-        LaunchedEffect(destination) {
-            onChallengeIdConsumed()
-        }
+    LaunchedEffect(initialChallengeId) {
+        if (initialChallengeId.isNullOrBlank()) return@LaunchedEffect
+        snapshotFlow { navController.currentBackStackEntry }
+            .collect { entry ->
+                if (entry == null) return@collect
+                if (!entry.destination.hasRoute<Home>()) {
+                    onChallengeIdConsumed()
+                }
+            }
     }
 
     ObserveAsEvents(flow = authDeeplinkViewModel.events) { event ->
