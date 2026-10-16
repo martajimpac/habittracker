@@ -39,12 +39,14 @@ import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.globalDayIntensity
 import com.marta.habittracker.presentation.components.toHeatmapWeeks
+import com.marta.habittracker.domain.usecase.habitStatsInsight
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.screens.home.habitTimeLabel
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.habitAccentColor
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 @Composable
@@ -61,6 +63,7 @@ fun StatsContent(
     habits: List<Habit>,
 ) {
     val today = remember { LocalDate.now() }
+    val insight = remember(habits, today) { habitStatsInsight(habits, today) }
     val activityWeeks = remember(habits, today) {
         toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->
             globalDayIntensity(habits, date)
@@ -99,6 +102,31 @@ fun StatsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
+                    StatsInsightCard(
+                        text = insight.strongestWeekday?.let { day ->
+                            stringResource(
+                                R.string.stats_strongest_day,
+                                stringResource(weekdayLabelRes(day)),
+                                insight.strongestWeekdayCount,
+                            )
+                        } ?: stringResource(R.string.stats_strongest_day_empty),
+                    )
+                }
+                item {
+                    val atRisk = insight.streakAtRisk
+                    StatsInsightCard(
+                        text = if (atRisk == null) {
+                            stringResource(R.string.stats_streak_risk_empty)
+                        } else {
+                            stringResource(
+                                R.string.stats_streak_risk,
+                                atRisk.habitName,
+                                atRisk.streakDays,
+                            )
+                        },
+                    )
+                }
+                item {
                     ActivityHeatmap(
                         weeks = activityWeeks,
                         today = today,
@@ -112,6 +140,32 @@ fun StatsContent(
             }
         }
     }
+}
+
+@Composable
+private fun StatsInsightCard(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = HabitOnSurface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(androidx.compose.ui.graphics.Color.White)
+            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .padding(16.dp),
+    )
+}
+
+private fun weekdayLabelRes(dayOfWeek: DayOfWeek): Int = when (dayOfWeek) {
+    DayOfWeek.MONDAY -> R.string.stats_weekday_monday
+    DayOfWeek.TUESDAY -> R.string.stats_weekday_tuesday
+    DayOfWeek.WEDNESDAY -> R.string.stats_weekday_wednesday
+    DayOfWeek.THURSDAY -> R.string.stats_weekday_thursday
+    DayOfWeek.FRIDAY -> R.string.stats_weekday_friday
+    DayOfWeek.SATURDAY -> R.string.stats_weekday_saturday
+    DayOfWeek.SUNDAY -> R.string.stats_weekday_sunday
 }
 
 @Composable
