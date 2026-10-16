@@ -291,7 +291,8 @@ Aprobado 2026-10-16.
   - **Day Streak:** max streak entre habitos (`calculateStreak` sobre records, igual que Home).
   - **Completed:** total de records con `isCompleted`.
   - **Habits:** numero de habitos.
-- Filas de menu: Notifications y Goals — solo UI, sin navegacion. **Preferences** navega a la pantalla Preferencias.
+- Filas de menu: Notifications — solo UI, sin navegacion. **Goals** abre la meta semanal. **Preferences** navega a la pantalla Preferencias.
+- **Goals:** meta fija de 5 días en la semana lunes–domingo que contiene hoy. Un día cuenta si hay al menos un hábito programado y todos los programados ese día tienen un record `isCompleted`. Un día sin hábitos no cuenta. Los datos salen de `HabitRepository.getAllHabitsWithRecords()` (Room). No hay tabla nueva ni meta editable. La barra inferior se oculta, igual que en Preferencias.
 - Sign Out: llama a `AuthRepository.signOut()` (Supabase) y navega a Login limpiando el back stack.
 - Todos los textos de Profile van en ingles (`strings.xml`).
 - `ProfileViewModel` expone nombre, email, avatar, stats y el evento de sign-out; Preferences maneja sus propios clicks.
@@ -313,7 +314,7 @@ Aprobado 2026-10-08.
 - Ventana: ultimas 4 semanas rolling alineadas a lunes (W4 = semana actual).
 - Colores invertidos vs mock oscuro: fondo claro; celda blanca = Less / no completado; morado oscuro = More / completado (escala intermedia en Stats).
 - **Detail → tab Calendar:** intensidad binaria del habito (0 o 1).
-- **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados.
+- **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados. Encima, dos lecturas de los mismos records: el día de la semana con más records `isCompleted` (si hay empate, gana el día más temprano, lunes primero) y el hábito con la racha viva más larga. La racha es la de Home: días completados seguidos que terminan hoy. Si hoy no está completado, la racha ya es 0 y no se avisa. El aviso dice que esa racha se corta si mañana no se completa.
 - Leyenda Less → More; etiqueta de hoy con borde sutil opcional.
 - Tab Stats de Detail mantiene el anillo de %% overall (sin cambiar en este alcance).
 

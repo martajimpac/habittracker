@@ -69,6 +69,7 @@ private data class ProfileMenuItem(
 fun ProfileScreen(
     onSignedOut: () -> Unit,
     onPreferences: () -> Unit,
+    onGoals: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -85,6 +86,7 @@ fun ProfileScreen(
         uiState = uiState,
         onSignOut = viewModel::onSignOutClicked,
         onPreferences = onPreferences,
+        onGoals = onGoals,
     )
 }
 
@@ -93,6 +95,7 @@ fun ProfileContent(
     uiState: ProfileUiState,
     onSignOut: () -> Unit = {},
     onPreferences: () -> Unit = {},
+    onGoals: () -> Unit = {},
 ) {
     val menuItems = listOf(
         ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, MaterialTheme.colorScheme.primary),
@@ -120,10 +123,10 @@ fun ProfileContent(
                     label = stringResource(item.labelRes),
                     icon = item.icon,
                     tint = item.tint,
-                    onClick = if (item.labelRes == R.string.profile_preferences) {
-                        onPreferences
-                    } else {
-                        {}
+                    onClick = when (item.labelRes) {
+                        R.string.profile_preferences -> onPreferences
+                        R.string.profile_goals -> onGoals
+                        else -> ({})
                     },
                 )
             }
@@ -323,5 +326,6 @@ private fun ProfileContentPreview() {
             habitsCount = 5,
         ),
         onPreferences = {},
+        onGoals = {},
     )
 }

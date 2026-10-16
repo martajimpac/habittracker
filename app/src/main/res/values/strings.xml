@@ -239,10 +239,24 @@
     <string name="stats_title">Stats</string>
     <string name="stats_coming_soon">Stats coming soon</string>
     <string name="stats_empty">No habits yet</string>
+    <string name="stats_weekday_monday">Monday</string>
+    <string name="stats_weekday_tuesday">Tuesday</string>
+    <string name="stats_weekday_wednesday">Wednesday</string>
+    <string name="stats_weekday_thursday">Thursday</string>
+    <string name="stats_weekday_friday">Friday</string>
+    <string name="stats_weekday_saturday">Saturday</string>
+    <string name="stats_weekday_sunday">Sunday</string>
+    <string name="stats_strongest_day">%1$s is your strongest day (%2$d completed)</string>
+    <string name="stats_strongest_day_empty">No completed habits yet</string>
+    <string name="stats_streak_risk">%1$s loses a %2$d-day streak if you skip tomorrow</string>
+    <string name="stats_streak_risk_empty">No streak ends tomorrow</string>
 
     <!-- Profile -->
     <string name="profile_notifications">Notifications</string>
     <string name="profile_goals">Goals &amp; targets</string>
+    <string name="goals_progress">%1$d/%2$d</string>
+    <string name="goals_rule">A day counts when every habit scheduled that day is completed.</string>
+    <string name="goals_reached">You reached this week\'s goal.</string>
     <string name="profile_reminders">Reminders</string>
     <string name="profile_preferences">Preferences</string>
     <string name="preferences_display_name_label">Display name</string>

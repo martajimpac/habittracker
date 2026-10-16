@@ -240,10 +240,24 @@
     <string name="stats_title">Estadísticas</string>
     <string name="stats_coming_soon">Estadísticas próximamente</string>
     <string name="stats_empty">Sin hábitos aún</string>
+    <string name="stats_weekday_monday">Lunes</string>
+    <string name="stats_weekday_tuesday">Martes</string>
+    <string name="stats_weekday_wednesday">Miércoles</string>
+    <string name="stats_weekday_thursday">Jueves</string>
+    <string name="stats_weekday_friday">Viernes</string>
+    <string name="stats_weekday_saturday">Sábado</string>
+    <string name="stats_weekday_sunday">Domingo</string>
+    <string name="stats_strongest_day">%1$s es tu día más fuerte (%2$d completados)</string>
+    <string name="stats_strongest_day_empty">Todavía no hay hábitos completados</string>
+    <string name="stats_streak_risk">%1$s pierde una racha de %2$d días si mañana no lo haces</string>
+    <string name="stats_streak_risk_empty">Ninguna racha se rompe mañana</string>
 
     <!-- Profile -->
     <string name="profile_notifications">Notificaciones</string>
     <string name="profile_goals">Objetivos y metas</string>
+    <string name="goals_progress">%1$d/%2$d</string>
+    <string name="goals_rule">Un día cuenta cuando completas todos los hábitos programados ese día.</string>
+    <string name="goals_reached">Has cumplido la meta de esta semana.</string>
     <string name="profile_reminders">Recordatorios</string>
     <string name="profile_preferences">Preferencias</string>
     <string name="preferences_display_name_label">Nombre visible</string>

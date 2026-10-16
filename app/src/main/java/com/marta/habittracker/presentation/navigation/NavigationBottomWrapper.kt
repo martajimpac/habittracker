@@ -11,6 +11,7 @@ import com.marta.habittracker.presentation.navigation.TabScreens.TabChallengeDet
 import com.marta.habittracker.presentation.navigation.TabScreens.TabDetail
 import com.marta.habittracker.presentation.navigation.TabScreens.TabFriends
 import com.marta.habittracker.presentation.navigation.TabScreens.TabHome
+import com.marta.habittracker.presentation.navigation.TabScreens.TabGoals
 import com.marta.habittracker.presentation.navigation.TabScreens.TabPreferences
 import com.marta.habittracker.presentation.navigation.TabScreens.TabProfile
 import com.marta.habittracker.presentation.navigation.TabScreens.TabStats
@@ -19,6 +20,7 @@ import com.marta.habittracker.presentation.screens.deleteaccount.DeleteAccountSc
 import com.marta.habittracker.presentation.screens.challenge.ChallengeDetailScreen
 import com.marta.habittracker.presentation.screens.detail.HabitDetailScreen
 import com.marta.habittracker.presentation.screens.friends.FriendsScreen
+import com.marta.habittracker.presentation.screens.goals.GoalsScreen
 import com.marta.habittracker.presentation.screens.home.HomeScreen
 import com.marta.habittracker.presentation.screens.preferences.PreferencesScreen
 import com.marta.habittracker.presentation.screens.profile.ProfileScreen
@@ -56,6 +58,13 @@ fun NavigationBottomWrapper(
             ProfileScreen(
                 onSignedOut = onSignedOut,
                 onPreferences = { navHostController.navigate(TabPreferences) },
+                onGoals = { navHostController.navigate(TabGoals) },
+            )
+        }
+
+        composable<TabGoals> {
+            GoalsScreen(
+                onBack = { navHostController.popBackStack() },
             )
         }
 
