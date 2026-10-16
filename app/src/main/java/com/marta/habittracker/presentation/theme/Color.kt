@@ -69,6 +69,7 @@ val Gray70 = Color(0xFFD0C5C0)
 
 val ErrorColor = Color(0xFF881C14)
 val ErrorColorLight = Color(0xFFEF5146)
+val SuccessColor = Color(0xFF4ADE80)
 
 // ─────────────────────────────────────
 // M3 ColorScheme containers

@@ -25,6 +25,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.utils.toHex
 
 @Composable
 fun ProfileAvatar(
@@ -63,7 +64,7 @@ fun ProfileAvatar(
                 text = userAvatarInitials(displayName),
                 style = initialsTextStyle(size),
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }
@@ -96,7 +97,7 @@ private fun ProfileAvatarInitialsPreview() {
     ProfileAvatar(
         avatarUrl = null,
         displayName = "John Doe",
-        avatarColor = "#6750A4",
+        avatarColor = HabitPrimary.toHex(),
         size = 80.dp,
     )
 }

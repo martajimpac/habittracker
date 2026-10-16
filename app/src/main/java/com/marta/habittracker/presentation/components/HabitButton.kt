@@ -53,8 +53,6 @@ enum class HabitButtonVariant {
 
 private val HabitButtonShape = RoundedCornerShape(16.dp)
 private val HabitButtonHeight = 56.dp
-private val HabitButtonDisabledContainer = Color(0xFFCAC4D0)
-private val HabitButtonDisabledContent = Color.White
 
 @Composable
 fun HabitButton(
@@ -66,6 +64,11 @@ fun HabitButton(
     loading: Boolean = false,
     fillMaxWidth: Boolean = true,
 ) {
+    val colors = MaterialTheme.colorScheme
+    val disabledContainer = colors.surfaceContainerHighest
+    val disabledContent = colors.onSurfaceVariant
+    val onPrimary = colors.onPrimary
+    val field = colors.surfaceContainerLowest
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -98,9 +101,9 @@ fun HabitButton(
                 interactionSource = interactionSource,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
-                    disabledContainerColor = HabitButtonDisabledContainer,
-                    contentColor = Color.White,
-                    disabledContentColor = HabitButtonDisabledContent,
+                    disabledContainerColor = disabledContainer,
+                    contentColor = onPrimary,
+                    disabledContentColor = disabledContent,
                 ),
                 contentPadding = PaddingValues(0.dp),
             ) {
@@ -113,7 +116,7 @@ fun HabitButton(
                                 Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight))
                             } else {
                                 Brush.linearGradient(
-                                    listOf(HabitButtonDisabledContainer, HabitButtonDisabledContainer),
+                                    listOf(disabledContainer, disabledContainer),
                                 )
                             }
                         ),
@@ -122,7 +125,7 @@ fun HabitButton(
                     Text(
                         text = text,
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (enabled) Color.White else HabitButtonDisabledContent,
+                        color = if (enabled) onPrimary else disabledContent,
                     )
                 }
             }
@@ -136,16 +139,16 @@ fun HabitButton(
                 shape = HabitButtonShape,
                 interactionSource = interactionSource,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
+                    containerColor = field,
                     contentColor = HabitPrimary,
-                    disabledContainerColor = HabitButtonDisabledContainer,
-                    disabledContentColor = HabitButtonDisabledContent,
+                    disabledContainerColor = disabledContainer,
+                    disabledContentColor = disabledContent,
                 ),
             ) {
                 Text(
                     text = text,
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (enabled) HabitPrimary else HabitButtonDisabledContent,
+                    color = if (enabled) HabitPrimary else disabledContent,
                 )
             }
         }
@@ -157,18 +160,18 @@ fun HabitButton(
                 modifier = buttonModifier
                     .clip(CircleShape)
                     .background(
-                        if (enabled) Color.White.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.12f),
+                        if (enabled) onPrimary.copy(alpha = 0.2f) else onPrimary.copy(alpha = 0.12f),
                     ),
                 interactionSource = interactionSource,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color.White,
-                    disabledContentColor = HabitButtonDisabledContent,
+                    contentColor = onPrimary,
+                    disabledContentColor = disabledContent,
                 ),
             ) {
                 Text(
                     text = text,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (enabled) Color.White else HabitButtonDisabledContent,
+                    color = if (enabled) onPrimary else disabledContent,
                 )
             }
         }
@@ -182,19 +185,19 @@ fun HabitButton(
                 interactionSource = interactionSource,
                 border = BorderStroke(
                     1.dp,
-                    if (enabled) HabitOutline else HabitButtonDisabledContainer,
+                    if (enabled) HabitOutline else disabledContainer,
                 ),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HabitField,
                     contentColor = HabitOnSurface,
-                    disabledContainerColor = HabitButtonDisabledContainer,
-                    disabledContentColor = HabitButtonDisabledContent,
+                    disabledContainerColor = disabledContainer,
+                    disabledContentColor = disabledContent,
                 ),
             ) {
                 Text(
                     text = text,
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (enabled) HabitOnSurface else HabitButtonDisabledContent,
+                    color = if (enabled) HabitOnSurface else disabledContent,
                 )
             }
         }
@@ -297,7 +300,7 @@ fun HabitFab(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }

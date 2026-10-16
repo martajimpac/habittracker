@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF1F1F1"
+    android:background="@color/habit_surface"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="12dp">
@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/weekly_widget_title"
-        android:textColor="#FF1A1D1F"
+        android:textColor="@color/habit_on_surface"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_mon"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_high"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -56,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_tue"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -64,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_high"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -79,7 +79,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_wed"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_high"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -102,7 +102,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_thu"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -110,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_high"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -125,7 +125,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_fri"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -133,7 +133,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_high"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -148,7 +148,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_sat"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -156,7 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_zero"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -171,7 +171,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/weekly_widget_day_sun"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
 
             <TextView
@@ -179,7 +179,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/weekly_widget_preview_percent_zero"
-                android:textColor="#FF1A1D1F"
+                android:textColor="@color/habit_on_surface"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>

@@ -143,7 +143,7 @@ fun HabitDetailContent(
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
-    val accent = parseHabitColor(habit?.colorHex ?: "#6750A4")
+    val accent = parseHabitColor(habit?.colorHex.orEmpty())
     val reminder = habit?.reminderTime?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.home_all_day)
 

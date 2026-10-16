@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.Button
+import androidx.glance.ButtonDefaults
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -26,6 +27,9 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.habitIconRes
 import com.marta.habittracker.presentation.screens.home.calculateStreak
+import com.marta.habittracker.presentation.theme.HabitField
+import com.marta.habittracker.presentation.theme.HabitOnSurface
+import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
@@ -102,7 +106,10 @@ internal fun HabitWidgetContent(
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
         if (habit == null) {
-            Text(text = configureText)
+            Text(
+                text = configureText,
+                style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
+            )
         } else {
             Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
                 Image(
@@ -120,13 +127,21 @@ internal fun HabitWidgetContent(
             }
             Text(
                 text = if (habit.isCompleted) completedText else notCompletedText,
+                style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
             )
             if (streakText.isNotEmpty()) {
-                Text(text = streakText)
+                Text(
+                    text = streakText,
+                    style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
+                )
             }
             Button(
                 text = if (habit.isCompleted) markIncompleteText else markCompleteText,
                 onClick = toggleAction,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = androidx.glance.unit.ColorProvider(HabitPrimary),
+                    contentColor = androidx.glance.unit.ColorProvider(HabitField),
+                ),
             )
         }
     }

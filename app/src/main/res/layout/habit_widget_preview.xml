@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF1F1F1"
+    android:background="@color/habit_color_1_wash"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp">
@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/habit_widget_preview_name"
-        android:textColor="#FFF04F45"
+        android:textColor="@color/habit_color_1"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -20,17 +20,17 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="@string/habit_widget_completed"
-        android:textColor="#FF1A1D1F"
+        android:textColor="@color/habit_on_surface"
         android:textSize="12sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="#FF021C4B"
+        android:background="@color/habit_primary"
         android:paddingHorizontal="12dp"
         android:paddingVertical="6dp"
         android:text="@string/habit_widget_mark_incomplete"
-        android:textColor="#FFFFFFFF"
+        android:textColor="@color/habit_field"
         android:textSize="12sp" />
 </LinearLayout>

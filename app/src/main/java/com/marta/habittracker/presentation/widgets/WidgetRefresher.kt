@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.glance.appwidget.updateAll
 import com.marta.habittracker.presentation.widgets.challenge.ChallengeGlanceWidget
 import com.marta.habittracker.presentation.widgets.habit.HabitGlanceWidget
+import com.marta.habittracker.presentation.widgets.today.TodayGlanceWidget
 import com.marta.habittracker.presentation.widgets.weekly.WeeklyGlanceWidget
 
 object WidgetRefresher {
@@ -15,6 +16,7 @@ object WidgetRefresher {
             HabitGlanceWidget().updateAll(context)
             ChallengeGlanceWidget().updateAll(context)
             WeeklyGlanceWidget().updateAll(context)
+            TodayGlanceWidget().updateAll(context)
             Log.d(TAG, "Finished refreshing all Glance widgets")
         } catch (exception: Exception) {
             Log.e(TAG, "Failed to refresh Glance widgets", exception)

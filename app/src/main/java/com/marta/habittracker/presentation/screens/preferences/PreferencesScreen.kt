@@ -38,7 +38,9 @@ import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.ProfileAvatar
+import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.toHex
 import kotlinx.coroutines.launch
 
 @Composable
@@ -196,7 +198,7 @@ private fun PreferencesContentPreview() {
         uiState = PreferencesUiState(
             displayName = "Marta",
             avatarUrl = null,
-            avatarColor = "#6750A4",
+            avatarColor = HabitPrimary.toHex(),
         ),
         snackbarHostState = remember { SnackbarHostState() },
         onBack = {},
@@ -215,7 +217,7 @@ private fun PreferencesContentWithPhotoPreview() {
         uiState = PreferencesUiState(
             displayName = "Marta",
             avatarUrl = "https://example.com/avatar.jpg",
-            avatarColor = "#6750A4",
+            avatarColor = HabitPrimary.toHex(),
         ),
         snackbarHostState = remember { SnackbarHostState() },
         onBack = {},

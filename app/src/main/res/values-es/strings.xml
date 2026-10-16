@@ -337,6 +337,16 @@
     <string name="weekly_widget_preview_percent_high">80%</string>
     <string name="weekly_widget_preview_percent_zero">0%</string>
 
+    <!-- Today widget -->
+    <string name="today_widget_label">Hoy</string>
+    <string name="today_widget_title">Hoy</string>
+    <string name="today_widget_empty">Nada programado hoy</string>
+    <string name="today_widget_pending">%1$s</string>
+    <string name="today_widget_done">Hecho · %1$s</string>
+    <string name="today_widget_more">+%1$d</string>
+    <string name="today_widget_preview_pending">Agua</string>
+    <string name="today_widget_preview_done">Hecho · Leer</string>
+
     <!-- Legacy tab keys -->
     <string name="tab_add_content">Añadir</string>
     <string name="tab_reels">Reels</string>

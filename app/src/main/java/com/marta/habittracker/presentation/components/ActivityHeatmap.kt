@@ -42,7 +42,7 @@ fun ActivityHeatmap(
     weeks: List<ActivityHeatmapWeek>,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
-    emptyColor: Color = Color.White,
+    emptyColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     filledColor: Color = HabitPrimary,
 ) {
     val dayLabels = listOf(
@@ -59,7 +59,7 @@ fun ActivityHeatmap(
         modifier = modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(1.dp, HabitOutline, CardShape)
             .padding(16.dp),
     ) {

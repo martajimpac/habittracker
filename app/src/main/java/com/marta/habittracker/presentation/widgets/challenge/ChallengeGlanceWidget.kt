@@ -25,6 +25,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.presentation.theme.HabitColor1
+import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
@@ -180,7 +181,10 @@ internal fun ChallengeWidgetContent(
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
         if (snapshot == null) {
-            Text(text = configureText)
+            Text(
+                text = configureText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
         } else {
             Text(
                 text = snapshot.habitName,
@@ -189,11 +193,23 @@ internal fun ChallengeWidgetContent(
                     color = ColorProvider(accent),
                 ),
             )
-            Text(text = versusText)
-            Text(text = progressText)
-            Text(text = daysLeftText)
+            Text(
+                text = versusText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
+            Text(
+                text = progressText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
+            Text(
+                text = daysLeftText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
             if (statusText.isNotBlank()) {
-                Text(text = statusText)
+                Text(
+                    text = statusText,
+                    style = TextStyle(color = ColorProvider(HabitOnSurface)),
+                )
             }
         }
     }

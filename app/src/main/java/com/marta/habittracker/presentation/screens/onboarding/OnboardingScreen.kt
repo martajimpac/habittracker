@@ -165,7 +165,7 @@ fun OnboardingContent(
                             .width(if (selected) 24.dp else 8.dp)
                             .clip(CircleShape)
                             .background(
-                                Color.White.copy(
+                                MaterialTheme.colorScheme.onPrimary.copy(
                                     alpha = if (selected) 1f else 0.4f,
                                 ),
                             ),
@@ -223,14 +223,14 @@ private fun OnboardingPage(
                 .size(144.dp)
                 .clip(RoundedCornerShape(40.dp))
                 .background(
-                    Color.White.copy(alpha = 0.2f)
+                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                 ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(slide.iconRes),
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(72.dp),
             )
         }
@@ -240,7 +240,7 @@ private fun OnboardingPage(
         Text(
             text = stringResource(slide.titleRes),
             style = MaterialTheme.typography.headlineLarge,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onPrimary,
             textAlign = TextAlign.Center,
         )
 
@@ -249,7 +249,7 @@ private fun OnboardingPage(
         Text(
             text = stringResource(slide.descriptionRes),
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.White.copy(alpha = 0.8f),
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp),
         )

@@ -204,14 +204,14 @@ fun AddContentContent(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.25f))
+                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f))
                         .clickable(onClick = onBack),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.add_habit_close),
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(20.dp),
                     )
                 }
@@ -219,7 +219,7 @@ fun AddContentContent(
                     text = stringResource(R.string.add_habit_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -336,7 +336,7 @@ fun AddContentContent(
                                         .background(color)
                                         .border(
                                             width = if (selected) 3.dp else 0.dp,
-                                            color = Color.White,
+                                            color = MaterialTheme.colorScheme.onPrimary,
                                             shape = CircleShape,
                                         )
                                         .clickable { onColorSelected(color) },
@@ -346,7 +346,7 @@ fun AddContentContent(
                                         Icon(
                                             imageVector = Icons.Default.Check,
                                             contentDescription = null,
-                                            tint = Color.White,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(18.dp),
                                         )
                                     }
@@ -393,7 +393,7 @@ fun AddContentContent(
                                 text = label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (selected) Color.White else HabitOnSurface,
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
                             )
                         }
                     }
@@ -442,7 +442,12 @@ fun AddContentContent(
                                 listOf(selectedColor, selectedColor.copy(alpha = 0.7f)),
                             )
                         } else {
-                            Brush.linearGradient(listOf(Color(0xFFCAC4D0), Color(0xFFCAC4D0)))
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                ),
+                            )
                         },
                     )
                     .clickable(enabled = canSave, onClick = onSaveClicked),
@@ -452,7 +457,11 @@ fun AddContentContent(
                     text = stringResource(R.string.add_habit_create),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = if (canSave) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
 

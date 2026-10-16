@@ -57,6 +57,8 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
+import com.marta.habittracker.presentation.theme.SuccessColor
+import com.marta.habittracker.presentation.utils.toHex
 import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.components.ProgressRing
 import com.marta.habittracker.presentation.utils.dayShortLabel
@@ -279,6 +281,7 @@ private fun HomeHeader(
     allHabits: List<Habit>,
     onDateSelected: (LocalDate) -> Unit,
 ) {
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,7 +303,7 @@ private fun HomeHeader(
                     },
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White.copy(alpha = 0.75f),
+                    color = onPrimary.copy(alpha = 0.75f),
                 )
                 Text(
                     text = if (isToday) {
@@ -314,7 +317,7 @@ private fun HomeHeader(
                     },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Black,
-                    color = Color.White,
+                    color = onPrimary,
                 )
             }
             ProfileAvatar(
@@ -358,11 +361,12 @@ private fun RowScope.WeekDayChip(
     dayPct: Int,
     onClick: () -> Unit,
 ) {
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Column(
         modifier = Modifier
             .weight(1f)
             .clip(RoundedCornerShape(16.dp))
-            .background(if (active) Color.White else Color.White.copy(alpha = 0.15f))
+            .background(if (active) onPrimary else onPrimary.copy(alpha = 0.15f))
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -372,13 +376,13 @@ private fun RowScope.WeekDayChip(
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             fontSize = 10.sp,
-            color = if (active) HabitPrimary else Color.White.copy(alpha = 0.7f),
+            color = if (active) HabitPrimary else onPrimary.copy(alpha = 0.7f),
         )
         Text(
             text = dayNumber.toString(),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Black,
-            color = if (active) HabitPrimary else Color.White,
+            color = if (active) HabitPrimary else onPrimary,
         )
         Box(
             modifier = Modifier
@@ -387,8 +391,8 @@ private fun RowScope.WeekDayChip(
                 .clip(CircleShape)
                 .background(
                     when {
-                        dayPct == 100 -> Color(0xFF4ADE80)
-                        dayPct > 0 -> if (active) HabitPrimary else Color.White.copy(alpha = 0.5f)
+                        dayPct == 100 -> SuccessColor
+                        dayPct > 0 -> if (active) HabitPrimary else onPrimary.copy(alpha = 0.5f)
                         else -> Color.Transparent
                     }
                 ),
@@ -410,7 +414,7 @@ private fun HomeProgressCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -486,7 +490,7 @@ private fun HomeHabitCard(
             .fillMaxWidth()
             .alpha(if (!isToday && !isDone) 0.55f else 1f)
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .clickable(enabled = isToday, onClick = onToggle)
             .padding(16.dp),
@@ -547,7 +551,7 @@ private fun HomeHabitCard(
                 .background(if (isDone) accentColor else Color.Transparent)
                 .border(
                     width = 2.5.dp,
-                    color = if (isDone) accentColor else Color(0xFFCAC4D0),
+                    color = if (isDone) accentColor else MaterialTheme.colorScheme.outline,
                     shape = CircleShape,
                 ),
             contentAlignment = Alignment.Center,
@@ -556,7 +560,7 @@ private fun HomeHabitCard(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(16.dp),
                 )
             }
@@ -585,7 +589,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
             Icon(
                 imageVector = Icons.Outlined.Bolt,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -594,7 +598,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
                 text = stringResource(R.string.home_keep_it_up),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFF21005D),
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = stringResource(R.string.home_overall_streak, overallStreak),
@@ -672,7 +676,7 @@ private fun HomeContentPreview() {
         today = LocalDate.now(),
         userDisplayName = "John",
         avatarUrl = null,
-        avatarColor = "#6750A4",
+        avatarColor = HabitPrimary.toHex(),
         actionErrorRes = null,
         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
         onDateSelected = {},

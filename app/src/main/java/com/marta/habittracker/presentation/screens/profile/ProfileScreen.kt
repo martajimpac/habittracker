@@ -50,14 +50,7 @@ import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
-
-
-private val ProfileHeaderMuted = Color(0xFFE9D5FF)
-private val ProfileMenuBorder = Color(0x146750A4)
-private val ProfileChevron = Color(0xFFCAC4D0)
-private val ProfileSignOutBg = Color(0xFFFFF1F0)
-private val ProfileSignOutBorder = Color(0x1FB3261E)
-private val ProfileSignOut = Color(0xFFB3261E)
+import com.marta.habittracker.presentation.utils.toHex
 
 private data class ProfileMenuItem(
     val labelRes: Int,
@@ -144,6 +137,7 @@ private fun ProfileHeader(
 ) {
     val displayName = uiState.displayName
     val email = uiState.email
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,14 +163,14 @@ private fun ProfileHeader(
             text = displayName.ifBlank { stringResource(R.string.user_fallback_name) },
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Black,
-            color = Color.White,
+            color = onPrimary,
         )
 
         Text(
             text = email,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = ProfileHeaderMuted,
+            color = onPrimary.copy(alpha = 0.75f),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -206,18 +200,19 @@ private fun ProfileStat(
     value: String,
     label: String,
 ) {
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Black,
-            color = Color.White,
+            color = onPrimary,
         )
         Text(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = ProfileHeaderMuted,
+            color = onPrimary.copy(alpha = 0.75f),
         )
     }
 }
@@ -229,12 +224,13 @@ private fun ProfileMenuRow(
     tint: Color,
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(1.dp, ProfileMenuBorder, RoundedCornerShape(24.dp))
+            .background(colors.surfaceContainerLowest)
+            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -266,7 +262,7 @@ private fun ProfileMenuRow(
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
             contentDescription = null,
-            tint = ProfileChevron,
+            tint = colors.outline,
             modifier = Modifier.size(18.dp),
         )
     }
@@ -276,12 +272,13 @@ private fun ProfileMenuRow(
 private fun ProfileSignOutRow(
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(ProfileSignOutBg)
-            .border(1.dp, ProfileSignOutBorder, RoundedCornerShape(24.dp))
+            .background(colors.errorContainer)
+            .border(1.dp, colors.error.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -291,13 +288,13 @@ private fun ProfileSignOutRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(ProfileSignOut.copy(alpha = 0.09f)),
+                .background(colors.error.copy(alpha = 0.09f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.Logout,
                 contentDescription = null,
-                tint = ProfileSignOut,
+                tint = colors.error,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -307,7 +304,7 @@ private fun ProfileSignOutRow(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = ProfileSignOut,
+            color = colors.error,
         )
     }
 }
@@ -320,7 +317,7 @@ private fun ProfileContentPreview() {
             displayName = "John Doe",
             email = "john@example.com",
             avatarUrl = null,
-            avatarColor = "#6750A4",
+            avatarColor = HabitPrimary.toHex(),
             dayStreak = 7,
             completedCount = 42,
             habitsCount = 5,

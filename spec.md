@@ -182,7 +182,7 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
    - `id` uuid PK FK `auth.users` ON DELETE CASCADE
    - `username` text unique not null (búsqueda Add friend)
    - `display_name` text not null
-   - `avatar_color` text not null default `#6750A4`
+   - `avatar_color` text not null default `#021C4B` (`HabitPrimary`)
    - `avatar_url` text nullable (path o URL pública del avatar en Storage; null = iniciales)
    - `created_at` / `updated_at` timestamptz
    - Trigger: al crear usuario en `auth.users`, insertar profile (username provisional derivado del email / id)
@@ -320,16 +320,16 @@ Aprobado 2026-10-08.
 
 ### Home screen widgets (Jetpack Glance)
 
-Aprobado 2026-08-07. Tres widgets independientes (Approach A).
+Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
 
 **Común**
 - Implementación con **Jetpack Glance** + App Widget.
 - Textos en ingles (`strings.xml`).
-- Colores alineados al theme Habit (`HabitPrimary` `#6750A4` / `HabitPrimaryLight`).
+- Colores alineados al theme Habit: `HabitPrimary`, `HabitSurface`, `HabitOnSurface`, `HabitField` y el color del hábito. Las previews del selector usan los mismos tokens en `colors.xml`.
 - Actualización: tras completar un hábito, al volver a primer plano la app, y refresh periódico razonable (30–60 min).
 - Configuración: **activity de configuración al añadir** el widget (picker clásico), no ajustes dentro de Profile.
 - Mutaciones desde widget siguen **online-first** (igual que la app): sin red no se escribe Room ni Supabase.
-- **Previews (2026-10-08):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) y un `@Preview` de Glance (`androidx.glance.preview`, source set `debug`) en Android Studio. Datos de muestra; no cambian la lógica. No hay un cuarto widget.
+- **Previews (2026-10-08):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) y un `@Preview` de Glance (`androidx.glance.preview`, source set `debug`) en Android Studio. Datos de muestra; no cambian la lógica. El widget de hoy usa el mismo tratamiento.
 
 **1. Habit widget (configurable)**
 - Al añadirlo: picker de un hábito propio.
@@ -349,6 +349,12 @@ Aprobado 2026-08-07. Tres widgets independientes (Approach A).
 - Resumen Lun–Dom de todos los hábitos: por día, % o conteo de hábitos programados completados (misma idea que Stats agregado).
 - Solo lectura; tap abre Stats o Home.
 - Datos desde Room.
+
+**4. Today widget (sin picker)**
+- Lista los hábitos programados hoy, en el mismo orden que Home. Los hechos se marcan. Como máximo se pintan 5 filas; el resto sale como `+N`.
+- Si no hay hábitos hoy, el texto es el estado vacío.
+- Tap: abre el detalle del primer hábito de esa lista que aún no está completado hoy. Si todos están hechos, o no hay ninguno, abre Home.
+- Solo lectura. Datos desde Room.
 
 **Fuera de alcance (widgets)**
 - Completar desde el widget de reto o del semanal.
