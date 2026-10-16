@@ -37,7 +37,7 @@ val HabitOutline = Color(0xFF7D828A)
 // Habit colours
 // ─────────────────────────────────────
 
-// Saturated + distinctive, rainbow hue order (HabitColor1 unchanged)
+// Saturated + distinctive, rainbow hue order
 val HabitColor1 = Color(0xFFF04F45)
 val HabitColor2 = Color(0xFFF27A24)
 val HabitColor3 = Color(0xFFE8B923)
@@ -69,3 +69,31 @@ val Gray70 = Color(0xFFD0C5C0)
 
 val ErrorColor = Color(0xFF881C14)
 val ErrorColorLight = Color(0xFFEF5146)
+
+// ─────────────────────────────────────
+// M3 ColorScheme containers
+// ─────────────────────────────────────
+
+val HabitPrimaryContainer = Color(0xFFD6E3F8)
+val HabitOnPrimaryContainer = Color(0xFF021C4B)
+val HabitSecondaryContainer = Color(0xFFDCE2F0)
+val HabitOnSecondaryContainer = Color(0xFF021C4B)
+val HabitTertiary = Color(0xFF1D6B8A)
+val HabitOnTertiary = Color.White
+val HabitTertiaryContainer = Color(0xFFC5E7F5)
+val HabitOnTertiaryContainer = Color(0xFF00344A)
+val HabitErrorContainer = Color(0xFFFFDAD6)
+val HabitOnErrorContainer = Color(0xFF410002)
+val HabitSurfaceContainerLowest = Color(0xFFFFFFFF)
+val HabitSurfaceContainerLow = Color(0xFFF1F1F1)
+val HabitSurfaceContainer = Color(0xFFECECEC)
+val HabitSurfaceContainerHigh = Color(0xFFE6E6E6)
+val HabitSurfaceContainerHighest = Color(0xFFE0E0E0)
+
+val HabitPrimaryContainerDark = Color(0xFF163A7A)
+val HabitOnPrimaryContainerDark = Color(0xFFD6E3F8)
+val HabitSurfaceContainerDark = Color(0xFF302A28)
+val HabitSurfaceContainerLowestDark = Color(0xFF161210)
+val HabitSurfaceContainerHighDark = Color(0xFF3A3330)
+val HabitErrorContainerDark = Color(0xFF93000A)
+val HabitOnErrorContainerDark = Color(0xFFFFDAD6)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,9 +36,6 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
-import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.coroutines.launch
 
@@ -86,14 +84,13 @@ fun DeleteAccountContent(
     onCancel: () -> Unit,
 ) {
     Scaffold(
-        containerColor = HabitSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = stringResource(R.string.preferences_delete_title),
-                        color = HabitOnSurface,
                     )
                 },
                 navigationIcon = {
@@ -105,7 +102,7 @@ fun DeleteAccountContent(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HabitSurface,
+                    containerColor = MaterialTheme.colorScheme.surface,
                 ),
             )
         },
@@ -122,7 +119,7 @@ fun DeleteAccountContent(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.preferences_delete_explanation),
-                color = HabitOnSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(24.dp))
             CustomTextField(

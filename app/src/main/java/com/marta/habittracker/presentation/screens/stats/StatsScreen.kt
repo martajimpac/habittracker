@@ -44,7 +44,6 @@ import com.marta.habittracker.presentation.screens.home.habitTimeLabel
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.utils.habitAccentColor
 import java.time.LocalDate
 
@@ -71,14 +70,14 @@ fun StatsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HabitSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding(),
     ) {
         Text(
             text = stringResource(R.string.stats_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Black,
-            color = HabitOnSurface,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
         )
 
@@ -91,7 +90,7 @@ fun StatsContent(
                     text = stringResource(R.string.stats_empty),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {

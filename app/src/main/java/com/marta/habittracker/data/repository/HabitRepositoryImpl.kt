@@ -15,11 +15,16 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.reminder.HabitReminderScheduler
+import com.marta.habittracker.domain.reminder.afterHabitDeleted
+import com.marta.habittracker.domain.reminder.afterHabitPersisted
+import com.marta.habittracker.domain.reminder.afterHabitsSynced
 import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -29,6 +34,7 @@ class HabitRepositoryImpl @Inject constructor(
     private val habitMapper: HabitMapper,
     private val remote: HabitRemoteDataSource,
     private val networkChecker: NetworkChecker,
+    private val reminderScheduler: HabitReminderScheduler,
 ) : DomainHabitRepository {
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> {
@@ -104,7 +110,12 @@ class HabitRepositoryImpl @Inject constructor(
             with(habitMapper) {
                 habitDao.insertHabit(habit.toEntity(updatedAt = now.toEpochMillis()))
             }
+            runReminderHook("afterHabitPersisted insert id=${habit.id}") {
+                afterHabitPersisted(habit, reminderScheduler)
+            }
             DataResult.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "insertHabit failed id=${habit.id}", e)
             DataResult.Error(AppError.Common.Unknown)
@@ -120,7 +131,12 @@ class HabitRepositoryImpl @Inject constructor(
             with(habitMapper) {
                 habitDao.updateHabit(habit.toEntity(updatedAt = now.toEpochMillis()))
             }
+            runReminderHook("afterHabitPersisted update id=${habit.id}") {
+                afterHabitPersisted(habit, reminderScheduler)
+            }
             DataResult.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "updateHabit failed id=${habit.id}", e)
             DataResult.Error(AppError.Common.Unknown)
@@ -145,7 +161,12 @@ class HabitRepositoryImpl @Inject constructor(
                     ),
                 )
             }
+            runReminderHook("afterHabitDeleted id=${habit.id}") {
+                afterHabitDeleted(habit.id, reminderScheduler)
+            }
             DataResult.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "deleteHabit failed id=${habit.id}", e)
             DataResult.Error(AppError.Common.Unknown)
@@ -159,16 +180,37 @@ class HabitRepositoryImpl @Inject constructor(
             val remoteRecords = remote.fetchRecords()
             habitDao.clearHabitRecords()
             habitDao.clearHabits()
-            remoteHabits.forEach { dto ->
-                habitDao.insertHabit(dto.toEntity())
+            val inserted = remoteHabits.map { dto -> dto.toEntity() }
+            inserted.forEach { entity ->
+                habitDao.insertHabit(entity)
             }
             remoteRecords.forEach { dto ->
                 habitDao.upsertHabitRecord(dto.toEntity())
             }
+            val syncedHabits = inserted
+                .filter { it.deletedAt == null }
+                .map { entity ->
+                    with(habitMapper) { entity.toDomain() }
+                }
+            runReminderHook("afterHabitsSynced") {
+                afterHabitsSynced(syncedHabits, reminderScheduler)
+            }
             DataResult.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "syncFromRemote failed", e)
             DataResult.Error(AppError.Common.Unknown)
+        }
+    }
+
+    private fun runReminderHook(operation: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "$operation failed", e)
         }
     }
 

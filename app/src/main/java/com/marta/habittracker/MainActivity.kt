@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
     private var initialTab by mutableStateOf<String?>(null)
     private var initialHabitId by mutableStateOf<String?>(null)
     private var initialChallengeId by mutableStateOf<String?>(null)
+    private var initialFriendRequestId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +45,8 @@ class MainActivity : ComponentActivity() {
                     onHabitIdConsumed = { consumeHabitId() },
                     initialChallengeId = initialChallengeId,
                     onChallengeIdConsumed = { consumeChallengeId() },
+                    initialFriendRequestId = initialFriendRequestId,
+                    onFriendRequestConsumed = { consumeFriendRequest() },
                 )
             }
         }
@@ -64,10 +67,19 @@ class MainActivity : ComponentActivity() {
         } else {
             null
         }
-        initialTab = if (initialHabitId == null && initialChallengeId == null) {
-            WidgetLaunchExtras.tabFromIntent(intent)
+        val friendRequestId = WidgetLaunchExtras.friendRequestIdFromIntent(intent)
+        initialFriendRequestId = if (initialHabitId == null && initialChallengeId == null) {
+            friendRequestId
         } else {
             null
+        }
+        initialTab = when {
+            initialHabitId != null || initialChallengeId != null -> null
+            initialFriendRequestId != null -> WidgetLaunchExtras.TAB_FRIENDS
+            else -> WidgetLaunchExtras.tabFromIntent(intent)
+        }
+        if (initialHabitId != null || initialChallengeId != null) {
+            intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
         }
     }
 
@@ -80,6 +92,13 @@ class MainActivity : ComponentActivity() {
     private fun consumeChallengeId() {
         initialChallengeId = null
         intent?.removeExtra(WidgetLaunchExtras.EXTRA_CHALLENGE_ID)
+    }
+
+    private fun consumeFriendRequest() {
+        initialFriendRequestId = null
+        initialTab = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
     }
 
     override fun onResume() {

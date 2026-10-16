@@ -48,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
@@ -104,7 +103,7 @@ fun ProfileContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HabitSurface),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         ProfileHeader(uiState = uiState)
 

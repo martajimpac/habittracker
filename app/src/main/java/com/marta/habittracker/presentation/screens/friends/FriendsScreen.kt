@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -64,6 +63,7 @@ import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.Friendship
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.components.toComposeColor
@@ -118,7 +118,7 @@ fun FriendsContent(
         FriendsHeader(onAddFriend = onAddFriend)
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = HabitPrimary)
+                HabitLoadingIndicator()
             }
         } else {
             FriendsBody(
@@ -172,7 +172,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
             text = stringResource(R.string.friends_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            color = HabitOnSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         FriendsAddButton(onClick = onAddFriend)
     }
@@ -549,11 +549,11 @@ private fun FriendsEmptyState() {
     ) {
         Icon(Icons.Outlined.People, null, tint = HabitPrimary, modifier = Modifier.size(40.dp))
         Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.friends_empty_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = HabitOnSurface)
+        Text(stringResource(R.string.friends_empty_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
         Text(
             stringResource(R.string.friends_empty_message),
             style = MaterialTheme.typography.bodyMedium,
-            color = HabitOnSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }
@@ -572,7 +572,7 @@ private fun FriendsInlineEmpty(messageRes: Int) {
 
 @Composable
 private fun FriendsSectionTitle(titleRes: Int) {
-    Text(stringResource(titleRes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = HabitOnSurface)
+    Text(stringResource(titleRes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
 }
 
 @Composable

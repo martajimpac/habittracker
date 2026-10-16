@@ -14,6 +14,7 @@ import com.marta.habittracker.MainActivity
 import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.push.ChallengePushIds
+import com.marta.habittracker.domain.push.FriendPushIds
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -42,6 +43,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     title = getString(R.string.challenge_push_title),
                     body = getString(R.string.challenge_push_body, challengerName),
                     challengeId = challengeId,
+                )
+                return
+            }
+        }
+
+        if (data["type"] == FRIEND_REQUEST_TYPE) {
+            val friendshipId = data["friendshipId"]?.takeIf { it.isNotBlank() }
+            if (friendshipId != null) {
+                Log.d(TAG, "Friend request push received type=$FRIEND_REQUEST_TYPE friendshipId=$friendshipId")
+                val requesterName = data["requesterName"].orEmpty().ifBlank {
+                    getString(R.string.friend_request_push_sender_fallback)
+                }
+                sendFriendRequestNotification(
+                    title = getString(R.string.friend_request_push_title),
+                    body = getString(R.string.friend_request_push_body, requesterName),
+                    friendshipId = friendshipId,
                 )
                 return
             }
@@ -83,6 +100,23 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         )
         postNotification(
             notificationId = ChallengePushIds.notificationIdFor(challengeId),
+            title = title,
+            body = body,
+            pendingIntent = pendingIntent,
+        )
+    }
+
+    private fun sendFriendRequestNotification(title: String, body: String, friendshipId: String) {
+        val intent = WidgetLaunchExtras.openFriendRequestIntent(this, friendshipId)
+        val notificationId = FriendPushIds.notificationIdFor(friendshipId)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        postNotification(
+            notificationId = notificationId,
             title = title,
             body = body,
             pendingIntent = pendingIntent,
@@ -146,5 +180,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val TAG = "MyFirebaseMsgService"
         private const val NOTIFICATION_CHANNEL_ID = "habit_tracker_notifications"
         private const val CHALLENGE_CREATED_TYPE = "challenge_created"
+        private const val FRIEND_REQUEST_TYPE = "friend_request"
     }
 }

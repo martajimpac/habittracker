@@ -73,7 +73,6 @@ class AddContentViewModelTest {
         viewModel.onDescriptionChanged("Park loop")
         viewModel.onIconSelected("directions_run")
         viewModel.onColorSelected(HabitColor1)
-        viewModel.onReminderTimeChanged("07:30")
         viewModel.onDayToggled(DayOfWeek.MONDAY)
         viewModel.onDayToggled(DayOfWeek.WEDNESDAY)
         viewModel.onSaveClicked()
@@ -84,11 +83,98 @@ class AddContentViewModelTest {
         assertEquals("Park loop", inserted.description)
         assertEquals("directions_run", inserted.icon)
         assertEquals("#F04F45", inserted.colorHex)
-        assertEquals("07:30", inserted.reminderTime)
+        assertNull(inserted.reminderTime)
         assertTrue(inserted.id.isNotBlank())
         assertTrue(saved)
         assertNull(viewModel.uiState.value.errorMessageRes)
         collectJob.cancel()
+    }
+
+    @Test
+    fun `save with reminder disabled sends null reminderTime even if time is set`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = AddContentViewModel(SaveHabit(repository))
+
+        viewModel.onNameChanged("Morning Run")
+        viewModel.onDayToggled(DayOfWeek.MONDAY)
+        viewModel.onReminderTimeChanged("08:00")
+        viewModel.onSaveClicked()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.reminderEnabled)
+        assertNull(repository.insertedHabits.single().reminderTime)
+    }
+
+    @Test
+    fun `save with reminder enabled persists reminderTime`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = AddContentViewModel(SaveHabit(repository))
+
+        viewModel.onNameChanged("Morning Run")
+        viewModel.onDayToggled(DayOfWeek.MONDAY)
+        viewModel.onReminderEnabled(true)
+        viewModel.onReminderTimeChanged("08:00")
+        viewModel.onSaveClicked()
+        advanceUntilIdle()
+
+        assertEquals("08:00", repository.insertedHabits.single().reminderTime)
+        assertNull(viewModel.uiState.value.errorMessageRes)
+    }
+
+    @Test
+    fun `invalid reminder format only errors when reminder is enabled`() = runTest {
+        val disabledRepository = FakeHabitRepository()
+        val disabledViewModel = AddContentViewModel(SaveHabit(disabledRepository))
+        disabledViewModel.onNameChanged("Morning Run")
+        disabledViewModel.onDayToggled(DayOfWeek.MONDAY)
+        disabledViewModel.onReminderTimeChanged("25:99")
+        disabledViewModel.onSaveClicked()
+        advanceUntilIdle()
+
+        assertNull(disabledViewModel.uiState.value.errorMessageRes)
+        assertNull(disabledRepository.insertedHabits.single().reminderTime)
+
+        val enabledRepository = FakeHabitRepository()
+        val enabledViewModel = AddContentViewModel(SaveHabit(enabledRepository))
+        enabledViewModel.onNameChanged("Morning Run")
+        enabledViewModel.onDayToggled(DayOfWeek.MONDAY)
+        enabledViewModel.onReminderEnabled(true)
+        enabledViewModel.onReminderTimeChanged("25:99")
+        enabledViewModel.onSaveClicked()
+        advanceUntilIdle()
+
+        assertEquals(
+            R.string.add_habit_error_reminder_format,
+            enabledViewModel.uiState.value.errorMessageRes,
+        )
+        assertTrue(enabledRepository.insertedHabits.isEmpty())
+    }
+
+    @Test
+    fun `disabling reminder keeps last time in state`() {
+        val viewModel = createViewModel()
+
+        viewModel.onReminderEnabled(true)
+        viewModel.onReminderTimeChanged("07:30")
+        viewModel.onReminderEnabled(false)
+
+        assertFalse(viewModel.uiState.value.reminderEnabled)
+        assertEquals("07:30", viewModel.uiState.value.reminderTime)
+    }
+
+    @Test
+    fun `reminder denied turns toggle off and sets error`() {
+        val viewModel = createViewModel()
+
+        viewModel.onReminderEnabled(true)
+        viewModel.onReminderEnabled(false)
+        viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
+
+        assertFalse(viewModel.uiState.value.reminderEnabled)
+        assertEquals(
+            R.string.habit_reminder_permission_denied,
+            viewModel.uiState.value.errorMessageRes,
+        )
     }
 
     private fun createViewModel(): AddContentViewModel =

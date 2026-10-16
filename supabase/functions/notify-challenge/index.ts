@@ -1,6 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { create } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
-import { importPKCS8 } from "https://deno.land/x/djwt@v3.0.2/key.ts";
 
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 const OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -50,24 +48,60 @@ function parseServiceAccount(raw: string): FirebaseServiceAccount | null {
   }
 }
 
+function pemToPkcs8(pem: string): Uint8Array {
+  const b64 = pem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function base64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+async function signServiceAccountAssertion(
+  serviceAccount: FirebaseServiceAccount,
+): Promise<string> {
+  const pem = normalizePrivateKeyPem(serviceAccount.private_key);
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToPkcs8(pem),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64Url(new TextEncoder().encode(JSON.stringify({ alg: "RS256", typ: "JWT" })));
+  const payload = base64Url(new TextEncoder().encode(JSON.stringify({
+    iss: serviceAccount.client_email,
+    sub: serviceAccount.client_email,
+    aud: OAUTH_AUDIENCE,
+    iat: now,
+    exp: now + 3600,
+    scope: FCM_SCOPE,
+  })));
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(`${header}.${payload}`),
+  );
+  return `${header}.${payload}.${base64Url(new Uint8Array(signature))}`;
+}
+
 async function getFcmAccessToken(
   serviceAccount: FirebaseServiceAccount,
 ): Promise<string | null> {
-  const pem = normalizePrivateKeyPem(serviceAccount.private_key);
-  const cryptoKey = await importPKCS8(pem, "RS256");
-  const now = Math.floor(Date.now() / 1000);
-  const assertion = await create(
-    { alg: "RS256", typ: "JWT" },
-    {
-      iss: serviceAccount.client_email,
-      sub: serviceAccount.client_email,
-      aud: OAUTH_AUDIENCE,
-      iat: now,
-      exp: now + 3600,
-      scope: FCM_SCOPE,
-    },
-    cryptoKey,
-  );
+  const assertion = await signServiceAccountAssertion(serviceAccount);
 
   const tokenResponse = await fetch(OAUTH_TOKEN_URL, {
     method: "POST",

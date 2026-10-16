@@ -2,7 +2,6 @@ package com.marta.habittracker.presentation.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marta.habittracker.presentation.auth.AuthDeeplinkEvent
 import com.marta.habittracker.presentation.auth.AuthDeeplinkViewModel
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.screens.auth.forgot_password.ForgotPasswordScreen
 import com.marta.habittracker.presentation.screens.auth.login.LoginScreen
 import com.marta.habittracker.presentation.screens.auth.register.RegisterScreen
@@ -33,6 +33,8 @@ fun NavigationWrapper(
     onHabitIdConsumed: () -> Unit = {},
     initialChallengeId: String? = null,
     onChallengeIdConsumed: () -> Unit = {},
+    initialFriendRequestId: String? = null,
+    onFriendRequestConsumed: () -> Unit = {},
     appStartViewModel: AppStartViewModel = hiltViewModel(),
     authDeeplinkViewModel: AuthDeeplinkViewModel = hiltViewModel(),
 ) {
@@ -40,7 +42,7 @@ fun NavigationWrapper(
 
     if (startDestination == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            HabitLoadingIndicator()
         }
         return
     }
@@ -60,6 +62,17 @@ fun NavigationWrapper(
                 if (entry == null) return@collect
                 if (!entry.destination.hasRoute<Home>()) {
                     onChallengeIdConsumed()
+                }
+            }
+    }
+
+    LaunchedEffect(initialFriendRequestId) {
+        if (initialFriendRequestId.isNullOrBlank()) return@LaunchedEffect
+        snapshotFlow { navController.currentBackStackEntry }
+            .collect { entry ->
+                if (entry == null) return@collect
+                if (!entry.destination.hasRoute<Home>()) {
+                    onFriendRequestConsumed()
                 }
             }
     }
@@ -146,6 +159,8 @@ fun NavigationWrapper(
                 onHabitIdConsumed = onHabitIdConsumed,
                 initialChallengeId = initialChallengeId,
                 onChallengeIdConsumed = onChallengeIdConsumed,
+                initialFriendRequestId = initialFriendRequestId,
+                onFriendRequestConsumed = onFriendRequestConsumed,
                 onSignedOut = {
                     navController.navigate(Login()) {
                         popUpTo(0) { inclusive = true }

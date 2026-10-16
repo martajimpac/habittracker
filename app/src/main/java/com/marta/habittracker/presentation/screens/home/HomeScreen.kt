@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -58,9 +57,7 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
-import com.marta.habittracker.presentation.components.HabitFab
 import com.marta.habittracker.presentation.components.ProgressRing
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
@@ -160,7 +157,7 @@ fun HomeContent(
                 onDateSelected = onDateSelected,
             )
         },
-        containerColor = HabitSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -213,7 +210,7 @@ fun HomeContent(
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
-                            color = HabitOnSurface,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = stringResource(R.string.home_total_count, totalCount),
@@ -233,7 +230,7 @@ fun HomeContent(
                         Text(
                             text = stringResource(R.string.home_empty_habits),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = HabitOnSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()

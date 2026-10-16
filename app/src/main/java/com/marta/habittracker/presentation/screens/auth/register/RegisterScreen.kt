@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,11 +52,10 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.theme.HabitField
-import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
@@ -110,11 +108,11 @@ fun RegisterContent(
                     },
                     title = {},
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = HabitSurface,
+                        containerColor = MaterialTheme.colorScheme.surface,
                     ),
                 )
             },
-            containerColor = HabitSurface,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) { innerPadding ->
             Column(
                 modifier = Modifier
@@ -126,12 +124,12 @@ fun RegisterContent(
                 Text(
                     text = stringResource(R.string.register_title),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = HabitOnSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = stringResource(R.string.register_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -269,7 +267,7 @@ fun RegisterContent(
         }
 
         if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            HabitLoadingIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
 }

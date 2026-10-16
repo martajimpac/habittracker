@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +34,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
@@ -66,7 +66,9 @@ fun ResetPasswordContent(
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmationVisible by remember { mutableStateOf(false) }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -165,7 +167,7 @@ fun ResetPasswordContent(
             )
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(16.dp))
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                HabitLoadingIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
         }
     }

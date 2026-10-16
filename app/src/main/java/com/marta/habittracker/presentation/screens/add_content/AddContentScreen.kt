@@ -1,5 +1,11 @@
 package com.marta.habittracker.presentation.screens.add_content
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,21 +50,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitIconOptions
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ReminderToggleRow
 import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -71,6 +79,17 @@ fun AddContentScreen(
     viewModel: AddContentViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            viewModel.onReminderEnabled(true)
+        } else {
+            viewModel.onReminderEnabled(false)
+            viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
+        }
+    }
 
     ObserveAsEvents(flow = viewModel.habitSaved) {
         onBack()
@@ -83,6 +102,27 @@ fun AddContentScreen(
         onDescriptionChanged = viewModel::onDescriptionChanged,
         onIconSelected = viewModel::onIconSelected,
         onColorSelected = viewModel::onColorSelected,
+        onReminderEnabledChange = { enabled ->
+            if (!enabled) {
+                viewModel.onReminderEnabled(false)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() != true
+            ) {
+                viewModel.onReminderEnabled(false)
+                viewModel.onReminderDenied(R.string.habit_reminder_exact_alarm_denied)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.onReminderEnabled(true)
+            }
+        },
         onReminderTimeChanged = viewModel::onReminderTimeChanged,
         onDayToggled = viewModel::onDayToggled,
         onPublicChanged = viewModel::onPublicChanged,
@@ -99,6 +139,7 @@ fun AddContentContent(
     onDescriptionChanged: (String) -> Unit,
     onIconSelected: (String) -> Unit,
     onColorSelected: (Color) -> Unit,
+    onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChanged: (String) -> Unit,
     onDayToggled: (DayOfWeek) -> Unit,
     onPublicChanged: (Boolean) -> Unit,
@@ -143,7 +184,7 @@ fun AddContentContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HabitSurface),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         Box(
             modifier = Modifier
@@ -229,7 +270,7 @@ fun AddContentContent(
                     text = stringResource(R.string.add_habit_choose_icon),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = HabitOnSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 HabitIconOptions.chunked(6).forEach { rowIcons ->
                     Row(
@@ -273,7 +314,7 @@ fun AddContentContent(
                     text = stringResource(R.string.add_habit_choose_color),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = HabitOnSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 HabitColorOptions.chunked(6).forEach { rowColors ->
                     Row(
@@ -319,68 +360,41 @@ fun AddContentContent(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+            ReminderToggleRow(
+                enabled = uiState.reminderEnabled,
+                reminderTime = uiState.reminderTime,
+                onEnabledChange = onReminderEnabledChange,
+                onTimeClick = { showTimePicker = true },
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.add_habit_frequency),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.add_habit_reminder_time),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = HabitOnSurface,
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(HabitField)
-                            .clickable { showTimePicker = true }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                    ) {
-                        Text(
-                            text = uiState.reminderTime,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = HabitOnSurface,
-                        )
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.add_habit_frequency),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = HabitOnSurface,
-                    )
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalArrangement = Arrangement.spacedBy(5.dp),
-                    ) {
-                        DayOfWeek.entries.forEach { day ->
-                            val selected = uiState.selectedDays.contains(day)
-                            val label = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale)
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (selected) HabitPrimary else HabitField)
-                                    .clickable { onDayToggled(day) }
-                                    .padding(horizontal = 9.dp, vertical = 9.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selected) Color.White else HabitOnSurface,
-                                )
-                            }
+                    DayOfWeek.entries.forEach { day ->
+                        val selected = uiState.selectedDays.contains(day)
+                        val label = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (selected) HabitPrimary else HabitField)
+                                .clickable { onDayToggled(day) }
+                                .padding(horizontal = 9.dp, vertical = 9.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selected) Color.White else HabitOnSurface,
+                            )
                         }
                     }
                 }
@@ -457,6 +471,7 @@ private fun AddContentContentPreview() {
         onDescriptionChanged = {},
         onIconSelected = {},
         onColorSelected = {},
+        onReminderEnabledChange = {},
         onReminderTimeChanged = {},
         onDayToggled = {},
         onPublicChanged = {},

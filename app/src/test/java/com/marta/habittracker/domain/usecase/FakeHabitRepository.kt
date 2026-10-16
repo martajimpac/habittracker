@@ -11,9 +11,11 @@ import java.time.LocalDate
 
 class FakeHabitRepository(
     private val allHabitsWithRecords: List<Habit> = emptyList(),
+    private val habitsById: Map<String, Habit> = emptyMap(),
 ) : HabitRepository {
 
     val insertedHabits = mutableListOf<Habit>()
+    val updatedHabits = mutableListOf<Habit>()
     val toggledHabits = mutableListOf<Pair<Habit, LocalDate>>()
     var insertCalls: Int = 0
         private set
@@ -32,7 +34,8 @@ class FakeHabitRepository(
         return toggleResult
     }
 
-    override fun getHabitById(id: String): Flow<Habit?> = flowOf(null)
+    override fun getHabitById(id: String): Flow<Habit?> =
+        flowOf(habitsById[id] ?: allHabitsWithRecords.find { it.id == id })
 
     override fun getRecordsForHabit(habitId: String): Flow<List<HabitRecord>> = flowOf(emptyList())
 
@@ -44,8 +47,10 @@ class FakeHabitRepository(
         return insertResult
     }
 
-    override suspend fun updateHabit(habit: Habit): DataResult<Unit, AppError> =
-        DataResult.Success(Unit)
+    override suspend fun updateHabit(habit: Habit): DataResult<Unit, AppError> {
+        updatedHabits.add(habit)
+        return DataResult.Success(Unit)
+    }
 
     override suspend fun deleteHabit(habit: Habit): DataResult<Unit, AppError> =
         DataResult.Success(Unit)

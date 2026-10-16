@@ -158,6 +158,9 @@
     <string name="challenge_status_cancelled">Cancelado</string>
     <string name="challenge_push_title">Nuevo reto</string>
     <string name="challenge_push_body">%1$s te ha retado</string>
+    <string name="friend_request_push_title">Solicitud de amistad</string>
+    <string name="friend_request_push_body">%1$s te ha enviado una solicitud de amistad</string>
+    <string name="friend_request_push_sender_fallback">Alguien</string>
 
     <!-- Home -->
     <string name="home_today_label">Hoy · %1$s</string>
@@ -271,6 +274,12 @@
     <!-- Notifications -->
     <string name="notification_channel_name">Notificaciones de Habit Tracker</string>
     <string name="notification_default_title">Habit Tracker</string>
+    <string name="habit_reminder_channel_name">Recordatorios de hábitos</string>
+    <string name="habit_reminder_body">Es hora de registrar el hábito</string>
+    <string name="habit_reminder_toggle">Recordatorio</string>
+    <string name="habit_reminder_permission_denied">Se necesita permiso de notificaciones para activar los recordatorios.</string>
+    <string name="habit_reminder_exact_alarm_denied">Se necesitan alarmas exactas para los recordatorios. Actívalas en los ajustes del sistema.</string>
+    <string name="habit_reminder_save">Guardar</string>
 
     <!-- Habit widget -->
     <string name="habit_widget_label">Vistazo de hábito</string>

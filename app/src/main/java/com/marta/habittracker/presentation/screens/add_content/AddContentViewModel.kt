@@ -31,6 +31,7 @@ data class AddContentUiState(
     val description: String = "",
     val icon: String = HabitIconKeys.DEFAULT,
     val color: Color = HabitColorOptions.first(),
+    val reminderEnabled: Boolean = false,
     val reminderTime: String = "08:00",
     val selectedDays: Set<DayOfWeek> = emptySet(),
     val isPublic: Boolean = false,
@@ -69,6 +70,14 @@ class AddContentViewModel @Inject constructor(
         _uiState.update { it.copy(reminderTime = reminderTime, errorMessageRes = null) }
     }
 
+    fun onReminderEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(reminderEnabled = enabled, errorMessageRes = null) }
+    }
+
+    fun onReminderDenied(@StringRes messageRes: Int) {
+        _uiState.update { it.copy(reminderEnabled = false, errorMessageRes = messageRes) }
+    }
+
     fun onDayToggled(day: DayOfWeek) {
         _uiState.update { current ->
             val updatedDays = if (current.selectedDays.contains(day)) {
@@ -101,7 +110,11 @@ class AddContentViewModel @Inject constructor(
                     daysOfWeek = currentState.selectedDays,
                     icon = currentState.icon,
                     colorHex = currentState.color.toHex(),
-                    reminderTime = currentState.reminderTime.trim().ifBlank { null },
+                    reminderTime = if (currentState.reminderEnabled) {
+                        currentState.reminderTime.trim().ifBlank { null }
+                    } else {
+                        null
+                    },
                     isPublic = currentState.isPublic,
                 )
             ) {
@@ -126,7 +139,9 @@ class AddContentViewModel @Inject constructor(
         return when {
             state.name.isBlank() -> R.string.add_habit_error_name_required
             state.selectedDays.isEmpty() -> R.string.add_habit_error_days_required
-            state.reminderTime.isNotBlank() && !ReminderTimePattern.matches(state.reminderTime.trim()) ->
+            state.reminderEnabled &&
+                state.reminderTime.isNotBlank() &&
+                !ReminderTimePattern.matches(state.reminderTime.trim()) ->
                 R.string.add_habit_error_reminder_format
             else -> null
         }

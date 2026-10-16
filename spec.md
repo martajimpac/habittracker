@@ -25,7 +25,7 @@ HabitTracker es una aplicacion Android para crear, consultar y completar habitos
   - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
   - La privacidad se persiste extremo a extremo mediante `Habit.isPublic`, `HabitEntity.isPublic` y `HabitDto.is_public`; por defecto cada hábito es privado.
   - Plan de implementación: `docs/plans/2026-07-31-friends-figma-android.md`.
-  - Fuera de alcance inmediato: Realtime y cache offline de amigos. El push al crear un reto está en § Challenge push + detail.
+  - Fuera de alcance inmediato: Realtime y cache offline de amigos. El push al crear un reto está en § Challenge push + detail. El push al enviar una solicitud de amistad está en § Friend request push.
 
 ### Material 3 chrome (NavigationBar + theme)
 
@@ -208,7 +208,7 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
 
 4. Lectura de `habit_records` de otro usuario: permitida a amigos solo para hábitos `is_public` del amigo, y/o para el hábito del otro en un challenge `active`/`pending` donde el lector es participante (ventana del reto). Escrituras de records siguen siendo solo del dueño.
 
-**Fuera de alcance:** Realtime obligatorio, chat, Room cache de friends. El aviso push al crear un reto y la pantalla para aceptarlo o rechazarlo están en § Challenge push + detail.
+**Fuera de alcance:** Realtime obligatorio, chat, Room cache de friends. El aviso push al crear un reto y la pantalla para aceptarlo o rechazarlo están en § Challenge push + detail. El aviso push al enviar una solicitud de amistad está en § Friend request push.
 
 ### Challenge push + detail
 
@@ -253,6 +253,35 @@ Aprobado 2026-10-10.
 - Pantalla global de notificaciones en Profile.
 - FCM para recordatorios de hábitos.
 - iOS.
+
+### Friend request push
+
+Aprobado 2026-10-16.
+
+**Producto**
+- Al enviar una solicitud (`INSERT` en `friendships` con `status = pending`), quien la recibe ve una notificación del sistema aunque la app esté cerrada.
+- El texto se resuelve en el dispositivo con `strings.xml` (EN + ES): título fijo y cuerpo con el `display_name` de quien invita. Si el nombre llega vacío, se usa el fallback localizado.
+- Pulsar la notificación abre la pestaña Amigos, donde ya está la solicitud pendiente.
+- Sin sesión al abrir la notificación: se muestra Login y Amigos no se abre después de entrar.
+- Un hábito o un reto pendientes de abrir ganan a esta notificación.
+- Aceptar o rechazar la solicitud no envía un push de vuelta.
+- No hay un permiso de notificaciones nuevo. Si `POST_NOTIFICATIONS` está denegado, la solicitud se crea igual y no hay aviso en la bandeja.
+
+**Técnico**
+- Reutiliza `device_tokens` y el mismo secreto de webhook que los retos (`CHALLENGE_WEBHOOK_SECRET` y el secreto de Vault `challenge_webhook_secret`). No hay un secreto nuevo.
+- Un trigger `AFTER INSERT` en `public.friendships` llama a la Edge Function `notify-friend-request` (`verify_jwt = false`). La función exige `x-webhook-secret`. Con service role lee los tokens del `addressee_id` y el `display_name` del `requester_id`, y envía un data message FCM HTTP v1 de prioridad alta: `type=friend_request`, `friendshipId`, `requesterName`. La cuenta de servicio sigue siendo `FIREBASE_SERVICE_ACCOUNT`. Si no hay tokens, la solicitud queda creada y no hay push. Un fallo de Firebase no deshace el insert.
+- `MyFirebaseMessagingService` pinta la notificación en el canal existente `habit_tracker_notifications`. El `notificationId` es el hash de `"friend:" + friendshipId` y nunca es 0. El `PendingIntent` abre `MainActivity` en la pestaña Amigos.
+- El dominio no depende de Android ni de textos de UI.
+
+**Tests**
+- El id de notificación de una solicitud no es 0 y es distinto del id de un reto con el mismo identificador.
+- El intent de la notificación lleva la pestaña Amigos y el id de la solicitud.
+- No se exigen tests instrumentados del webhook ni de que FCM entregue el mensaje.
+
+**Fuera de alcance**
+- Push a quien envió la solicitud cuando la aceptan o la rechazan.
+- Pantalla de detalle de una solicitud.
+- Realtime.
 
 ### Profile (tab)
 

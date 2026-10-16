@@ -85,6 +85,28 @@ class WidgetLaunchExtrasTest {
     }
 
     @Test
+    fun `openFriendRequestIntent opens friends and keeps the friendship id`() {
+        val intent = WidgetLaunchExtras.openFriendRequestIntent(
+            RuntimeEnvironment.getApplication(),
+            friendshipId = "friendship-3",
+        )
+
+        assertEquals(WidgetLaunchExtras.TAB_FRIENDS, WidgetLaunchExtras.tabFromIntent(intent))
+        assertEquals("friendship-3", WidgetLaunchExtras.friendRequestIdFromIntent(intent))
+    }
+
+    @Test
+    fun `friendRequestIdFromIntent returns null for blank missing or null intent`() {
+        assertNull(WidgetLaunchExtras.friendRequestIdFromIntent(null))
+        assertNull(WidgetLaunchExtras.friendRequestIdFromIntent(Intent()))
+        assertNull(
+            WidgetLaunchExtras.friendRequestIdFromIntent(
+                Intent().putExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID, "  "),
+            ),
+        )
+    }
+
+    @Test
     fun `challengeIdFromIntent returns null for blank missing or null intent`() {
         assertNull(WidgetLaunchExtras.challengeIdFromIntent(null))
         assertNull(WidgetLaunchExtras.challengeIdFromIntent(Intent()))

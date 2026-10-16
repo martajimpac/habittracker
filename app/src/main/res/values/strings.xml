@@ -157,6 +157,9 @@
     <string name="challenge_status_cancelled">Cancelled</string>
     <string name="challenge_push_title">New challenge</string>
     <string name="challenge_push_body">%1$s challenged you</string>
+    <string name="friend_request_push_title">Friend request</string>
+    <string name="friend_request_push_body">%1$s sent you a friend request</string>
+    <string name="friend_request_push_sender_fallback">Someone</string>
 
     <!-- Home -->
     <string name="home_today_label">Today · %1$s</string>
@@ -270,6 +273,12 @@
     <!-- Notifications -->
     <string name="notification_channel_name">Habit Tracker Notifications</string>
     <string name="notification_default_title">Habit Tracker</string>
+    <string name="habit_reminder_channel_name">Habit reminders</string>
+    <string name="habit_reminder_body">Time to check in</string>
+    <string name="habit_reminder_toggle">Reminder</string>
+    <string name="habit_reminder_permission_denied">Notification permission is required to enable reminders.</string>
+    <string name="habit_reminder_exact_alarm_denied">Exact alarms are required for habit reminders. Enable them in system settings.</string>
+    <string name="habit_reminder_save">Save</string>
 
     <!-- Habit widget -->
     <string name="habit_widget_label">Habit glance</string>
