@@ -7,6 +7,7 @@ import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.model.RegisterError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.UserMode
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -16,10 +17,12 @@ import io.github.jan.supabase.auth.user.UserInfo
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
+    private val deviceTokenRegistration: DeviceTokenRegistration,
 ) : AuthRepository {
 
     companion object {
@@ -116,7 +119,18 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isLoggedIn(): Boolean {
-        return supabase.auth.currentUserOrNull() != null
+        return try {
+            val user = supabase.auth.currentUserOrNull()
+            Log.d(TAG, "isLoggedIn check: ${if (user != null) "YES (${user.email})" else "NO"}")
+            user != null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking login status", e)
+            false
+        }
+    }
+
+    override suspend fun getCurrentUserId(): String? {
+        return supabase.auth.currentUserOrNull()?.id
     }
 
     override suspend fun getCurrentUserDisplayName(): String {
@@ -133,12 +147,21 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signOut(): DataResult<Unit, AppError> {
         return try {
             Log.d(TAG, "Sign out started")
+            try {
+                deviceTokenRegistration.clearCurrentToken()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "clearCurrentToken before sign-out failed", e)
+            }
             supabase.auth.signOut()
             Log.d(TAG, "Sign out finished ok")
             DataResult.Success(Unit)
         } catch (_: IOException) {
             Log.e(TAG, "Sign out failed: network")
             DataResult.Error(AppError.Common.Network)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Sign out failed", e)
             DataResult.Error(AppError.Common.Unknown)

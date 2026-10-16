@@ -19,6 +19,7 @@ class SocialMapper @Inject constructor() {
         username = username,
         displayName = displayName,
         avatarColor = avatarColor,
+        avatarUrl = avatarUrl,
     )
 
     fun FriendshipDto.toDomain(): Friendship = Friendship(

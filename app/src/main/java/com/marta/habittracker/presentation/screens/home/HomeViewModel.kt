@@ -6,6 +6,7 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
+import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.presentation.utils.getCurrentWeekDays
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     val weekDays: List<LocalDate> = getCurrentWeekDays()
@@ -34,6 +36,12 @@ class HomeViewModel @Inject constructor(
 
     private val _userDisplayName = MutableStateFlow("")
     val userDisplayName: StateFlow<String> = _userDisplayName.asStateFlow()
+
+    private val _avatarUrl = MutableStateFlow<String?>(null)
+    val avatarUrl: StateFlow<String?> = _avatarUrl.asStateFlow()
+
+    private val _avatarColor = MutableStateFlow("")
+    val avatarColor: StateFlow<String> = _avatarColor.asStateFlow()
 
     private val _actionErrorRes = MutableStateFlow<Int?>(null)
     val actionErrorRes: StateFlow<Int?> = _actionErrorRes.asStateFlow()
@@ -55,8 +63,25 @@ class HomeViewModel @Inject constructor(
         )
 
     init {
+        refreshDisplayName()
+    }
+
+    fun refreshDisplayName() {
         viewModelScope.launch {
-            _userDisplayName.value = authRepository.getCurrentUserDisplayName()
+            when (val result = profileRepository.getMyProfile()) {
+                is DataResult.Success -> {
+                    _userDisplayName.value = result.data.displayName
+                    _avatarUrl.value = result.data.avatarUrl
+                    _avatarColor.value = result.data.avatarColor
+                }
+                is DataResult.Error -> {
+                    val email = authRepository.getCurrentUserEmail()
+                    _userDisplayName.value =
+                        email.substringBefore("@").takeIf { email.contains("@") }.orEmpty()
+                    _avatarUrl.value = null
+                    _avatarColor.value = ""
+                }
+            }
         }
     }
 
@@ -77,4 +102,5 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
 }

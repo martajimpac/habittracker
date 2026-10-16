@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.add_content
 
+import androidx.compose.ui.graphics.Color
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,22 +9,20 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.SaveHabit
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import com.marta.habittracker.presentation.components.HabitIconKeys
+import com.marta.habittracker.presentation.utils.HabitColorOptions
+import com.marta.habittracker.presentation.utils.toHex
 import javax.inject.Inject
 
-val HabitColorOptions = listOf(
-    "#6750A4", "#0D9488", "#D97706", "#E11D48",
-    "#059669", "#2563EB", "#EA580C", "#7C3AED",
-)
+
 
 private val ReminderTimePattern = Regex("""^([01]\d|2[0-3]):([0-5]\d)$""")
 
@@ -31,7 +30,8 @@ data class AddContentUiState(
     val name: String = "",
     val description: String = "",
     val icon: String = HabitIconKeys.DEFAULT,
-    val colorHex: String = HabitColorOptions.first(),
+    val color: Color = HabitColorOptions.first(),
+    val reminderEnabled: Boolean = false,
     val reminderTime: String = "08:00",
     val selectedDays: Set<DayOfWeek> = emptySet(),
     val isPublic: Boolean = false,
@@ -47,8 +47,8 @@ class AddContentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AddContentUiState())
     val uiState: StateFlow<AddContentUiState> = _uiState.asStateFlow()
 
-    private val _habitSaved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val habitSaved: SharedFlow<Unit> = _habitSaved.asSharedFlow()
+    private val _habitSaved = Channel<Unit>(Channel.BUFFERED)
+    val habitSaved = _habitSaved.receiveAsFlow()
 
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name, errorMessageRes = null) }
@@ -62,12 +62,20 @@ class AddContentViewModel @Inject constructor(
         _uiState.update { it.copy(icon = icon, errorMessageRes = null) }
     }
 
-    fun onColorSelected(colorHex: String) {
-        _uiState.update { it.copy(colorHex = colorHex, errorMessageRes = null) }
+    fun onColorSelected(color: Color) {
+        _uiState.update { it.copy(color = color, errorMessageRes = null) }
     }
 
     fun onReminderTimeChanged(reminderTime: String) {
         _uiState.update { it.copy(reminderTime = reminderTime, errorMessageRes = null) }
+    }
+
+    fun onReminderEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(reminderEnabled = enabled, errorMessageRes = null) }
+    }
+
+    fun onReminderDenied(@StringRes messageRes: Int) {
+        _uiState.update { it.copy(reminderEnabled = false, errorMessageRes = messageRes) }
     }
 
     fun onDayToggled(day: DayOfWeek) {
@@ -101,13 +109,17 @@ class AddContentViewModel @Inject constructor(
                     description = currentState.description.trim().ifBlank { null },
                     daysOfWeek = currentState.selectedDays,
                     icon = currentState.icon,
-                    colorHex = currentState.colorHex,
-                    reminderTime = currentState.reminderTime.trim().ifBlank { null },
+                    colorHex = currentState.color.toHex(),
+                    reminderTime = if (currentState.reminderEnabled) {
+                        currentState.reminderTime.trim().ifBlank { null }
+                    } else {
+                        null
+                    },
                     isPublic = currentState.isPublic,
                 )
             ) {
                 is DataResult.Success -> {
-                    _habitSaved.emit(Unit)
+                    _habitSaved.send(Unit)
                     _uiState.update { it.copy(isSaving = false) }
                 }
                 is DataResult.Error -> {
@@ -127,7 +139,9 @@ class AddContentViewModel @Inject constructor(
         return when {
             state.name.isBlank() -> R.string.add_habit_error_name_required
             state.selectedDays.isEmpty() -> R.string.add_habit_error_days_required
-            state.reminderTime.isNotBlank() && !ReminderTimePattern.matches(state.reminderTime.trim()) ->
+            state.reminderEnabled &&
+                state.reminderTime.isNotBlank() &&
+                !ReminderTimePattern.matches(state.reminderTime.trim()) ->
                 R.string.add_habit_error_reminder_format
             else -> null
         }

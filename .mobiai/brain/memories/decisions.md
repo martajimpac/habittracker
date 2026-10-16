@@ -169,3 +169,27 @@ Matches product choice (in-app only), reuses existing Auth/Clean Architecture pa
 - app/src/main/java/com/marta/habittracker/di/SupabaseModule.kt
 - app/src/main/java/com/marta/habittracker/data/repository/AuthRepositoryImpl.kt
 - app/src/main/java/com/marta/habittracker/presentation/screens/auth/
+
+## Client IDs use UUIDv7 via kotlin.uuid
+
+- id: client-ids-uuidv7-kotlin-uuid-20260811
+- type: architecture_decision
+- status: active
+- platform: android
+- area: identifiers
+- date: 2026-08-11
+
+### Decision
+All new client-generated IDs (habits, habit_records, friendships, challenges, mapper fallbacks) use UUIDv7 as String via a central helper wrapping kotlin.uuid.Uuid.generateV7(), with OptIn ExperimentalUuidApi. Existing persisted v4 IDs are not migrated. Postgres uuid columns unchanged.
+
+### Reason
+Time-ordered IDs improve locality/sorting; Kotlin 2.4.10 already provides generateV7 in stdlib so no new dependency. A single helper prevents accidental UUID.randomUUID() (v4) call sites.
+
+### Alternatives considered
+- External UUID library (e.g. uuid-creator) — rejected; unnecessary dependency
+- Hand-rolled UUIDv7 — rejected; error-prone vs stdlib
+- Migrate existing v4 rows — rejected; high risk, no product need
+
+### Files
+- spec.md
+- app/src/main/java/com/marta/habittracker/core/IdGenerator.kt

@@ -1,5 +1,6 @@
 package com.marta.habittracker.domain.usecase
 
+import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.core.toKotlinSet
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
@@ -7,7 +8,6 @@ import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.HabitRepository
 import java.time.DayOfWeek
 import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 
 class SaveHabit @Inject constructor(
@@ -23,7 +23,7 @@ class SaveHabit @Inject constructor(
         isPublic: Boolean = false,
         id: String? = null,
     ): DataResult<String, AppError> {
-        val habitId = id ?: UUID.randomUUID().toString()
+        val habitId = id ?: IdGenerator.newId()
         val result = habitRepository.insertHabit(
             Habit(
                 id = habitId,

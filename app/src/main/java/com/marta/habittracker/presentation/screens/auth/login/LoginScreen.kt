@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +42,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,13 +50,12 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.navigation.LoginMessage
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.LoginGradientEnd
-import com.marta.habittracker.presentation.theme.LoginGradientStart
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun LoginScreen(
@@ -69,7 +67,7 @@ fun LoginScreen(
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(loginViewModel.navigateToHome) {
+    ObserveAsEvents(flow = loginViewModel.navigateToHome) {
         navigateToHome()
     }
 
@@ -100,9 +98,7 @@ fun LoginContent(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(LoginGradientStart, LoginGradientEnd),
-                ),
+                MaterialTheme.colorScheme.primary,
             ),
     ) {
         Column(
@@ -128,7 +124,7 @@ fun LoginContent(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
 
@@ -137,9 +133,8 @@ fun LoginContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(12.dp, RoundedCornerShape(24.dp))
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                     .padding(horizontal = 20.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -269,7 +264,7 @@ fun LoginContent(
         }
 
         if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            HabitLoadingIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
 }
@@ -278,4 +273,18 @@ private fun LoginMessage.toStringRes(): Int = when (this) {
     LoginMessage.PasswordResetRequestSent -> R.string.login_password_reset_request_sent
     LoginMessage.PasswordUpdated -> R.string.login_password_updated
     LoginMessage.ResetLinkInvalid -> R.string.login_password_reset_link_invalid
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun LoginContentPreview() {
+    LoginContent(
+        uiState = LoginUiState(),
+        onEmailChanged = {},
+        onPasswordChanged = {},
+        onTogglePasswordVisibility = {},
+        onClickSelected = {},
+        onForgotPassword = {},
+        onNavigateToRegister = {},
+    )
 }

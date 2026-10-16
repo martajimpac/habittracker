@@ -19,8 +19,12 @@ fun getCurrentWeekDays(): List<LocalDate> {
     return (0..6).map { monday.plusDays(it.toLong()) }
 }
 
-fun dayShortLabel(date: LocalDate): String =
-    date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+
+fun dayShortLabel(date: LocalDate): String {
+    val locale = Locale.getDefault()
+    return date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+}
 
 fun isSameDay(a: LocalDate, b: LocalDate): Boolean = a == b
 

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -44,6 +42,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,14 +51,12 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.theme.HabitField
-import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitSurface
-import com.marta.habittracker.presentation.theme.HabitTermsBg
-import com.marta.habittracker.presentation.theme.HabitTermsText
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
 fun RegisterScreen(
@@ -69,7 +66,7 @@ fun RegisterScreen(
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
-    CollectAsEffect(registerViewModel.navigateToHome) {
+    ObserveAsEvents(flow = registerViewModel.navigateToHome) {
         navigateToHome()
     }
 
@@ -110,11 +107,11 @@ fun RegisterContent(
                     },
                     title = {},
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = HabitSurface,
+                        containerColor = MaterialTheme.colorScheme.surface,
                     ),
                 )
             },
-            containerColor = HabitSurface,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) { innerPadding ->
             Column(
                 modifier = Modifier
@@ -126,12 +123,12 @@ fun RegisterContent(
                 Text(
                     text = stringResource(R.string.register_title),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = HabitOnSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = stringResource(R.string.register_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -187,7 +184,7 @@ fun RegisterContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(HabitTermsBg)
+                        .background(HabitSurfaceVariant)
                         .clickable { onTermsChecked(!uiState.termsAccepted) }
                         .padding(12.dp),
                     verticalAlignment = Alignment.Top,
@@ -203,7 +200,7 @@ fun RegisterContent(
                             Icon(
                                 imageVector = Icons.Outlined.Check,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(14.dp),
                             )
                         }
@@ -236,7 +233,6 @@ fun RegisterContent(
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = HabitTermsText,
                     )
                 }
 
@@ -270,7 +266,22 @@ fun RegisterContent(
         }
 
         if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            HabitLoadingIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun RegisterContentPreview() {
+    RegisterContent(
+        uiState = RegisterUiState(),
+        onBack = {},
+        onNameChanged = {},
+        onEmailChanged = {},
+        onPasswordChanged = {},
+        onTogglePasswordVisibility = {},
+        onTermsChecked = {},
+        onRegisterClicked = {},
+    )
 }

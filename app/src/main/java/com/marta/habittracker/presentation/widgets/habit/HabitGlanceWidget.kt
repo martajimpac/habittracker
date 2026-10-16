@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.Button
+import androidx.glance.ButtonDefaults
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -26,8 +27,11 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.habitIconRes
 import com.marta.habittracker.presentation.screens.home.calculateStreak
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
+import com.marta.habittracker.presentation.theme.HabitField
+import com.marta.habittracker.presentation.theme.HabitOnSurface
+import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
+import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.android.EntryPointAccessors
@@ -50,11 +54,15 @@ class HabitGlanceWidget : GlanceAppWidget() {
         val openAppAction = actionStartActivity(
             WidgetLaunchExtras.openHomeIntent(context, habit?.id),
         )
+        val toggleAction = actionRunCallback<ToggleHabitAction>(
+            parameters = androidx.glance.action.actionParametersOf(
+                ToggleHabitAction.appWidgetIdKey to appWidgetId,
+            ),
+        )
 
         provideContent {
             HabitWidgetContent(
                 habit = habit,
-                appWidgetId = appWidgetId,
                 configureText = context.getString(R.string.habit_widget_configure),
                 completedText = context.getString(R.string.habit_widget_completed),
                 notCompletedText = context.getString(R.string.habit_widget_not_completed),
@@ -69,15 +77,15 @@ class HabitGlanceWidget : GlanceAppWidget() {
                     }
                 }.orEmpty(),
                 openAppAction = openAppAction,
+                toggleAction = toggleAction,
             )
         }
     }
 }
 
 @Composable
-private fun HabitWidgetContent(
+internal fun HabitWidgetContent(
     habit: Habit?,
-    appWidgetId: Int,
     configureText: String,
     completedText: String,
     notCompletedText: String,
@@ -85,6 +93,7 @@ private fun HabitWidgetContent(
     markIncompleteText: String,
     streakText: String,
     openAppAction: androidx.glance.action.Action,
+    toggleAction: androidx.glance.action.Action,
 ) {
     val accent = habit?.let { parseHabitColor(it.colorHex) }
     Column(
@@ -97,7 +106,10 @@ private fun HabitWidgetContent(
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
         if (habit == null) {
-            Text(text = configureText)
+            Text(
+                text = configureText,
+                style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
+            )
         } else {
             Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
                 Image(
@@ -115,16 +127,20 @@ private fun HabitWidgetContent(
             }
             Text(
                 text = if (habit.isCompleted) completedText else notCompletedText,
+                style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
             )
             if (streakText.isNotEmpty()) {
-                Text(text = streakText)
+                Text(
+                    text = streakText,
+                    style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
+                )
             }
             Button(
                 text = if (habit.isCompleted) markIncompleteText else markCompleteText,
-                onClick = actionRunCallback<ToggleHabitAction>(
-                    parameters = androidx.glance.action.actionParametersOf(
-                        ToggleHabitAction.appWidgetIdKey to appWidgetId,
-                    ),
+                onClick = toggleAction,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = androidx.glance.unit.ColorProvider(HabitPrimary),
+                    contentColor = androidx.glance.unit.ColorProvider(HabitField),
                 ),
             )
         }

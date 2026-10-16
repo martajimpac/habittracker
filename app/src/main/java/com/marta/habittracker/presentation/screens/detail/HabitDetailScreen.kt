@@ -1,5 +1,11 @@
 package com.marta.habittracker.presentation.screens.detail
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +22,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,33 +31,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.ActivityHeatmap
+import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ReminderToggleRow
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.habitDayIntensity
 import com.marta.habittracker.presentation.components.toHeatmapWeeks
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
-import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.utils.CollectAsEffect
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.parseHabitColor
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
@@ -61,15 +77,55 @@ fun HabitDetailScreen(
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
+    val reminderEnabled by viewModel.reminderEnabled.collectAsStateWithLifecycle()
+    val reminderTime by viewModel.reminderTime.collectAsStateWithLifecycle()
+    val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            viewModel.onReminderEnabled(true)
+        } else {
+            viewModel.onReminderEnabled(false)
+            viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
+        }
+    }
 
-    CollectAsEffect(viewModel.habitDeleted) {
+    ObserveAsEvents(flow = viewModel.habitDeleted) {
         onBack()
     }
 
     HabitDetailContent(
         habit = habit,
         completionRate = completionRate,
+        reminderEnabled = reminderEnabled,
+        reminderTime = reminderTime,
+        actionErrorRes = actionErrorRes,
         onBack = onBack,
+        onReminderEnabledChange = { enabled ->
+            if (!enabled) {
+                viewModel.onReminderEnabled(false)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() != true
+            ) {
+                viewModel.onReminderEnabled(false)
+                viewModel.onReminderDenied(R.string.habit_reminder_exact_alarm_denied)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.onReminderEnabled(true)
+            }
+        },
+        onReminderTimeChanged = viewModel::onReminderTimeChanged,
+        onSaveReminder = viewModel::saveReminder,
     )
 }
 
@@ -78,10 +134,16 @@ fun HabitDetailContent(
     habit: Habit?,
     completionRate: Float,
     onBack: () -> Unit,
+    reminderEnabled: Boolean = false,
+    reminderTime: String = "08:00",
+    actionErrorRes: Int? = null,
+    onReminderEnabledChange: (Boolean) -> Unit = {},
+    onReminderTimeChanged: (String) -> Unit = {},
+    onSaveReminder: () -> Unit = {},
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
-    val accent = parseHabitColor(habit?.colorHex ?: "#6750A4")
+    val accent = parseHabitColor(habit?.colorHex.orEmpty())
     val reminder = habit?.reminderTime?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.home_all_day)
 
@@ -128,7 +190,15 @@ fun HabitDetailContent(
             when (pageIndex) {
                 0 -> StatisticsTab(completionRate = completionRate, accentColor = accent)
                 1 -> CalendarTab(habit = habit)
-                2 -> SettingsTab()
+                2 -> SettingsTab(
+                    reminderEnabled = reminderEnabled,
+                    reminderTime = reminderTime,
+                    actionErrorRes = actionErrorRes,
+                    canSaveReminder = habit != null,
+                    onReminderEnabledChange = onReminderEnabledChange,
+                    onReminderTimeChanged = onReminderTimeChanged,
+                    onSaveReminder = onSaveReminder,
+                )
             }
         }
     }
@@ -171,7 +241,7 @@ fun HabitDetailHeader(
                     Text(
                         text = reminderTime,
                         style = MaterialTheme.typography.labelMedium,
-                        color = HabitOnSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -226,7 +296,7 @@ fun StatisticsTab(completionRate: Float, accentColor: Color) {
                 Text(
                     text = stringResource(R.string.detail_completed),
                     style = MaterialTheme.typography.labelMedium,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -257,13 +327,84 @@ fun CalendarTab(habit: Habit?) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsTab() {
+fun SettingsTab(
+    reminderEnabled: Boolean,
+    reminderTime: String,
+    actionErrorRes: Int?,
+    canSaveReminder: Boolean,
+    onReminderEnabledChange: (Boolean) -> Unit,
+    onReminderTimeChanged: (String) -> Unit,
+    onSaveReminder: () -> Unit,
+) {
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    if (showTimePicker) {
+        val parts = reminderTime.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 8
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        val timePickerState = rememberTimePickerState(
+            initialHour = hour,
+            initialMinute = minute,
+            is24Hour = true,
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onReminderTimeChanged(
+                            "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
+                        )
+                        showTimePicker = false
+                    },
+                ) {
+                    Text(stringResource(R.string.add_habit_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text(stringResource(R.string.add_habit_cancel))
+                }
+            },
+            text = { TimePicker(state = timePickerState) },
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(stringResource(R.string.detail_edit_habit))
+        ReminderToggleRow(
+            enabled = reminderEnabled,
+            reminderTime = reminderTime,
+            onEnabledChange = onReminderEnabledChange,
+            onTimeClick = { showTimePicker = true },
+        )
+        actionErrorRes?.let { errorRes ->
+            Text(
+                text = stringResource(errorRes),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        HabitButton(
+            text = stringResource(R.string.habit_reminder_save),
+            onClick = onSaveReminder,
+            enabled = canSaveReminder,
+        )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HabitDetailContentPreview() {
+    HabitDetailContent(
+        habit = null,
+        completionRate = 75f,
+        onBack = {},
+    )
 }

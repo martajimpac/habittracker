@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.widgets.challenge
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -19,11 +20,14 @@ import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.ChallengeCard
-import com.marta.habittracker.presentation.screens.home.parseHabitColor
+import com.marta.habittracker.presentation.theme.HabitColor1
+import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
+import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.android.EntryPointAccessors
@@ -155,8 +159,9 @@ class ChallengeGlanceWidget : GlanceAppWidget() {
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
-private fun ChallengeWidgetContent(
+internal fun ChallengeWidgetContent(
     snapshot: ChallengeWidgetSnapshot?,
     configureText: String,
     versusText: String,
@@ -165,31 +170,46 @@ private fun ChallengeWidgetContent(
     statusText: String,
     openAppAction: androidx.glance.action.Action,
 ) {
-    val accent = snapshot?.let { parseHabitColor(it.habitColorHex) }
+    val accent = snapshot?.let { parseHabitColor(it.habitColorHex) } ?: HabitColor1
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(accent?.copy(alpha = 0.12f) ?: HabitSurface)
+            .background(accent.copy(alpha = 0.12f) ?: HabitSurface)
             .clickable(openAppAction)
             .padding(16.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
         if (snapshot == null) {
-            Text(text = configureText)
+            Text(
+                text = configureText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
         } else {
             Text(
                 text = snapshot.habitName,
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    color = androidx.glance.unit.ColorProvider(requireNotNull(accent)),
+                    color = ColorProvider(accent),
                 ),
             )
-            Text(text = versusText)
-            Text(text = progressText)
-            Text(text = daysLeftText)
+            Text(
+                text = versusText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
+            Text(
+                text = progressText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
+            Text(
+                text = daysLeftText,
+                style = TextStyle(color = ColorProvider(HabitOnSurface)),
+            )
             if (statusText.isNotBlank()) {
-                Text(text = statusText)
+                Text(
+                    text = statusText,
+                    style = TextStyle(color = ColorProvider(HabitOnSurface)),
+                )
             }
         }
     }

@@ -4,12 +4,12 @@
     <!-- Onboarding -->
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_continue">Continue</string>
-    <string name="onboarding_get_started">Get Started</string>
-    <string name="onboarding_slide1_title">Build Habits That\nActually Stick</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_slide1_title">Build habits that\nactually stick</string>
     <string name="onboarding_slide1_description">Track your daily routines and watch consistency transform into lasting change.</string>
-    <string name="onboarding_slide2_title">Visualize Your\nProgress</string>
+    <string name="onboarding_slide2_title">Visualize your\nprogress</string>
     <string name="onboarding_slide2_description">Beautiful charts and streaks keep you motivated and show how far you\'ve come.</string>
-    <string name="onboarding_slide3_title">Achieve Your\nBest Self</string>
+    <string name="onboarding_slide3_title">Achieve your\nbest self</string>
     <string name="onboarding_slide3_description">Set goals, earn streaks, and celebrate every milestone on your journey.</string>
 
     <!-- Login -->
@@ -20,7 +20,7 @@
     <string name="login_password_label">Password</string>
     <string name="login_password_placeholder">Enter password</string>
     <string name="login_forgot_password">Forgot password?</string>
-    <string name="login_sign_in">Sign In</string>
+    <string name="login_sign_in">Sign in</string>
     <string name="login_signing_in">Signing in…</string>
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_sign_up">Sign up</string>
@@ -47,7 +47,7 @@
     <string name="reset_password_error_passwords_do_not_match">Passwords do not match.</string>
 
     <!-- Legacy login keys kept for compatibility -->
-    <string name="login_screen_header_text_spain">Español (España)</string>
+    <string name="login_screen_header_text_spain">Spanish (Spain)</string>
     <string name="login_screen_textfield_email">Email</string>
     <string name="login_screen_textfield_password">Password</string>
     <string name="login_screen_button_login">Sign In</string>
@@ -58,7 +58,7 @@
     <string name="register_back">Back</string>
     <string name="register_title">Create account</string>
     <string name="register_subtitle">Start building better habits today</string>
-    <string name="register_name_label">Full Name</string>
+    <string name="register_name_label">Full name</string>
     <string name="register_name_placeholder">Alex Rivera</string>
     <string name="register_email_label">Email</string>
     <string name="register_email_placeholder">alex@example.com</string>
@@ -68,34 +68,37 @@
     <string name="register_terms_of_service">Terms of Service</string>
     <string name="register_terms_and">and</string>
     <string name="register_privacy_policy">Privacy Policy</string>
-    <string name="register_create_account">Create Account</string>
+    <string name="register_create_account">Create account</string>
     <string name="register_creating_account">Creating account…</string>
 
     <!-- Auth / common errors (user-facing) -->
-    <string name="error_login_invalid_credentials">Email o contraseña incorrectos.</string>
-    <string name="error_login_email_not_verified">Debes confirmar tu email antes de iniciar sesión.</string>
-    <string name="error_register_invalid_email">Introduce un correo electrónico válido.</string>
-    <string name="error_register_weak_password">La contraseña debe tener al menos 8 caracteres, con letras y números.</string>
-    <string name="error_register_email_already_registered">Este correo ya está registrado.</string>
-    <string name="error_register_email_confirmation_required">Revisa tu correo para confirmar la cuenta antes de iniciar sesión.</string>
-    <string name="error_common_network">Error de conexión. Comprueba tu red.</string>
-    <string name="error_common_unauthorized">No tienes permiso para acceder.</string>
-    <string name="error_common_unknown">No se pudo completar la operación. Inténtalo de nuevo.</string>
+    <string name="error_login_invalid_credentials">Incorrect email or password.</string>
+    <string name="error_login_email_not_verified">You must verify your email before signing in.</string>
+    <string name="error_register_invalid_email">Enter a valid email address.</string>
+    <string name="error_register_weak_password">Password must be at least 8 characters long, with letters and numbers.</string>
+    <string name="error_register_email_already_registered">This email is already registered.</string>
+    <string name="error_register_email_confirmation_required">Check your email to confirm your account before signing in.</string>
+    <string name="error_common_network">Network error. Please check your connection.</string>
+    <string name="error_common_unauthorized">You do not have permission to access.</string>
+    <string name="error_common_unknown">Could not complete the operation. Please try again.</string>
     <string name="error_no_internet">No internet connection. Try again when you are online.</string>
+    <string name="challenge_detail_error">Couldn\'t load this challenge</string>
+    <string name="challenge_respond_error">Couldn\'t update this challenge</string>
+    <string name="error_preferences_invalid_display_name">Enter a name between 1 and 40 characters.</string>
     <string name="error_sync_failed">Could not sync habits. Please try again.</string>
 
     <!-- Legacy register keys -->
-    <string name="register_screen_title_phone">¿Cuál es tu número de móvil?</string>
-    <string name="register_screen_title_email">¿Cuál es tu correo electrónico?</string>
-    <string name="register_screen_subtitle_phone">Introduce tu número de móvil de contacto. Nadie lo verá en tu perfil.</string>
-    <string name="register_screen_subtitle_email">Introduce tu correo electrónico. Nadie lo verá en tu perfil.</string>
-    <string name="register_screen_body">Puede que recibas notificaciones nuestras en Whatsapp y por SMS por motivos de seguridad y para iniciar sesión.</string>
-    <string name="register_screen_textfield_register_phone">Número de móvil</string>
-    <string name="register_screen_textfield_register_email">Correo electrónico</string>
-    <string name="register_screen_button_next">Siguiente</string>
-    <string name="register_screen_button_register_with_email">Registrarte con tu correo electrónico</string>
-    <string name="register_screen_button_register_with_phone">Registrarte con tu número de móvil</string>
-    <string name="register_screen_text_find_my_account">Buscar mi cuenta</string>
+    <string name="register_screen_title_phone">What is your mobile number?</string>
+    <string name="register_screen_title_email">What is your email address?</string>
+    <string name="register_screen_subtitle_phone">Enter your contact mobile number. Nobody will see it on your profile.</string>
+    <string name="register_screen_subtitle_email">Enter your email address. Nobody will see it on your profile.</string>
+    <string name="register_screen_body">You may receive notifications from us on WhatsApp and via SMS for security reasons and to sign in.</string>
+    <string name="register_screen_textfield_register_phone">Mobile number</string>
+    <string name="register_screen_textfield_register_email">Email address</string>
+    <string name="register_screen_button_next">Next</string>
+    <string name="register_screen_button_register_with_email">Register with your email address</string>
+    <string name="register_screen_button_register_with_phone">Register with your mobile number</string>
+    <string name="register_screen_text_find_my_account">Find my account</string>
 
     <!-- BottomBar -->
     <string name="tab_home">Home</string>
@@ -118,7 +121,7 @@
     <string name="friends_list_title">Friends</string>
     <string name="friends_me">Me</string>
     <string name="friends_days_left">%1$d days left</string>
-    <string name="friends_username">@%1$s</string>
+    <string name="friends_username">%1$s</string>
     <string name="friends_best_streak">Best streak: %1$d days</string>
     <string name="friends_public_habits">%1$d public habits</string>
     <string name="friends_private_habits">Private</string>
@@ -143,13 +146,28 @@
     <string name="friends_criteria_completion">Completion</string>
     <string name="friends_send_challenge">Send challenge</string>
 
+    <!-- Challenge detail -->
+    <string name="challenge_detail_title">Challenge</string>
+    <string name="challenge_accept">Accept</string>
+    <string name="challenge_decline">Decline</string>
+    <string name="challenge_status_pending">Pending</string>
+    <string name="challenge_status_active">Active</string>
+    <string name="challenge_status_completed">Completed</string>
+    <string name="challenge_status_declined">Declined</string>
+    <string name="challenge_status_cancelled">Cancelled</string>
+    <string name="challenge_push_title">New challenge</string>
+    <string name="challenge_push_body">%1$s challenged you</string>
+    <string name="friend_request_push_title">Friend request</string>
+    <string name="friend_request_push_body">%1$s sent you a friend request</string>
+    <string name="friend_request_push_sender_fallback">Someone</string>
+
     <!-- Home -->
     <string name="home_today_label">Today · %1$s</string>
     <string name="home_past_label">Past · %1$s</string>
     <string name="home_upcoming_label">Upcoming · %1$s</string>
     <string name="home_greeting">%1$s, %2$s!</string>
-    <string name="home_todays_habits">Today\'s Habits</string>
-    <string name="home_day_habits">%1$s\'s Habits</string>
+    <string name="home_todays_habits">Today\'s habits</string>
+    <string name="home_day_habits">%1$s\'s habits</string>
     <string name="home_total_count">%1$d total</string>
     <string name="home_empty_habits">No habits scheduled for this day.</string>
     <string name="home_percent">%1$d%%</string>
@@ -171,23 +189,23 @@
     <string name="home_greeting_afternoon">Good afternoon</string>
     <string name="home_greeting_evening">Good evening</string>
     <string name="user_fallback_name">there</string>
-    <string name="user_avatar_initials_fallback">?</string>
+    <string name="user_avatar_initials_fallback">\?</string>
 
     <!-- Add habit -->
-    <string name="add_habit_title">New Habit</string>
+    <string name="add_habit_title">New habit</string>
     <string name="add_habit_save">Save</string>
     <string name="add_habit_cancel">Cancel</string>
     <string name="add_habit_close">Close</string>
-    <string name="add_habit_name_label">Habit Name</string>
-    <string name="add_habit_name_placeholder">e.g. Morning Run</string>
+    <string name="add_habit_name_label">Habit name</string>
+    <string name="add_habit_name_placeholder">e.g. Morning run</string>
     <string name="add_habit_description_label">Description (optional)</string>
     <string name="add_habit_description_placeholder">e.g. 30 minutes outdoors</string>
     <string name="add_habit_choose_icon">Choose Icon</string>
     <string name="add_habit_choose_color">Choose Color</string>
-    <string name="add_habit_reminder_time">Reminder Time</string>
+    <string name="add_habit_reminder_time">Reminder time</string>
     <string name="add_habit_frequency">Frequency</string>
     <string name="habit_is_public">Public habit</string>
-    <string name="add_habit_create">Create Habit</string>
+    <string name="add_habit_create">Create habit</string>
     <string name="add_habit_error_name_required">Habit name is required.</string>
     <string name="add_habit_error_days_required">Select at least one day of the week.</string>
     <string name="add_habit_error_reminder_format">Reminder time must use HH:mm format.</string>
@@ -221,24 +239,60 @@
     <string name="stats_title">Stats</string>
     <string name="stats_coming_soon">Stats coming soon</string>
     <string name="stats_empty">No habits yet</string>
+    <string name="stats_weekday_monday">Monday</string>
+    <string name="stats_weekday_tuesday">Tuesday</string>
+    <string name="stats_weekday_wednesday">Wednesday</string>
+    <string name="stats_weekday_thursday">Thursday</string>
+    <string name="stats_weekday_friday">Friday</string>
+    <string name="stats_weekday_saturday">Saturday</string>
+    <string name="stats_weekday_sunday">Sunday</string>
+    <string name="stats_strongest_day">%1$s is your strongest day (%2$d completed)</string>
+    <string name="stats_strongest_day_empty">No completed habits yet</string>
+    <string name="stats_streak_risk">%1$s loses a %2$d-day streak if you skip tomorrow</string>
+    <string name="stats_streak_risk_empty">No streak ends tomorrow</string>
 
     <!-- Profile -->
     <string name="profile_notifications">Notifications</string>
-    <string name="profile_goals">Goals &amp; Targets</string>
+    <string name="profile_goals">Goals &amp; targets</string>
+    <string name="goals_progress">%1$d/%2$d</string>
+    <string name="goals_rule">A day counts when every habit scheduled that day is completed.</string>
+    <string name="goals_reached">You reached this week\'s goal.</string>
     <string name="profile_reminders">Reminders</string>
     <string name="profile_preferences">Preferences</string>
+    <string name="preferences_display_name_label">Display name</string>
+    <string name="preferences_save">Save</string>
+    <string name="preferences_saving">Saving…</string>
+    <string name="preferences_back">Back</string>
+    <string name="preferences_change_photo">Change photo</string>
+    <string name="preferences_remove_photo">Remove photo</string>
+    <string name="preferences_avatar_cd">Profile photo</string>
+    <string name="preferences_delete_account">Delete account</string>
+    <string name="preferences_delete_title">Delete account</string>
+    <string name="preferences_delete_explanation">This permanently deletes your account, habits, and profile photo. This cannot be undone. Type DELETE to confirm.</string>
+    <string name="preferences_delete_confirm_label">Type DELETE to confirm</string>
+    <string name="preferences_delete_confirm_token" translatable="false">DELETE</string>
+    <string name="preferences_delete_confirm_action">Delete account</string>
+    <string name="preferences_delete_cancel">Cancel</string>
+    <string name="preferences_delete_deleting">Deleting…</string>
     <string name="profile_achievements">Achievements</string>
     <string name="profile_sign_out">Sign Out</string>
-    <string name="profile_stat_day_streak">Day Streak</string>
+    <string name="profile_stat_day_streak">Day streak</string>
     <string name="profile_stat_completed">Completed</string>
     <string name="profile_stat_habits">Habits</string>
 
     <!-- Accessibility / chrome -->
     <string name="cd_toolbar_actions">Toolbar actions</string>
+    <string name="cd_profile_avatar">Profile photo</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Habit Tracker Notifications</string>
     <string name="notification_default_title">Habit Tracker</string>
+    <string name="habit_reminder_channel_name">Habit reminders</string>
+    <string name="habit_reminder_body">Time to check in</string>
+    <string name="habit_reminder_toggle">Reminder</string>
+    <string name="habit_reminder_permission_denied">Notification permission is required to enable reminders.</string>
+    <string name="habit_reminder_exact_alarm_denied">Exact alarms are required for habit reminders. Enable them in system settings.</string>
+    <string name="habit_reminder_save">Save</string>
 
     <!-- Habit widget -->
     <string name="habit_widget_label">Habit glance</string>
@@ -274,9 +328,26 @@
     <string name="weekly_widget_day_fri">Fri</string>
     <string name="weekly_widget_day_sat">Sat</string>
     <string name="weekly_widget_day_sun">Sun</string>
+    <string name="habit_widget_preview_name">Read</string>
+    <string name="challenge_widget_preview_habit">Run</string>
+    <string name="challenge_widget_preview_versus">vs Alex</string>
+    <string name="challenge_widget_preview_progress">You 60% · Alex 40%</string>
+    <string name="challenge_widget_preview_days_left">5 days left</string>
+    <string name="weekly_widget_preview_percent_high">80%</string>
+    <string name="weekly_widget_preview_percent_zero">0%</string>
+
+    <!-- Today widget -->
+    <string name="today_widget_label">Today</string>
+    <string name="today_widget_title">Today</string>
+    <string name="today_widget_empty">Nothing scheduled today</string>
+    <string name="today_widget_pending">%1$s</string>
+    <string name="today_widget_done">Done · %1$s</string>
+    <string name="today_widget_more">+%1$d</string>
+    <string name="today_widget_preview_pending">Water</string>
+    <string name="today_widget_preview_done">Done · Read</string>
 
     <!-- Legacy tab keys -->
     <string name="tab_add_content">Add</string>
     <string name="tab_reels">Reels</string>
-    <string name="tab_search">Buscar</string>
+    <string name="tab_search">Search</string>
 </resources>

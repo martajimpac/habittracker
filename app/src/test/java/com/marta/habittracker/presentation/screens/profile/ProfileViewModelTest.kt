@@ -4,8 +4,12 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.repository.HabitRepository
+import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
+import com.marta.habittracker.domain.usecase.FakeProfileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -41,13 +45,25 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `loads display name and email from auth repository`() = runTest {
+    fun `loads display name from profile repository and email from auth`() = runTest {
         val authRepository = FakeAuthRepository(
-            displayName = "Alex Rivera",
+            displayName = "Should Not Appear",
             email = "alex@example.com",
         )
+        val profileRepository = FakeProfileRepository(
+            myProfileResult = DataResult.Success(
+                FakeProfileRepository.defaultProfile.copy(
+                    displayName = "Alex Rivera",
+                    avatarUrl = "https://cdn.example/me.jpg?v=1",
+                    avatarColor = "#059669",
+                ),
+            ),
+        )
 
-        val viewModel = ProfileViewModel(authRepository, FakeHabitRepository())
+        val viewModel = createViewModel(
+            authRepository = authRepository,
+            profileRepository = profileRepository,
+        )
         val collectJob = backgroundScope.launch {
             viewModel.uiState.collect {}
         }
@@ -55,6 +71,27 @@ class ProfileViewModelTest {
 
         assertEquals("Alex Rivera", viewModel.uiState.value.displayName)
         assertEquals("alex@example.com", viewModel.uiState.value.email)
+        assertEquals("https://cdn.example/me.jpg?v=1", viewModel.uiState.value.avatarUrl)
+        assertEquals("#059669", viewModel.uiState.value.avatarColor)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `profile load error leaves avatar url null and color default`() = runTest {
+        val viewModel = createViewModel(
+            authRepository = FakeAuthRepository(email = "alex@example.com"),
+            profileRepository = FakeProfileRepository(
+                myProfileResult = DataResult.Error(AppError.Common.Network),
+            ),
+        )
+        val collectJob = backgroundScope.launch {
+            viewModel.uiState.collect {}
+        }
+        advanceUntilIdle()
+
+        assertEquals("alex", viewModel.uiState.value.displayName)
+        assertEquals(null, viewModel.uiState.value.avatarUrl)
+        assertEquals("", viewModel.uiState.value.avatarColor)
         collectJob.cancel()
     }
 
@@ -90,8 +127,7 @@ class ProfileViewModelTest {
             ),
         )
 
-        val viewModel = ProfileViewModel(
-            authRepository = FakeAuthRepository(),
+        val viewModel = createViewModel(
             habitRepository = FakeHabitRepository(allHabitsWithRecords = listOf(habitA, habitB)),
         )
         val collectJob = backgroundScope.launch {
@@ -109,7 +145,7 @@ class ProfileViewModelTest {
     @Test
     fun `sign out success emits navigate to login`() = runTest {
         val authRepository = FakeAuthRepository()
-        val viewModel = ProfileViewModel(authRepository, FakeHabitRepository())
+        val viewModel = createViewModel(authRepository = authRepository)
 
         val navigation = async { viewModel.navigateToLogin.first() }
         viewModel.onSignOutClicked()
@@ -124,7 +160,7 @@ class ProfileViewModelTest {
         val authRepository = FakeAuthRepository(
             signOutResult = DataResult.Error(AppError.Common.Network),
         )
-        val viewModel = ProfileViewModel(authRepository, FakeHabitRepository())
+        val viewModel = createViewModel(authRepository = authRepository)
 
         var navigated = false
         val collectJob = backgroundScope.launch {
@@ -137,6 +173,16 @@ class ProfileViewModelTest {
         assertEquals(false, navigated)
         collectJob.cancel()
     }
+
+    private fun createViewModel(
+        authRepository: AuthRepository = FakeAuthRepository(),
+        habitRepository: HabitRepository = FakeHabitRepository(),
+        profileRepository: ProfileRepository = FakeProfileRepository(),
+    ) = ProfileViewModel(
+        authRepository = authRepository,
+        habitRepository = habitRepository,
+        profileRepository = profileRepository,
+    )
 
     private fun toKotlinDate(date: LocalDate): KotlinLocalDate =
         KotlinLocalDate(date.year, date.monthValue, date.dayOfMonth)

@@ -5,21 +5,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
-/**
- * Collects one-shot / event [Flow]s (typically [kotlinx.coroutines.flow.SharedFlow]) only while
- * the host is at least [Lifecycle.State.STARTED], so navigation does not run in the background.
- */
 @Composable
-fun <T> CollectAsEffect(
+fun <T> ObserveAsEvents(
     flow: Flow<T>,
-    block: suspend (T) -> Unit,
+    onEvent: (T) -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner, flow) {
+    LaunchedEffect(flow, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collect { block(it) }
+            withContext(Dispatchers.Main.immediate) {
+                //Esto es para asegurarnos de no perder nunca el evento
+                flow.collect(onEvent)
+            }
         }
     }
 }

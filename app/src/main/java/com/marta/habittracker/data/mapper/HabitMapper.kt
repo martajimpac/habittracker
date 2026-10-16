@@ -1,5 +1,6 @@
 package com.marta.habittracker.data.mapper
 
+import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.core.toEpochMillis
 import com.marta.habittracker.core.toInstant
 import com.marta.habittracker.core.toJava
@@ -11,7 +12,6 @@ import com.marta.habittracker.data.local.room.entities.HabitRecordEntity
 import com.marta.habittracker.data.local.room.entities.HabitWithRecordsEntity
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
-import java.util.UUID
 import javax.inject.Inject
 
 class HabitMapper @Inject constructor() {
@@ -69,7 +69,7 @@ class HabitMapper @Inject constructor() {
     )
 
     fun HabitRecord.toEntity(
-        id: String = this.id.ifBlank { UUID.randomUUID().toString() },
+        id: String = this.id.ifBlank { IdGenerator.newId() },
         updatedAt: Long = System.currentTimeMillis(),
         deletedAt: Long? = null,
     ): HabitRecordEntity = HabitRecordEntity(

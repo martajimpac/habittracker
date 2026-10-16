@@ -27,14 +27,27 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var authDeeplinkCoordinator: AuthDeeplinkCoordinator
 
     private var initialTab by mutableStateOf<String?>(null)
+    private var initialHabitId by mutableStateOf<String?>(null)
+    private var initialChallengeId by mutableStateOf<String?>(null)
+    private var initialFriendRequestId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialTab = WidgetLaunchExtras.tabFromIntent(intent)
+        if (savedInstanceState == null) {
+            applyLaunchExtras(intent)
+        }
         enableEdgeToEdge()
         setContent {
             InstaDevTheme {
-                NavigationWrapper(initialTabRoute = initialTab)
+                NavigationWrapper(
+                    initialTabRoute = initialTab,
+                    initialHabitId = initialHabitId,
+                    onHabitIdConsumed = { consumeHabitId() },
+                    initialChallengeId = initialChallengeId,
+                    onChallengeIdConsumed = { consumeChallengeId() },
+                    initialFriendRequestId = initialFriendRequestId,
+                    onFriendRequestConsumed = { consumeFriendRequest() },
+                )
             }
         }
         handleAuthDeeplink(intent)
@@ -43,8 +56,49 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        initialTab = WidgetLaunchExtras.tabFromIntent(intent)
+        applyLaunchExtras(intent)
         handleAuthDeeplink(intent)
+    }
+
+    private fun applyLaunchExtras(intent: Intent?) {
+        initialHabitId = WidgetLaunchExtras.habitIdFromIntent(intent)
+        initialChallengeId = if (initialHabitId == null) {
+            WidgetLaunchExtras.challengeIdFromIntent(intent)
+        } else {
+            null
+        }
+        val friendRequestId = WidgetLaunchExtras.friendRequestIdFromIntent(intent)
+        initialFriendRequestId = if (initialHabitId == null && initialChallengeId == null) {
+            friendRequestId
+        } else {
+            null
+        }
+        initialTab = when {
+            initialHabitId != null || initialChallengeId != null -> null
+            initialFriendRequestId != null -> WidgetLaunchExtras.TAB_FRIENDS
+            else -> WidgetLaunchExtras.tabFromIntent(intent)
+        }
+        if (initialHabitId != null || initialChallengeId != null) {
+            intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
+        }
+    }
+
+    private fun consumeHabitId() {
+        initialHabitId = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_HABIT_ID)
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
+    }
+
+    private fun consumeChallengeId() {
+        initialChallengeId = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_CHALLENGE_ID)
+    }
+
+    private fun consumeFriendRequest() {
+        initialFriendRequestId = null
+        initialTab = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
     }
 
     override fun onResume() {

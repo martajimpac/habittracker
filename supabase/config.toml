@@ -1,0 +1,7 @@
+# Challenge and friend-request INSERT webhooks authenticate with x-webhook-secret.
+# register-device-token keeps the default JWT check.
+[functions.notify-challenge]
+verify_jwt = false
+
+[functions.notify-friend-request]
+verify_jwt = false

@@ -1,0 +1,110 @@
+---
+description: One-shot UI events must use Channel + ObserveAsEvents (never sticky StateFlow)
+alwaysApply: true
+---
+
+# One-shot UI events — Channel + ObserveAsEvents
+
+When implementing one-shot UI events in this project, **always use the `Channel` + `ObserveAsEvents` pattern**.
+
+Do NOT use `StateFlow` for one-shot events such as:
+
+* Showing dialogs
+* Navigation events
+* Toasts / snackbars
+* Opening another screen
+* Any event that should be handled only once
+
+## ViewModel
+
+Events must be exposed through a `Channel` and converted to a `Flow` using `receiveAsFlow()`.
+
+For example:
+
+```kotlin
+private val _events = Channel<UiEvent>(Channel.BUFFERED)
+val events = _events.receiveAsFlow()
+
+private suspend fun sendEvent(event: UiEvent) {
+    _events.send(event)
+}
+```
+
+Use a sealed interface/class for the events:
+
+```kotlin
+sealed interface UiEvent {
+    data object ShowSuccessDialog : UiEvent
+    data class ShowError(val message: String) : UiEvent
+    data object NavigateBack : UiEvent
+}
+```
+
+When an event needs to be emitted:
+
+```kotlin
+viewModelScope.launch {
+    _events.send(UiEvent.ShowSuccessDialog)
+}
+```
+
+## Compose
+
+In every Composable that needs to observe one-shot events, use the following `ObserveAsEvents` helper:
+
+```kotlin
+@Composable
+private fun <T> ObserveAsEvents(
+    flow: Flow<T>,
+    onEvent: (T) -> Unit
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(flow, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            withContext(Dispatchers.Main.immediate) {
+                flow.collect(onEvent)
+            }
+        }
+    }
+}
+```
+
+Then observe events like this:
+
+```kotlin
+ObserveAsEvents(
+    flow = viewModel.events
+) { event ->
+    when (event) {
+        UiEvent.ShowSuccessDialog -> {
+            // Show dialog
+        }
+
+        is UiEvent.ShowError -> {
+            // Show error
+        }
+
+        UiEvent.NavigateBack -> {
+            // Navigate back
+        }
+    }
+}
+```
+
+## Important rules
+
+1. **Use `StateFlow` only for persistent UI state.**
+2. **Use `Channel` for one-shot events.**
+3. Expose the `Channel` as a `Flow` with `receiveAsFlow()`.
+4. Always collect these event flows using the `ObserveAsEvents()` helper above.
+5. Do NOT reset a `StateFlow` to `null` after consuming an event.
+6. Do NOT put one-shot events inside the UI state.
+7. Do NOT collect these event flows directly with `collectAsState()` or `collectAsStateWithLifecycle()`, because events are not UI state.
+8. The `Channel` should use `Channel.BUFFERED`.
+9. Keep the event handling lifecycle-aware using `repeatOnLifecycle(Lifecycle.State.STARTED)`.
+10. Use `Dispatchers.Main.immediate` as shown in the `ObserveAsEvents` implementation.
+
+The goal is to ensure that one-shot events are handled as events rather than being re-emitted when the Composable recomposes or the user navigates back to the screen.
+
+Prefer the shared `ObserveAsEvents` in `presentation/utils` when it exists (do not duplicate a private copy per screen unless migrating).

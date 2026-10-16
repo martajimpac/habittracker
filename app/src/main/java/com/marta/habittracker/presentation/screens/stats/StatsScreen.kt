@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,13 +39,14 @@ import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.globalDayIntensity
 import com.marta.habittracker.presentation.components.toHeatmapWeeks
+import com.marta.habittracker.domain.usecase.habitStatsInsight
 import com.marta.habittracker.presentation.screens.home.calculateStreak
-import com.marta.habittracker.presentation.screens.home.habitAccentColor
 import com.marta.habittracker.presentation.screens.home.habitTimeLabel
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitSurface
+import com.marta.habittracker.presentation.utils.habitAccentColor
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 @Composable
@@ -61,6 +63,7 @@ fun StatsContent(
     habits: List<Habit>,
 ) {
     val today = remember { LocalDate.now() }
+    val insight = remember(habits, today) { habitStatsInsight(habits, today) }
     val activityWeeks = remember(habits, today) {
         toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->
             globalDayIntensity(habits, date)
@@ -70,14 +73,14 @@ fun StatsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HabitSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding(),
     ) {
         Text(
             text = stringResource(R.string.stats_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Black,
-            color = HabitOnSurface,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
         )
 
@@ -90,7 +93,7 @@ fun StatsContent(
                     text = stringResource(R.string.stats_empty),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {
@@ -98,6 +101,31 @@ fun StatsContent(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                item {
+                    StatsInsightCard(
+                        text = insight.strongestWeekday?.let { day ->
+                            stringResource(
+                                R.string.stats_strongest_day,
+                                stringResource(weekdayLabelRes(day)),
+                                insight.strongestWeekdayCount,
+                            )
+                        } ?: stringResource(R.string.stats_strongest_day_empty),
+                    )
+                }
+                item {
+                    val atRisk = insight.streakAtRisk
+                    StatsInsightCard(
+                        text = if (atRisk == null) {
+                            stringResource(R.string.stats_streak_risk_empty)
+                        } else {
+                            stringResource(
+                                R.string.stats_streak_risk,
+                                atRisk.habitName,
+                                atRisk.streakDays,
+                            )
+                        },
+                    )
+                }
                 item {
                     ActivityHeatmap(
                         weeks = activityWeeks,
@@ -115,6 +143,32 @@ fun StatsContent(
 }
 
 @Composable
+private fun StatsInsightCard(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = HabitOnSurface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .padding(16.dp),
+    )
+}
+
+private fun weekdayLabelRes(dayOfWeek: DayOfWeek): Int = when (dayOfWeek) {
+    DayOfWeek.MONDAY -> R.string.stats_weekday_monday
+    DayOfWeek.TUESDAY -> R.string.stats_weekday_tuesday
+    DayOfWeek.WEDNESDAY -> R.string.stats_weekday_wednesday
+    DayOfWeek.THURSDAY -> R.string.stats_weekday_thursday
+    DayOfWeek.FRIDAY -> R.string.stats_weekday_friday
+    DayOfWeek.SATURDAY -> R.string.stats_weekday_saturday
+    DayOfWeek.SUNDAY -> R.string.stats_weekday_sunday
+}
+
+@Composable
 private fun StatsHabitRow(habit: Habit) {
     val accent = habitAccentColor(habit)
     val streak = calculateStreak(habit.records)
@@ -123,7 +177,7 @@ private fun StatsHabitRow(habit: Habit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(androidx.compose.ui.graphics.Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -175,4 +229,10 @@ private fun StatsHabitRow(habit: Habit) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun StatsContentPreview() {
+    StatsContent(habits = emptyList())
 }

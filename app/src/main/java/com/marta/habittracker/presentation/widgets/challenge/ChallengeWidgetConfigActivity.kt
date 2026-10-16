@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,6 +33,7 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.repository.FriendsRepository
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.theme.InstaDevTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -149,7 +149,7 @@ private fun ChallengeWidgetConfigContent(
             style = MaterialTheme.typography.headlineSmall,
         )
         when {
-            isLoading -> CircularProgressIndicator()
+            isLoading -> HabitLoadingIndicator()
             errorMessageResId != null -> Text(text = stringResource(errorMessageResId))
             challenges.isEmpty() -> Text(text = stringResource(R.string.challenge_widget_empty_config))
             else -> LazyColumn(modifier = Modifier.fillMaxWidth()) {

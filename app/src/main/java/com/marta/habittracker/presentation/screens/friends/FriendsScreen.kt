@@ -1,6 +1,5 @@
 package com.marta.habittracker.presentation.screens.friends
 
-import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -28,7 +27,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,10 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -64,16 +62,19 @@ import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.Friendship
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ProfileAvatar
+import com.marta.habittracker.presentation.components.toComposeColor
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 
-private val FriendsBackground = Color(0xFFF6F0FF)
 
 @Composable
 fun FriendsScreen(
+    onOpenChallenge: (String) -> Unit = {},
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +83,7 @@ fun FriendsScreen(
     }
     FriendsContent(
         uiState = uiState,
+        onOpenChallenge = onOpenChallenge,
         onAddFriend = viewModel::onAddFriendClicked,
         onDismissSheet = viewModel::onDismissSheet,
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
@@ -97,6 +99,7 @@ fun FriendsScreen(
 @Composable
 fun FriendsContent(
     uiState: FriendsUiState,
+    onOpenChallenge: (String) -> Unit = {},
     onAddFriend: () -> Unit = {},
     onDismissSheet: () -> Unit = {},
     onSearchQueryChanged: (String) -> Unit = {},
@@ -109,16 +112,17 @@ fun FriendsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FriendsBackground),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         FriendsHeader(onAddFriend = onAddFriend)
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = HabitPrimary)
+                HabitLoadingIndicator()
             }
         } else {
             FriendsBody(
                 uiState = uiState,
+                onOpenChallenge = onOpenChallenge,
                 onRespondToRequest = onRespondToRequest,
                 onViewFriend = onViewFriend,
                 onCreateChallenge = onCreateChallenge,
@@ -167,7 +171,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
             text = stringResource(R.string.friends_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            color = HabitOnSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         FriendsAddButton(onClick = onAddFriend)
     }
@@ -176,6 +180,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
 @Composable
 private fun FriendsBody(
     uiState: FriendsUiState,
+    onOpenChallenge: (String) -> Unit,
     onRespondToRequest: (String, Boolean) -> Unit,
     onViewFriend: (String) -> Unit,
     onCreateChallenge: (String) -> Unit,
@@ -192,7 +197,12 @@ private fun FriendsBody(
                 FriendsInlineEmpty(R.string.friends_empty_challenges)
             } else {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(uiState.challenges, key = { it.challenge.id }) { ChallengeCard(it) }
+                    items(uiState.challenges, key = { it.challenge.id }) { card ->
+                        ChallengeCard(
+                            card = card,
+                            onClick = { onOpenChallenge(card.challenge.id) },
+                        )
+                    }
                 }
             }
         }
@@ -229,23 +239,28 @@ private fun FriendsBody(
 }
 
 @Composable
-private fun ChallengeCard(card: ChallengeCard) {
+private fun ChallengeCard(
+    card: ChallengeCard,
+    onClick: () -> Unit = {},
+) {
     val cardColor = card.habitColorHex.toComposeColor()
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
     Column(
         modifier = Modifier
             .width(220.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(Brush.linearGradient(listOf(cardColor, HabitPrimaryLight)))
+            .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HabitLineIcon(card.habitIcon, tint = Color.White, size = 20.dp)
+            HabitLineIcon(card.habitIcon, tint = onPrimary, size = 20.dp)
             Spacer(Modifier.width(8.dp))
             Text(
                 text = card.habitName,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.titleSmall,
-                color = Color.White,
+                color = onPrimary,
                 fontWeight = FontWeight.Black,
             )
         }
@@ -257,7 +272,7 @@ private fun ChallengeCard(card: ChallengeCard) {
         Text(
             text = stringResource(R.string.friends_days_left, card.daysLeft),
             style = MaterialTheme.typography.labelMedium,
-            color = Color.White,
+            color = onPrimary,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -265,12 +280,13 @@ private fun ChallengeCard(card: ChallengeCard) {
 
 @Composable
 private fun ChallengeProgress(label: String, progress: Int) {
-    Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White)
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    Text(label, style = MaterialTheme.typography.labelMedium, color = onPrimary)
     LinearProgressIndicator(
         progress = { progress.coerceIn(0, 100) / 100f },
         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        color = Color.White,
-        trackColor = Color.White.copy(alpha = 0.28f),
+        color = onPrimary,
+        trackColor = onPrimary.copy(alpha = 0.28f),
     )
 }
 
@@ -283,7 +299,7 @@ private fun PendingRequestRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -291,7 +307,7 @@ private fun PendingRequestRow(
             modifier = Modifier.size(40.dp).clip(CircleShape).background(HabitPrimaryLight),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Outlined.People, null, tint = Color.White)
+            Icon(Icons.Outlined.People, null, tint = MaterialTheme.colorScheme.onPrimary)
         }
         Text(
             text = stringResource(R.string.friends_pending_request),
@@ -320,11 +336,17 @@ private fun FriendRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(profile = profile)
+        ProfileAvatar(
+            avatarUrl = profile.avatarUrl,
+            displayName = profile.displayName,
+            avatarColor = profile.avatarColor,
+            size = 48.dp,
+            contentDescription = stringResource(R.string.cd_profile_avatar),
+        )
         Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(profile.displayName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = HabitOnSurface)
             Text(
@@ -356,21 +378,6 @@ private fun FriendRow(
 }
 
 @Composable
-private fun Avatar(profile: Profile) {
-    Box(
-        modifier = Modifier.size(48.dp).clip(CircleShape).background(profile.avatarColor.toComposeColor()),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = profile.displayName.split(" ").filter(String::isNotBlank).take(2).joinToString("") { it.first().uppercase() },
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-            fontWeight = FontWeight.Black,
-        )
-    }
-}
-
-@Composable
 private fun AddFriendSheet(
     uiState: FriendsUiState,
     onQueryChanged: (String) -> Unit,
@@ -390,7 +397,13 @@ private fun AddFriendSheet(
         }
         uiState.searchResults.forEach { profile ->
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Avatar(profile)
+                ProfileAvatar(
+                    avatarUrl = profile.avatarUrl,
+                    displayName = profile.displayName,
+                    avatarColor = profile.avatarColor,
+                    size = 48.dp,
+                    contentDescription = stringResource(R.string.cd_profile_avatar),
+                )
                 Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text(profile.displayName, fontWeight = FontWeight.Bold, color = HabitOnSurface)
                     Text(stringResource(R.string.friends_username, profile.username), color = HabitOnSurfaceVariant)
@@ -478,7 +491,7 @@ private fun HabitPicker(habits: List<Habit>, selectedHabit: Habit?, onSelected: 
                         .background(if (habit == selectedHabit) HabitPrimary else HabitPrimaryLight.copy(alpha = 0.2f))
                         .clickable { onSelected(habit) }
                         .padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (habit == selectedHabit) Color.White else HabitOnSurface,
+                    color = if (habit == selectedHabit) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -500,7 +513,7 @@ private fun <T> ChoiceRow(options: List<T>, selected: T, onSelected: (T) -> Unit
                     .background(if (option == selected) HabitPrimary else HabitPrimaryLight.copy(alpha = 0.2f))
                     .clickable { onSelected(option) }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                color = if (option == selected) Color.White else HabitOnSurface,
+                color = if (option == selected) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
                 fontWeight = FontWeight.Bold,
             )
         }
@@ -537,11 +550,11 @@ private fun FriendsEmptyState() {
     ) {
         Icon(Icons.Outlined.People, null, tint = HabitPrimary, modifier = Modifier.size(40.dp))
         Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.friends_empty_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = HabitOnSurface)
+        Text(stringResource(R.string.friends_empty_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
         Text(
             stringResource(R.string.friends_empty_message),
             style = MaterialTheme.typography.bodyMedium,
-            color = HabitOnSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }
@@ -551,7 +564,7 @@ private fun FriendsEmptyState() {
 private fun FriendsInlineEmpty(messageRes: Int) {
     Text(
         text = stringResource(messageRes),
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.72f)).padding(16.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f)).padding(16.dp),
         style = MaterialTheme.typography.bodyMedium,
         color = HabitOnSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -560,7 +573,7 @@ private fun FriendsInlineEmpty(messageRes: Int) {
 
 @Composable
 private fun FriendsSectionTitle(titleRes: Int) {
-    Text(stringResource(titleRes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = HabitOnSurface)
+    Text(stringResource(titleRes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
 }
 
 @Composable
@@ -568,15 +581,21 @@ private fun FriendsAddButton(onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+            .background(HabitPrimaryLight)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Icon(Icons.Filled.Add, null, tint = Color.White, modifier = Modifier.size(18.dp))
-        Text(stringResource(R.string.friends_add), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Color.White)
+        Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
+        Text(stringResource(R.string.friends_add), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
     }
 }
 
-private fun String.toComposeColor(): Color = runCatching { Color(parseColor(this)) }.getOrDefault(HabitPrimary)
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun FriendsContentPreview() {
+    FriendsContent(
+        uiState = FriendsUiState(),
+    )
+}

@@ -22,6 +22,7 @@ class SocialMapperTest {
                 username = "marta",
                 displayName = "Marta",
                 avatarColor = "#6750A4",
+                avatarUrl = "https://example.com/avatar.jpg",
             ).toDomain()
         }
 
@@ -29,6 +30,21 @@ class SocialMapperTest {
         assertEquals("marta", profile.username)
         assertEquals("Marta", profile.displayName)
         assertEquals("#6750A4", profile.avatarColor)
+        assertEquals("https://example.com/avatar.jpg", profile.avatarUrl)
+    }
+
+    @Test
+    fun `profile dto maps null avatar url to domain`() {
+        val profile = with(mapper) {
+            ProfileDto(
+                id = "profile-2",
+                username = "alex",
+                displayName = "Alex",
+                avatarColor = "#2563EB",
+            ).toDomain()
+        }
+
+        assertEquals(null, profile.avatarUrl)
     }
 
     @Test

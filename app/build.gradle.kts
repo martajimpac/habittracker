@@ -77,6 +77,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.animation.core)
     //Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -121,6 +122,7 @@ dependencies {
     implementation(libs.postgrest)
     implementation(libs.auth)
     implementation(libs.storage)
+    implementation(libs.functions)
     implementation(libs.ktor.client.android)
 
     //Firebase
@@ -131,7 +133,13 @@ dependencies {
     //Glance widgets
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    debugImplementation(libs.androidx.glance.preview)
+    debugImplementation(libs.androidx.glance.appwidget.preview)
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Coil — https avatar URLs in Preferences (Task 5 will reuse on Home/Friends/Profile)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     //Testing
     testImplementation(libs.junit)

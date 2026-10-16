@@ -9,35 +9,88 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 
 private val DarkColorScheme = darkColorScheme(
     primary = HabitPrimaryLight,
     onPrimary = Color.White,
+    primaryContainer = HabitPrimaryContainerDark,
+    onPrimaryContainer = HabitOnPrimaryContainerDark,
+
+    secondary = HabitSecondaryLight,
+    onSecondary = Color.White,
+    secondaryContainer = Gray30,
+    onSecondaryContainer = HabitOnPrimaryContainerDark,
+
+    tertiary = HabitTertiary,
+    onTertiary = HabitOnTertiary,
+    tertiaryContainer = HabitOnTertiaryContainer,
+    onTertiaryContainer = HabitTertiaryContainer,
+
     background = Gray20,
-    onBackground = Gray70,
+    onBackground = Color.White,
+
     surface = Gray20,
     onSurface = Color.White,
-    onSurfaceVariant = Color.White,
-    tertiary = Red60
+
+    surfaceVariant = Gray30,
+    onSurfaceVariant = Gray70,
+
+    surfaceContainerLowest = HabitSurfaceContainerLowestDark,
+    surfaceContainerLow = Gray20,
+    surfaceContainer = HabitSurfaceContainerDark,
+    surfaceContainerHigh = HabitSurfaceContainerHighDark,
+    surfaceContainerHighest = HabitSurfaceContainerHighDark,
+
+    outline = Gray50,
+
+    error = ErrorColor,
+    onError = Color.White,
+    errorContainer = HabitErrorContainerDark,
+    onErrorContainer = HabitOnErrorContainerDark,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = HabitPrimary,
     onPrimary = Color.White,
+    primaryContainer = HabitPrimaryContainer,
+    onPrimaryContainer = HabitOnPrimaryContainer,
+
+    secondary = HabitSecondary,
+    onSecondary = Color.White,
+    secondaryContainer = HabitSecondaryContainer,
+    onSecondaryContainer = HabitOnSecondaryContainer,
+
+    tertiary = HabitTertiary,
+    onTertiary = HabitOnTertiary,
+    tertiaryContainer = HabitTertiaryContainer,
+    onTertiaryContainer = HabitOnTertiaryContainer,
+
     background = HabitSurface,
     onBackground = HabitOnSurface,
+
     surface = HabitSurface,
     onSurface = HabitOnSurface,
+
+    surfaceVariant = HabitSurfaceVariant,
     onSurfaceVariant = HabitOnSurfaceVariant,
-    tertiary = Red60
+
+    surfaceContainerLowest = HabitSurfaceContainerLowest,
+    surfaceContainerLow = HabitSurfaceContainerLow,
+    surfaceContainer = HabitSurfaceContainer,
+    surfaceContainerHigh = HabitSurfaceContainerHigh,
+    surfaceContainerHighest = HabitSurfaceContainerHighest,
+
+    outline = HabitOutline,
+
+    error = ErrorColorLight,
+    onError = Color.White,
+    errorContainer = HabitErrorContainer,
+    onErrorContainer = HabitOnErrorContainer,
 )
 
-val LocalStateColors = staticCompositionLocalOf<StateColors> {
-    error("No StateColors provided")
-}
 
 @Composable
 fun InstaDevTheme(
@@ -55,20 +108,33 @@ fun InstaDevTheme(
         else -> LightColorScheme
     }
 
-    val stateColors = if (darkTheme) {
-        DarkStateColors
-    } else {
-        LightStateColors
-    }
 
-    CompositionLocalProvider(
-        LocalStateColors provides stateColors
-    ) {
+    CompositionLocalProvider() {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
             shapes = shapes,
             content = content
         )
+    }
+}
+
+@Preview(name = "Light chrome", showBackground = true)
+@Composable
+private fun LightThemePreview() {
+    InstaDevTheme(darkTheme = false) {
+        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
+            androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
+@Preview(name = "Dark chrome", showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DarkThemePreview() {
+    InstaDevTheme(darkTheme = true) {
+        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
+            androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
+        }
     }
 }

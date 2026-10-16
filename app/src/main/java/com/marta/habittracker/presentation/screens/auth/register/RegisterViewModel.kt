@@ -4,16 +4,16 @@ import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.RegisterUseCase
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,13 +21,14 @@ import javax.inject.Inject
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
+    private val deviceTokenRegistration: DeviceTokenRegistration,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    private val _navigateToHome = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val navigateToHome: SharedFlow<Unit> = _navigateToHome.asSharedFlow()
+    private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
+    val navigateToHome = _navigateToHome.receiveAsFlow()
 
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name, errorMessageRes = null) }
@@ -60,8 +61,9 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = registerUseCase(state.email.trim(), state.password)) {
                 is DataResult.Success -> {
+                    deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
-                    _navigateToHome.emit(Unit)
+                    _navigateToHome.send(Unit)
                 }
                 is DataResult.Error -> {
                     _uiState.update {

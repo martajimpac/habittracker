@@ -5,4 +5,5 @@ data class Profile(
     val username: String,
     val displayName: String,
     val avatarColor: String,
+    val avatarUrl: String? = null,
 )

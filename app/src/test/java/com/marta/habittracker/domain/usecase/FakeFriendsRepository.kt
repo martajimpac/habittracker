@@ -15,6 +15,10 @@ class FakeFriendsRepository(
         DataResult.Success(emptyList()),
     private val activeChallengesResult: DataResult<List<ChallengeCard>, AppError> =
         DataResult.Success(emptyList()),
+    private val getChallengeResult: DataResult<ChallengeCard, AppError> =
+        DataResult.Error(AppError.Common.Unknown),
+    private val respondToChallengeResult: DataResult<ChallengeCard, AppError> =
+        DataResult.Error(AppError.Common.Unknown),
     private val pendingFriendRequestsResult: DataResult<List<Friendship>, AppError> =
         DataResult.Success(emptyList()),
     private val searchProfilesResult: DataResult<List<Profile>, AppError> =
@@ -28,6 +32,8 @@ class FakeFriendsRepository(
     var getAcceptedFriendsCalls: Int = 0
         private set
     var getActiveChallengesCalls: Int = 0
+        private set
+    var respondCalls: Int = 0
         private set
     var getPendingFriendRequestsCalls: Int = 0
         private set
@@ -71,6 +77,18 @@ class FakeFriendsRepository(
     override suspend fun getActiveChallenges(): DataResult<List<ChallengeCard>, AppError> {
         getActiveChallengesCalls++
         return activeChallengesResult
+    }
+
+    override suspend fun getChallenge(challengeId: String): DataResult<ChallengeCard, AppError> =
+        getChallengeResult
+
+    override suspend fun respondToChallenge(
+        challengeId: String,
+        accept: Boolean,
+    ): DataResult<ChallengeCard, AppError> {
+        respondCalls++
+        lastRespondAccept = accept
+        return respondToChallengeResult
     }
 
     override suspend fun getPendingFriendRequests(): DataResult<List<Friendship>, AppError> {

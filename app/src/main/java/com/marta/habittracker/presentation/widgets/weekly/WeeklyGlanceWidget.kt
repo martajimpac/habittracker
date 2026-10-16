@@ -2,7 +2,6 @@ package com.marta.habittracker.presentation.widgets.weekly
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -22,6 +21,8 @@ import androidx.glance.text.TextStyle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.usecase.DaySummary
 import com.marta.habittracker.domain.usecase.buildWeeklyHabitSummary
+import com.marta.habittracker.presentation.theme.HabitField
+import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurface
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
@@ -67,7 +68,7 @@ class WeeklyGlanceWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun WeeklyWidgetContent(
+internal fun WeeklyWidgetContent(
     cells: List<WeeklyWidgetDayCell>,
     title: String,
     percentFormat: String,
@@ -84,17 +85,23 @@ private fun WeeklyWidgetContent(
     ) {
         Text(
             text = title,
-            style = TextStyle(fontWeight = FontWeight.Bold),
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                color = androidx.glance.unit.ColorProvider(HabitPrimary),
+            ),
         )
         Row(modifier = GlanceModifier.padding(top = 12.dp)) {
             cells.forEach { cell ->
                 Column(
                     modifier = GlanceModifier
-                        .background(if (cell.percent == 0) Color.White else HabitPrimary.copy(alpha = 0.18f))
+                        .background(if (cell.percent == 0) HabitField else HabitPrimary.copy(alpha = 0.18f))
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
                 ) {
-                    Text(text = dayLabels.getValue(cell.dayOfWeek))
+                    Text(
+                        text = dayLabels.getValue(cell.dayOfWeek),
+                        style = TextStyle(color = androidx.glance.unit.ColorProvider(HabitOnSurface)),
+                    )
                     Text(
                         text = String.format(Locale.getDefault(), percentFormat, cell.percent),
                         style = TextStyle(

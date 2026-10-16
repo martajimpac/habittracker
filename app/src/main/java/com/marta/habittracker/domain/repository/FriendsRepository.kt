@@ -14,6 +14,13 @@ interface FriendsRepository {
 
     suspend fun getActiveChallenges(): DataResult<List<ChallengeCard>, AppError>
 
+    suspend fun getChallenge(challengeId: String): DataResult<ChallengeCard, AppError>
+
+    suspend fun respondToChallenge(
+        challengeId: String,
+        accept: Boolean,
+    ): DataResult<ChallengeCard, AppError>
+
     suspend fun getPendingFriendRequests(): DataResult<List<Friendship>, AppError>
 
     suspend fun searchProfiles(query: String): DataResult<List<Profile>, AppError>

@@ -30,3 +30,8 @@ internal data class ChallengeInsertDto(
     @SerialName("ends_at") val endsAt: String,
     val status: String = "pending",
 )
+
+@Serializable
+internal data class ChallengeStatusUpdateDto(
+    val status: String,
+)

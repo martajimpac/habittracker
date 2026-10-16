@@ -6,16 +6,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.BuildConfig
 import com.marta.habittracker.R
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,13 +24,14 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val syncHabits: SyncHabits,
+    private val deviceTokenRegistration: DeviceTokenRegistration,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _navigateToHome = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val navigateToHome: SharedFlow<Unit> = _navigateToHome.asSharedFlow()
+    private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
+    val navigateToHome = _navigateToHome.receiveAsFlow()
 
     fun onEmailChanged(email: String) {
         _uiState.update { it.copy(email = email, errorMessageRes = null) }
@@ -53,8 +54,9 @@ class LoginViewModel @Inject constructor(
             when (loginUseCase(_uiState.value.email, _uiState.value.password)) {
                 is DataResult.Success -> {
                     syncHabits()
+                    deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
-                    _navigateToHome.emit(Unit)
+                    _navigateToHome.send(Unit)
                 }
                 is DataResult.Error -> {
                     _uiState.update {

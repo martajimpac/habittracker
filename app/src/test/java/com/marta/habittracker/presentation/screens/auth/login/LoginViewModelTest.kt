@@ -1,6 +1,7 @@
 package com.marta.habittracker.presentation.screens.auth.login
 
 import android.app.Application
+import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
@@ -34,6 +35,11 @@ class LoginViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
 
+    private val noOpDeviceTokenRegistration = object : DeviceTokenRegistration {
+        override suspend fun registerCurrentToken() = Unit
+        override suspend fun clearCurrentToken() = Unit
+    }
+
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -49,6 +55,7 @@ class LoginViewModelTest {
         val viewModel = LoginViewModel(
             loginUseCase = LoginUseCase(FakeAuthRepository()),
             syncHabits = SyncHabits(FakeHabitRepository()),
+            deviceTokenRegistration = noOpDeviceTokenRegistration,
         )
         val navigation = async { viewModel.navigateToHome.first() }
 
@@ -72,6 +79,7 @@ class LoginViewModelTest {
                 FakeAuthRepository(loginResult = DataResult.Error(AppError.Common.Unauthorized)),
             ),
             syncHabits = SyncHabits(FakeHabitRepository()),
+            deviceTokenRegistration = noOpDeviceTokenRegistration,
         )
         var navigated = false
         val collector = launch {
