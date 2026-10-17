@@ -112,6 +112,17 @@ class RegisterUseCaseTest {
     }
 
     @Test
+    fun `invoke accepts password with a letter and a digit and no uppercase`() = runTest {
+        val repository = FakeAuthRepository()
+        val useCase = RegisterUseCase(repository)
+
+        val result = useCase(email = "user@example.com", password = "abcdefg1")
+
+        assertTrue(result is DataResult.Success)
+        assertEquals(1, repository.registerCalls)
+    }
+
+    @Test
     fun `invoke accepts password with letters and digits at minimum length`() = runTest {
         val repository = FakeAuthRepository()
         val useCase = RegisterUseCase(repository)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -22,6 +23,8 @@ fun CustomTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
+    isError: Boolean = false,
+    supportingText: String = "",
 ) {
     OutlinedTextField(
         value = value,
@@ -29,7 +32,31 @@ fun CustomTextField(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         label = if (label.isNotEmpty()) {
-            { CustomText(text = label) }
+            {
+                CustomText(
+                    text = label,
+                    color = if (isError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onBackground
+                    },
+                )
+            }
+        } else {
+            null
+        },
+        isError = isError,
+        supportingText = if (supportingText.isNotEmpty()) {
+            {
+                Text(
+                    text = supportingText,
+                    color = if (isError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
         } else {
             null
         },

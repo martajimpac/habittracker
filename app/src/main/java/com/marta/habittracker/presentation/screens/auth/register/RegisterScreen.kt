@@ -176,6 +176,8 @@ fun RegisterContent(
                         PasswordVisualTransformation()
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = uiState.passwordErrorRes != null,
+                    supportingText = uiState.passwordErrorRes?.let { stringResource(it) }.orEmpty(),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

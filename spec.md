@@ -368,9 +368,11 @@ Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
 
 - No se aceptan passwords vacias, triviales o demasiado debiles.
 - Una password valida debe tener longitud suficiente y combinar al menos varios tipos de caracteres.
+- En el registro, la contraseña es válida con al menos 8 caracteres, una letra y un número. El campo permanece en error, con el mensaje de contraseña débil, mientras no cumpla esa regla. El botón de crear cuenta usa la misma regla.
 - Las credenciales no deben estar precargadas en `LoginUiState`.
 - `LoginUiState.toString()` no debe exponer email ni password.
 - La app no debe registrar passwords, tokens ni secretos mediante `Log`.
+- Los cierres inesperados se informan con Firebase Crashlytics. El informe no debe incluir passwords, tokens ni credenciales.
 
 ### Datos Locales
 

@@ -4,8 +4,10 @@ import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.PasswordValidator
 import com.marta.habittracker.domain.usecase.RegisterUseCase
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +43,13 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onPasswordChanged(password: String) {
-        _uiState.update { it.copy(password = password, errorMessageRes = null) }
+        _uiState.update {
+            it.copy(
+                password = password,
+                errorMessageRes = null,
+                passwordErrorRes = passwordError(password),
+            )
+        }
         verifyForm()
     }
 
@@ -81,10 +89,17 @@ class RegisterViewModel @Inject constructor(
         val state = _uiState.value
         val enabled = state.name.isNotBlank() &&
             Patterns.EMAIL_ADDRESS.matcher(state.email).matches() &&
-            state.password.length >= 8 &&
+            PasswordValidator.isRegistrationValid(state.password) &&
             state.termsAccepted
         _uiState.update { it.copy(isRegisterEnabled = enabled) }
     }
+
+    private fun passwordError(password: String): Int? =
+        if (PasswordValidator.isRegistrationValid(password)) {
+            null
+        } else {
+            R.string.error_register_weak_password
+        }
 }
 
 data class RegisterUiState(
@@ -96,10 +111,11 @@ data class RegisterUiState(
     val isPasswordVisible: Boolean = false,
     val termsAccepted: Boolean = false,
     @StringRes val errorMessageRes: Int? = null,
+    @StringRes val passwordErrorRes: Int? = R.string.error_register_weak_password,
 ) {
     override fun toString(): String {
         return "RegisterUiState(isLoading=$isLoading, isRegisterEnabled=$isRegisterEnabled, " +
             "isPasswordVisible=$isPasswordVisible, termsAccepted=$termsAccepted, " +
-            "hasError=${errorMessageRes != null})"
+            "hasError=${errorMessageRes != null}, hasPasswordError=${passwordErrorRes != null})"
     }
 }

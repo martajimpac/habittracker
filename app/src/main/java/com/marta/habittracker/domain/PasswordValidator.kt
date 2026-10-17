@@ -12,4 +12,11 @@ object PasswordValidator {
         
         return hasEnoughLength && hasUppercase && hasLowercase && hasDigit
     }
+
+    fun isRegistrationValid(password: String?): Boolean {
+        if (password == null) return false
+        return password.length >= 8 &&
+            password.any { it.isLetter() } &&
+            password.any { it.isDigit() }
+    }
 }

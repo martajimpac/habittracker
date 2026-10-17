@@ -19,7 +19,7 @@ class RegisterUseCase @Inject constructor(
         if (!EmailValidator.isValid(email)) {
             return DataResult.Error(RegisterError.InvalidEmail)
         }
-        if (!PasswordValidator.isValid(password)) {
+        if (!PasswordValidator.isRegistrationValid(password)) {
             return DataResult.Error(RegisterError.WeakPassword)
         }
         return authRepository.doRegister(email.trim(), password)

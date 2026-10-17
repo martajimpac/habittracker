@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.kover)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 val localProperties = Properties()
@@ -129,6 +130,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     //Glance widgets
     implementation(libs.androidx.glance.appwidget)
