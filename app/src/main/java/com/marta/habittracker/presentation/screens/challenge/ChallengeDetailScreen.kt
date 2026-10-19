@@ -289,14 +289,14 @@ private fun ChallengeDetailContentPreview() {
             username = "alex",
             displayName = "Alex",
             avatarUrl = null,
-            avatarColor = "#1D4EA6",
+            avatarColor = "#3D6E50",
         ),
         myProgress = 40,
         theirProgress = 60,
         daysLeft = 5,
         habitName = "Morning run",
         habitIcon = "run",
-        habitColorHex = "#021C4B",
+        habitColorHex = "#294536",
     )
     ChallengeDetailContent(
         state = ChallengeDetailUiState(

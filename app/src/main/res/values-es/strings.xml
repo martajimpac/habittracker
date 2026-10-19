@@ -230,6 +230,11 @@
     <string name="detail_last_four_weeks">Últimas 4 semanas</string>
     <string name="detail_week_empty">—</string>
     <string name="detail_week_bar">Semana del %1$s, %2$d por ciento</string>
+    <string name="detail_weekday_chart">Por día de la semana</string>
+    <plurals name="detail_weekday_bar">
+        <item quantity="one">%1$s, %2$d vez</item>
+        <item quantity="other">%1$s, %2$d veces</item>
+    </plurals>
 
     <!-- Activity heatmap -->
     <string name="activity_title">Actividad</string>

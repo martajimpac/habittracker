@@ -13,10 +13,10 @@ La app se llama Bloom. Sirve para crear, consultar y completar habitos personale
 - El estado de UI no debe contener secretos persistentes por defecto.
 - Las credenciales introducidas por el usuario no deben aparecer en logs ni en representaciones persistentes del estado.
 - El login debe empezar deshabilitado hasta que email y password sean validos.
-- Pantalla Login: fondo con gradiente (azul → cyan), marca `logo` + nombre de app arriba, y el formulario (email, password, acciones existentes) dentro de una card blanca redondeada.
+- Pantalla Login: fondo verde bosque (`colorScheme.primary`). El wordmark `logo` es transparente y va al inicio de la card blanca, para que el verde del dibujo se lea. Debajo sigue el formulario (email, password, acciones existentes).
 - Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
 - Password reset (aprobado 2026-08-08): ver § Password reset (deep link).
-- El icono de la app (launcher) es una flor de loto: cada pétalo usa un color de la paleta de hábitos y el trazo es gris claro. El drawable `res/drawable/logo.xml` sigue siendo la marca del login.
+- El icono de la app (launcher) es una flor de loto: cada pétalo usa un color de la paleta de hábitos y el trazo es gris claro. La marca del login es el wordmark Bloom en `res/drawable-nodpi/logo.png`.
 - Bottom navigation: ver § Material 3 chrome (NavigationBar + theme). No hay FAB de alta.
 - Tab Friends (Figma Make — social):
   - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, solicitudes pendientes y bottom sheets (añadir / ver hábitos / crear reto). La hoja de añadir amigo no lleva asa ni divisor bajo el título, y cierra con un botón de solo icono.
@@ -35,20 +35,20 @@ Aprobado 2026-10-09.
 
 **NavigationBar**
 - `NavigationBar` con cinco huecos: Home, Stats, **Nuevo**, Friends, Profile (Nuevo en el centro). Solo iconos; el texto de cada tab queda como `contentDescription`.
-- Nuevo es una card azul (`colorScheme.primary`) con el icono Add, más grande que el resto y con elevación. No es un destino seleccionado: navega a crear hábito (`TabAddContent`). Al volver, permanece seleccionada la tab anterior (Home/Stats/Friends/Profile), no Nuevo.
+- Nuevo es una card verde (`colorScheme.primary`) con el icono Add, más grande que el resto y con elevación. No es un destino seleccionado: navega a crear hábito (`TabAddContent`). Al volver, permanece seleccionada la tab anterior (Home/Stats/Friends/Profile), no Nuevo.
 - Los otros cuatro usan `NavigationBarItem` sin label, con la píldora de selección.
 - La barra se oculta en Crear, Editar hábito, Detalle de hábito, Detalle de reto, Preferencias y Borrar cuenta.
 - Sin `FloatingActionButton` / `HabitFab` para el alta. `contentDescription` de Nuevo: `tab_new` (`strings.xml`).
 
 **Botones**
-- Los botones con texto usan `HabitButton`. Los grandes (56 dp, ancho completo salvo que compartan fila) comparten forma, tipografía y, si son de acción, el azul sólido `colorScheme.primary`. Sin degradado.
+- Los botones con texto usan `HabitButton`. Los grandes (56 dp, ancho completo salvo que compartan fila) comparten forma, tipografía y, si son de acción, el verde sólido `colorScheme.primary`. Sin degradado.
 - Cancelar y rechazar usan la variante Secondary: fondo `HabitField` y borde de 1 dp.
 - En Crear hábito, cerrar va a la derecha del título.
-- Onboarding: Continuar sigue en `PrimaryLight` (fondo claro) porque las slides son navy; Saltar sigue en `GhostPill`.
+- Onboarding: Continuar sigue en `PrimaryLight` (fondo claro) porque las slides son verde bosque; Saltar sigue en `GhostPill`.
 
 **Theme**
 - Completar `lightColorScheme` y `darkColorScheme` con roles M3: `primaryContainer` / `onPrimaryContainer`, `secondaryContainer` / `onSecondaryContainer`, `tertiary` / `onTertiary` / `tertiaryContainer`, `errorContainer` / `onErrorContainer`, y `surfaceContainerLowest` … `surfaceContainerHighest` (más `surfaceContainer` / `surfaceContainerHigh` / `Low` según el scheme). En modo oscuro los neutros son gris, sin tinte marrón. El fondo (`surface`) es el tono más oscuro; las cards (`surfaceContainerLowest` y el resto de containers) quedan siempre más claras.
-- Marca: navy actual (`HabitPrimary` `#021C4B`, `HabitPrimaryLight` `#1D4EA6`). No volver al púrpura `#6750A4` del mock Figma Make antiguo.
+- Marca: verde bosque (`HabitPrimary` `#294536`, `HabitPrimaryLight` `#3D6E50`). Los contenedores y el terciario son verdes del mismo tono. No volver al navy `#021C4B` ni al púrpura `#6750A4`.
 - Dynamic color **apagado** (`InstaDevTheme(dynamicColor = false)`). Nunito y `shapes` sin cambio.
 
 **Chrome (sí) vs contenido (no)**
@@ -113,7 +113,7 @@ Aprobado 2026-08-08.
 - El usuario puede marcar y desmarcar un habito como completado.
 - El usuario puede consultar el detalle e historial de un habito.
 - En Stats, pulsar un hábito abre su detalle (`TabDetail`).
-- En el detalle no hay pestañas. La ficha del hábito (icono, nombre, descripción, días programados, recordatorio y racha viva) va en una tarjeta. Debajo, otra tarjeta agrupa los gráficos: el anillo de «Desempeño general» y las barras de las últimas 4 semanas. Cada barra es el porcentaje de días programados completados esa semana; no entran los días futuros ni los anteriores a la creación del hábito. El calendario mensual sigue en su propia tarjeta, con el mismo borde. Editar, eliminar y atrás son `HabitIconButton`: cuadrados de 40 dp. Por defecto usa el mismo color primario, el texto `onPrimary` y las esquinas de 16 dp que `HabitButton`. El nombre y el icono del hábito van dentro de la ficha. Editar abre el formulario de crear hábito ya relleno (`TabEditHabit`) y guarda con `updateHabit`. Eliminar pide confirmación, llama a `deleteHabit` y vuelve atrás.
+- En el detalle no hay pestañas. La ficha del hábito (icono, nombre, descripción, días programados, recordatorio y racha viva) va en una tarjeta. Debajo, otra tarjeta agrupa los gráficos: el anillo de «Desempeño general», las barras de las últimas 4 semanas y las barras por día de la semana. En las últimas 4 semanas, cada barra es el porcentaje de días programados completados esa semana; no entran los días futuros ni los anteriores a la creación del hábito. Las barras por día de la semana cuentan cuántas veces se completó el hábito cada día, de lunes a domingo; no cuentan los días futuros. El calendario mensual sigue en su propia tarjeta, con el mismo borde. Editar, eliminar y atrás son `HabitIconButton`: cuadrados de 40 dp. Por defecto usa el mismo color primario, el texto `onPrimary` y las esquinas de 16 dp que `HabitButton`. El nombre y el icono del hábito van dentro de la ficha. Editar abre el formulario de crear hábito ya relleno (`TabEditHabit`) y guarda con `updateHabit`. Eliminar pide confirmación, llama a `deleteHabit` y vuelve atrás.
 - El usuario puede eliminar habitos y sus registros asociados.
 - El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders.
 - Si faltan el nombre, los días o el formato del recordatorio, el botón de crear sigue pulsable con aspecto deshabilitado. Al pulsarlo, el foco va al primer campo incompleto y ese campo muestra el error.
@@ -191,7 +191,7 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
    - `id` uuid PK FK `auth.users` ON DELETE CASCADE
    - `username` text unique not null (búsqueda Add friend)
    - `display_name` text not null
-   - `avatar_color` text not null default `#021C4B` (`HabitPrimary`)
+   - `avatar_color` text not null default `#294536` (`HabitPrimary`)
    - `avatar_url` text nullable (path o URL pública del avatar en Storage; null = iniciales)
    - `created_at` / `updated_at` timestamptz
    - Trigger: al crear usuario en `auth.users`, insertar profile (username provisional derivado del email / id)
@@ -296,14 +296,14 @@ Aprobado 2026-10-16.
 
 - La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar, stats, menu rows, Sign Out).
 - Hasta que el perfil y los hábitos han llegado, la tab no muestra nada: ni nombre de reserva, ni ceros, ni menú. El fondo es el de la superficie. El primer estado real marca `isReady`.
-- Header usa datos reales: `display_name` y `avatar_url` desde `profiles` (no Auth `user_metadata`); email via `AuthRepository`. Si `avatar_url` es null, avatar = iniciales derivadas del display name. El círculo de iniciales del perfil y el del inicio usan `HabitPrimaryLight` (`#1D4EA6`), no el púrpura `#6750A4` ni `HabitPrimary` (el header ya es navy). En inicio y en el perfil ese círculo lleva un reborde blanco.
+- Header usa datos reales: `display_name` y `avatar_url` desde `profiles` (no Auth `user_metadata`); email via `AuthRepository`. Si `avatar_url` es null, avatar = iniciales derivadas del display name. El círculo de iniciales del perfil y el del inicio usan `HabitPrimaryLight` (`#3D6E50`), no el púrpura `#6750A4` ni `HabitPrimary` (el header ya es verde bosque). En inicio y en el perfil ese círculo lleva un reborde blanco.
 - Stats del header (reales, desde `HabitRepository.getAllHabitsWithRecords()`):
   - **Day Streak:** max streak entre habitos (`calculateStreak` sobre records, igual que Home).
   - **Completed:** total de records con `isCompleted`.
   - **Habits:** numero de habitos.
 - Filas de menu: **Notifications** queda oculto de momento (no hay pantalla detrás). **Goals** queda oculto de momento (la pantalla sigue en el proyecto, pero no hay fila en el perfil). **Preferences** navega a la pantalla Preferencias. **Modo oscuro** es un interruptor en el perfil: apagado fuerza tema claro, encendido fuerza tema oscuro, y se guarda en DataStore. Si aún no hay elección, sigue el tema del sistema. El tema elegido aplica a toda la app, incluidos login y el selector de widgets. Los textos sobre fondos del tema usan `colorScheme.onSurface` y `onSurfaceVariant`, no el negro fijo de `HabitOnSurface`.
 - **Goals:** meta fija de 5 días en la semana lunes–domingo que contiene hoy. Un día cuenta si hay al menos un hábito programado y todos los programados ese día tienen un record `isCompleted`. Un día sin hábitos no cuenta. Los datos salen de `HabitRepository.getAllHabitsWithRecords()` (Room). No hay tabla nueva ni meta editable. La barra inferior se oculta, igual que en Preferencias. La pantalla muestra el progreso y los días en tarjetas redondeadas, como las filas del perfil.
-- Preferencias agrupa foto y nombre en tarjetas. Cerrar sesión y borrar cuenta usan la paleta `HabitDanger` (no el rol `error`). En modo oscuro el icono de esas acciones es blanco. El botón final de borrar usa el mismo vino, no el primario azul.
+- Preferencias agrupa foto y nombre en tarjetas. Cerrar sesión y borrar cuenta usan la paleta `HabitDanger` (no el rol `error`). En modo oscuro el icono de esas acciones es blanco. El botón final de borrar usa el mismo vino, no el primario verde.
 - Sign Out: llama a `AuthRepository.signOut()` (Supabase) y navega a Login limpiando el back stack.
 - Todos los textos de Profile van en ingles (`strings.xml`).
 - `ProfileViewModel` expone nombre, email, avatar, stats y el evento de sign-out; Preferences maneja sus propios clicks.
@@ -328,7 +328,7 @@ Aprobado 2026-10-08.
 - **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados. Encima, una sola tarjeta de racha. Si la racha actual de cumplir todos los hábitos programados llega a `StatsStreakMinimums.ALL_HABITS_DAYS`, la tarjeta lo dice con un icono de fuego y una de varias frases; si además es la racha perfecta más larga del historial reciente, alguna frase lo señala. Un día sin hábitos programados no rompe esa racha. Si no llega al mínimo, y algún hábito tiene una racha viva de al menos `StatsStreakMinimums.SINGLE_HABIT_DAYS`, la tarjeta destaca ese hábito (el nombre en negrita) con otra frase rotativa. Por debajo de ambos mínimos no hay tarjeta. Los dos mínimos viven en `StatsStreakMinimums` y hoy valen 3. La racha de un hábito es la de Home: días completados seguidos que terminan hoy. En cada hábito de la lista, el icono, el nombre, la racha (desde 1 día) y el horario van agrupados a la izquierda, y a la derecha va una matriz de 4 semanas más pequeña, con celdas fijas, e intensidad binaria de ese hábito (color del hábito).
 - Home no muestra la tarjeta «Día perfecto» cuando el día está completado al 100 %. Tampoco muestra la tarjeta de resumen del día en hoy ni en los días próximos. En un día pasado incompleto sigue el registro con el conteo. El saludo es «buenos días» hasta las 14:00, «buenas tardes» desde las 14:00 hasta las 21:00 y «buenas noches» a partir de las 21:00.
 - Leyenda Less → More; etiqueta de hoy con borde sutil opcional.
-- El detalle muestra la ficha del hábito en una tarjeta, los gráficos (anillo de % y barras de las últimas 4 semanas) en otra, y el calendario mensual en una tercera, sin pestañas ni heatmap de 4 semanas. La racha viva del hábito, si es de al menos 1 día, va en la ficha.
+- El detalle muestra la ficha del hábito en una tarjeta, los gráficos (anillo de %, barras de las últimas 4 semanas y barras por día de la semana) en otra, y el calendario mensual en una tercera, sin pestañas ni heatmap de 4 semanas. La racha viva del hábito, si es de al menos 1 día, va en la ficha.
 
 ### Home screen widgets (Jetpack Glance)
 

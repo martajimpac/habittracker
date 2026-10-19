@@ -8,12 +8,12 @@ import androidx.compose.ui.graphics.Color
 // Brand
 // ─────────────────────────────────────
 
-// Soft burnt orange
-val HabitPrimary = Color(0xFF021C4B)
-val HabitPrimaryLight = Color(0xFF1D4EA6)
+// Forest green. Primary is the brand; PrimaryLight is the lighter tone for dark mode and gradients.
+val HabitPrimary = Color(0xFF294536)
+val HabitPrimaryLight = Color(0xFF3D6E50)
 
-val HabitSecondary = Color(0xFF021C4B)
-val HabitSecondaryLight = Color(0xFF1D4EA6)
+val HabitSecondary = Color(0xFF294536)
+val HabitSecondaryLight = Color(0xFF3D6E50)
 
 
 // ─────────────────────────────────────
@@ -83,14 +83,14 @@ val HabitDangerButtonDark = Color(0xFF7A3A3A)
 // M3 ColorScheme containers
 // ─────────────────────────────────────
 
-val HabitPrimaryContainer = Color(0xFFD6E3F8)
-val HabitOnPrimaryContainer = Color(0xFF021C4B)
-val HabitSecondaryContainer = Color(0xFFDCE2F0)
-val HabitOnSecondaryContainer = Color(0xFF021C4B)
-val HabitTertiary = Color(0xFF1D6B8A)
+val HabitPrimaryContainer = Color(0xFFDCE8E0)
+val HabitOnPrimaryContainer = Color(0xFF294536)
+val HabitSecondaryContainer = Color(0xFFE4EBE6)
+val HabitOnSecondaryContainer = Color(0xFF294536)
+val HabitTertiary = Color(0xFF1F6B45)
 val HabitOnTertiary = Color.White
-val HabitTertiaryContainer = Color(0xFFC5E7F5)
-val HabitOnTertiaryContainer = Color(0xFF00344A)
+val HabitTertiaryContainer = Color(0xFFC9E6D4)
+val HabitOnTertiaryContainer = Color(0xFF0E2F1C)
 val HabitErrorContainer = Color(0xFFFFDAD6)
 val HabitOnErrorContainer = Color(0xFF410002)
 val HabitSurfaceContainerLowest = Color(0xFFFFFFFF)
@@ -99,8 +99,8 @@ val HabitSurfaceContainer = Color(0xFFECECEC)
 val HabitSurfaceContainerHigh = Color(0xFFE6E6E6)
 val HabitSurfaceContainerHighest = Color(0xFFE0E0E0)
 
-val HabitPrimaryContainerDark = Color(0xFF163A7A)
-val HabitOnPrimaryContainerDark = Color(0xFFD6E3F8)
+val HabitPrimaryContainerDark = Color(0xFF1B3328)
+val HabitOnPrimaryContainerDark = Color(0xFFDCE8E0)
 val HabitSurfaceContainerDark = Color(0xFF2A2A2C)
 val HabitSurfaceContainerLowestDark = Color(0xFF1C1C1E)
 val HabitSurfaceContainerLowDark = Color(0xFF222224)

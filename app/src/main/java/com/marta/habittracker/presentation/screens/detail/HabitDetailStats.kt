@@ -7,6 +7,11 @@ import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import java.time.DayOfWeek as JavaDayOfWeek
 
+data class WeekdayCompletion(
+    val day: JavaDayOfWeek,
+    val count: Int,
+)
+
 data class WeekCompletion(
     val weekStart: LocalDate,
     val completed: Int,
@@ -14,6 +19,23 @@ data class WeekCompletion(
 ) {
     val rate: Float
         get() = if (scheduled == 0) 0f else completed.toFloat() / scheduled
+}
+
+/** Completed days grouped Monday to Sunday. Days after [today] are left out. */
+fun weekdayCompletions(
+    records: List<HabitRecord>,
+    today: LocalDate,
+): List<WeekdayCompletion> {
+    val counts = IntArray(7)
+    records.forEach { record ->
+        if (!record.isCompleted) return@forEach
+        val date = record.date.toJava()
+        if (date.isAfter(today)) return@forEach
+        counts[date.dayOfWeek.value - 1]++
+    }
+    return JavaDayOfWeek.entries.map { day ->
+        WeekdayCompletion(day = day, count = counts[day.value - 1])
+    }
 }
 
 fun completionPercent(records: List<HabitRecord>): Float {

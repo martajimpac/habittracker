@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Mirrors presentation/theme/Color.kt. Layouts and the launcher must use these, not new hex values. -->
-    <color name="habit_primary">#FF021C4B</color>
+    <color name="habit_primary">#FF294536</color>
     <color name="habit_surface">#FFF1F1F1</color>
     <color name="habit_on_surface">#FF1A1D1F</color>
     <color name="habit_field">#FFFFFFFF</color>

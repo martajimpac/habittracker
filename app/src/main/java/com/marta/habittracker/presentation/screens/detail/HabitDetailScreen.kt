@@ -68,6 +68,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
@@ -383,6 +384,11 @@ private fun DetailChartsCard(
                 records = records,
                 accent = accent,
             )
+            Spacer(modifier = Modifier.height(28.dp))
+            WeekdayCompletionsChart(
+                records = records,
+                accent = accent,
+            )
         }
     }
 }
@@ -466,6 +472,86 @@ private fun LastFourWeeksChart(
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekdayCompletionsChart(
+    records: List<HabitRecord>,
+    accent: Color,
+) {
+    val today = remember { LocalDate.now() }
+    val days = remember(records, today) { weekdayCompletions(records, today) }
+    val maxCount = days.maxOf { it.count }.coerceAtLeast(1)
+    val labels = listOf(
+        stringResource(R.string.activity_day_mon),
+        stringResource(R.string.activity_day_tue),
+        stringResource(R.string.activity_day_wed),
+        stringResource(R.string.activity_day_thu),
+        stringResource(R.string.activity_day_fri),
+        stringResource(R.string.activity_day_sat),
+        stringResource(R.string.activity_day_sun),
+    )
+    Text(
+        text = stringResource(R.string.detail_weekday_chart),
+        modifier = Modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        days.forEachIndexed { index, day ->
+            val fraction = day.count.toFloat() / maxCount
+            val dayName = day.day.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+            val description = pluralStringResource(
+                R.plurals.detail_weekday_bar,
+                day.count,
+                dayName,
+                day.count,
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { contentDescription = description },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = day.count.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accent,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.15f)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .fillMaxHeight(fraction.coerceIn(0f, 1f))
+                            .background(accent),
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = labels[index],
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
                 )
             }
         }

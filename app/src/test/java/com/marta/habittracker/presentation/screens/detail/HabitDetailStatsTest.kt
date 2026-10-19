@@ -5,9 +5,27 @@ import com.marta.habittracker.domain.model.HabitRecord
 import kotlinx.datetime.DayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.DayOfWeek as JavaDayOfWeek
 import java.time.LocalDate
 
 class HabitDetailStatsTest {
+
+    @Test
+    fun `weekday bars count completed days and skip the future`() {
+        val counts = weekdayCompletions(
+            records = listOf(
+                record("2026-10-12", completed = true),
+                record("2026-10-14", completed = true),
+                record("2026-10-16", completed = false),
+                record("2026-10-19", completed = true),
+                record("2026-10-26", completed = true),
+            ),
+            today = LocalDate.parse("2026-10-19"),
+        )
+
+        assertEquals(JavaDayOfWeek.entries.toList(), counts.map { it.day })
+        assertEquals(listOf(2, 0, 1, 0, 0, 0, 0), counts.map { it.count })
+    }
 
     @Test
     fun `completion percent is the share of completed records`() {

@@ -11,7 +11,7 @@ data class HabitEntity(
     val description: String? = null,
     val daysOfWeek: List<DayOfWeek>,
     val icon: String = "water_drop",
-    val colorHex: String = "#021C4B",
+    val colorHex: String = "#294536",
     val reminderTime: String? = null,
     val isPublic: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
