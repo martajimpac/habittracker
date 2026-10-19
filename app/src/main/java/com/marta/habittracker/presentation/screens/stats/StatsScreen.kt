@@ -93,7 +93,7 @@ fun StatsContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 20.dp, vertical = 14.dp)
                 .heightIn(min = 44.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -237,7 +237,7 @@ private fun StatsHabitRow(
     onClick: () -> Unit,
 ) {
     val accent = habitAccentColor(habit)
-    val streak = calculateStreak(habit.records)
+    val streak = calculateStreak(habit)
     val weeks = remember(habit.id, habit.records, today) {
         toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->
             habitDayIntensity(habit, date)

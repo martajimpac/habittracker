@@ -3,15 +3,17 @@
     <string name="app_name">Bloom</string>
 
     <!-- Onboarding -->
+    <string name="onboarding_wordmark">bloom</string>
     <string name="onboarding_skip">Saltar</string>
     <string name="onboarding_continue">Continuar</string>
-    <string name="onboarding_get_started">Comenzar</string>
-    <string name="onboarding_slide1_title">Construye hábitos que\nperduran</string>
-    <string name="onboarding_slide1_description">Realiza un seguimiento de tus rutinas diarias y observa cómo la consistencia se transforma en cambio duradero.</string>
-    <string name="onboarding_slide2_title">Visualiza tu\nprogreso</string>
-    <string name="onboarding_slide2_description">Gráficos hermosos y rachas te mantienen motivado y muestran cuánto has avanzado.</string>
-    <string name="onboarding_slide3_title">Alcanza tu\nmejor versión</string>
-    <string name="onboarding_slide3_description">Establece objetivos, consigue rachas y celebra cada hito en tu camino.</string>
+    <string name="onboarding_get_started">Empezar</string>
+    <string name="onboarding_lets_bloom">A florecer</string>
+    <string name="onboarding_slide1_title">Conviértete en quien quieres ser.</string>
+    <string name="onboarding_slide1_description">Hábitos pequeños. Gran crecimiento. Mejor juntos.</string>
+    <string name="onboarding_slide2_title">Pequeños hábitos. Grandes cambios.</string>
+    <string name="onboarding_slide2_description">Crea tu rutina, sigue tu progreso y celebra cada pequeño logro.</string>
+    <string name="onboarding_slide3_title">Mejores hábitos, juntos.</string>
+    <string name="onboarding_slide3_description">Reta a tus amigos, animaos y creced juntos.</string>
 
     <!-- Login -->
     <string name="login_welcome_title">¡Bienvenido de vuelta!</string>
@@ -304,6 +306,9 @@
     <string name="profile_preferences">Preferencias</string>
     <string name="profile_dark_mode">Modo oscuro</string>
     <string name="preferences_display_name_label">Nombre visible</string>
+    <string name="preferences_username_label">Nombre de usuario</string>
+    <string name="preferences_copy_username">Copiar nombre de usuario</string>
+    <string name="preferences_username_copied">Nombre de usuario copiado</string>
     <string name="preferences_save">Guardar</string>
     <string name="preferences_saving">Guardando…</string>
     <string name="preferences_back">Atrás</string>
@@ -320,6 +325,10 @@
     <string name="preferences_delete_deleting">Eliminando…</string>
     <string name="profile_achievements">Logros</string>
     <string name="profile_sign_out">Cerrar sesión</string>
+    <string name="profile_sign_out_title">¿Cerrar sesión?</string>
+    <string name="profile_sign_out_message">Tendrás que iniciar sesión de nuevo para ver tus hábitos.</string>
+    <string name="profile_username">\@%1$s</string>
+    <string name="profile_username_hint">Tus amigos te buscan con este nombre</string>
     <string name="profile_stat_day_streak">Racha de días</string>
     <string name="profile_stat_completed">Completados</string>
     <string name="profile_stat_habits">Hábitos</string>

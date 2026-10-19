@@ -67,6 +67,7 @@ class ProfileViewModelTest {
 
         assertEquals(true, viewModel.uiState.value.isReady)
         assertEquals("Alex Rivera", viewModel.uiState.value.displayName)
+        assertEquals("marta", viewModel.uiState.value.username)
         collectJob.cancel()
     }
 
@@ -96,6 +97,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Alex Rivera", viewModel.uiState.value.displayName)
+        assertEquals("marta", viewModel.uiState.value.username)
         assertEquals("alex@example.com", viewModel.uiState.value.email)
         assertEquals("https://cdn.example/me.jpg?v=1", viewModel.uiState.value.avatarUrl)
         assertEquals("#059669", viewModel.uiState.value.avatarColor)
@@ -116,6 +118,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertEquals("alex", viewModel.uiState.value.displayName)
+        assertEquals("", viewModel.uiState.value.username)
         assertEquals(null, viewModel.uiState.value.avatarUrl)
         assertEquals("", viewModel.uiState.value.avatarColor)
         collectJob.cancel()
@@ -128,7 +131,7 @@ class ProfileViewModelTest {
             id = "a",
             name = "Run",
             description = null,
-            daysOfWeek = setOf(DayOfWeek.MONDAY),
+            daysOfWeek = DayOfWeek.entries.toSet(),
             icon = "directions_run",
             colorHex = "#059669",
             reminderTime = null,

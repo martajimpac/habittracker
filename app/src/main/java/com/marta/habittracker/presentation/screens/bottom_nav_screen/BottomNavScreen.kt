@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -173,6 +174,7 @@ fun HabitBottomBar(
     onAdd: () -> Unit,
 ) {
     NavigationBar(
+        modifier = Modifier.height(64.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         windowInsets = WindowInsets(0),
     ) {
@@ -209,11 +211,11 @@ private fun NewHabitBarButton(
     ) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.size(52.dp),
+            modifier = Modifier.size(44.dp),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
-            shadowElevation = 6.dp,
+            shadowElevation = 4.dp,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -222,7 +224,7 @@ private fun NewHabitBarButton(
                 Icon(
                     imageVector = BottomNavigation.TabNew.icon,
                     contentDescription = stringResource(BottomNavigation.TabNew.label),
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }

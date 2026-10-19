@@ -1,7 +1,16 @@
 package com.marta.habittracker.presentation.screens.onboarding
 
-import androidx.compose.animation.animateColorAsState
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,42 +23,68 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.HabitButton
-import com.marta.habittracker.presentation.components.HabitButtonVariant
-import com.marta.habittracker.presentation.theme.HabitColor1
-import com.marta.habittracker.presentation.theme.HabitPrimary
-import com.marta.habittracker.presentation.theme.HabitColor2
+import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
-import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
 
-data class OnboardingSlide(
-    val iconRes: Int,
-    val titleRes: Int,
-    val descriptionRes: Int,
-    val backgroundColor: Color,
+private val BloomCoral = Color(0xFFFF7775)
+private val BloomYellow = Color(0xFFFFB938)
+
+private data class OnboardingPage(
+    @StringRes val title: Int,
+    @StringRes val description: Int,
+    @StringRes val button: Int,
+)
+
+private val onboardingPages = listOf(
+    OnboardingPage(
+        title = R.string.onboarding_slide1_title,
+        description = R.string.onboarding_slide1_description,
+        button = R.string.onboarding_get_started,
+    ),
+    OnboardingPage(
+        title = R.string.onboarding_slide2_title,
+        description = R.string.onboarding_slide2_description,
+        button = R.string.onboarding_continue,
+    ),
+    OnboardingPage(
+        title = R.string.onboarding_slide3_title,
+        description = R.string.onboarding_slide3_description,
+        button = R.string.onboarding_lets_bloom,
+    ),
 )
 
 @Composable
@@ -61,232 +96,240 @@ fun OnboardingScreen(
         navigateToLogin()
     }
 
-    OnboardingContent(
-        onSkip = viewModel::completeOnboarding,
-        onComplete = viewModel::completeOnboarding,
-    )
+    OnboardingContent(onComplete = viewModel::completeOnboarding)
 }
 
 @Composable
 fun OnboardingContent(
-    initialPage: Int = 0,   
-    onSkip: () -> Unit,
     onComplete: () -> Unit,
 ) {
-    val slides = listOf(
-        OnboardingSlide(
-            iconRes = R.drawable.ic_onboarding_target,
-            titleRes = R.string.onboarding_slide1_title,
-            descriptionRes = R.string.onboarding_slide1_description,
-            backgroundColor = HabitPrimary,
-        ),
-        OnboardingSlide(
-            iconRes = R.drawable.ic_onboarding_chart,
-            titleRes = R.string.onboarding_slide2_title,
-            descriptionRes = R.string.onboarding_slide2_description,
-            backgroundColor = HabitPrimary.copy(alpha = 0.85f),
-        ),
-        OnboardingSlide(
-            iconRes = R.drawable.ic_onboarding_trophy,
-            titleRes = R.string.onboarding_slide3_title,
-            descriptionRes = R.string.onboarding_slide3_description,
-            backgroundColor = HabitPrimary.copy(alpha = 0.7f),
-        ),
-    )
+    var currentPage by remember { mutableIntStateOf(0) }
+    val colors = MaterialTheme.colorScheme
 
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { slides.size }
-    )
-
-    val scope = rememberCoroutineScope()
-
-    val currentPage = pagerState.currentPage
-    val currentSlide = slides[currentPage]
-
-    SyncStatusBarIcons(lightBackground = false)
-
-    val backgroundColor by animateColorAsState(
-        targetValue = currentSlide.backgroundColor,
-        animationSpec = tween(durationMillis = 600),
-        label = "onboardingBackground",
-    )
+    SyncStatusBarIcons(lightBackground = !isHabitDarkTheme())
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(colors.surface)
             .safeDrawingPadding()
-            .padding(
-                vertical = 16.dp,
-                horizontal = 24.dp,
-            )
+            .padding(horizontal = 28.dp, vertical = 24.dp),
     ) {
-
-        // Contenido que se desliza
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-        ) { page ->
-
-            OnboardingPage(
-                slide = slides[page],
-            )
-        }
-
-        // Skip fijo arriba
-        HabitButton(
-            text = stringResource(R.string.onboarding_skip),
-            onClick = onSkip,
-            variant = HabitButtonVariant.GhostPill,
-            fillMaxWidth = false,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .safeDrawingPadding()
-        )
-
-        // Controles fijos abajo
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .safeDrawingPadding(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Indicadores
+            Text(
+                text = stringResource(R.string.onboarding_wordmark),
+                fontSize = 42.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = colors.primary,
+                letterSpacing = (-2).sp,
+            )
+
+            AnimatedContent(
+                targetState = currentPage,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                transitionSpec = {
+                    val forward = targetState > initialState
+                    val enter = slideInHorizontally(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            easing = FastOutSlowInEasing,
+                        ),
+                        initialOffsetX = { width ->
+                            if (forward) width / 3 else -width / 3
+                        },
+                    ) + fadeIn(animationSpec = tween(300))
+                    val exit = slideOutHorizontally(
+                        animationSpec = tween(
+                            durationMillis = 180,
+                            easing = FastOutSlowInEasing,
+                        ),
+                        targetOffsetX = { width ->
+                            if (forward) -width / 4 else width / 4
+                        },
+                    ) + fadeOut(animationSpec = tween(180))
+                    enter togetherWith exit
+                },
+                label = "onboarding_transition",
+            ) { pageIndex ->
+                val page = onboardingPages[pageIndex]
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    BloomFlowerIllustration(
+                        page = pageIndex,
+                        modifier = Modifier.size(width = 240.dp, height = 250.dp),
+                    )
+                    Spacer(modifier = Modifier.height(28.dp))
+                    Text(
+                        text = stringResource(page.title),
+                        fontSize = 30.sp,
+                        lineHeight = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.primary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = stringResource(page.description),
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
             Row(
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                repeat(slides.size) { index ->
-                    val selected = index == currentPage
-
+                onboardingPages.indices.forEach { index ->
                     Box(
                         modifier = Modifier
-                            .height(8.dp)
-                            .width(if (selected) 24.dp else 8.dp)
-                            .clip(CircleShape)
+                            .size(
+                                width = if (index == currentPage) 22.dp else 7.dp,
+                                height = 7.dp,
+                            )
                             .background(
-                                MaterialTheme.colorScheme.onPrimary.copy(
-                                    alpha = if (selected) 1f else 0.4f,
-                                ),
+                                color = if (index == currentPage) {
+                                    colors.primary
+                                } else {
+                                    colors.primary.copy(alpha = 0.18f)
+                                },
+                                shape = CircleShape,
                             ),
                     )
-
-                    if (index < slides.lastIndex) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Continue
             HabitButton(
-                text = stringResource(
-                    if (currentPage == slides.lastIndex) {
-                        R.string.onboarding_get_started
-                    } else {
-                        R.string.onboarding_continue
-                    }
-                ),
+                text = stringResource(onboardingPages[currentPage].button),
                 onClick = {
-                    if (currentPage == slides.lastIndex) {
-                        onComplete()
+                    if (currentPage < onboardingPages.lastIndex) {
+                        currentPage++
                     } else {
-                        scope.launch {
-                            pagerState.animateScrollToPage(
-                                currentPage + 1
-                            )
-                        }
+                        onComplete()
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                variant = HabitButtonVariant.PrimaryLight,
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
 @Composable
-private fun OnboardingPage(
-    slide: OnboardingSlide,
+private fun BloomFlowerIllustration(
+    page: Int,
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
+    var grown by remember(page) { mutableStateOf(false) }
+    val stem = MaterialTheme.colorScheme.primary
 
-        Box(
+    LaunchedEffect(page) {
+        grown = false
+        grown = true
+    }
+
+    val flowerScale by animateFloatAsState(
+        targetValue = if (grown) 1f else 0.65f,
+        animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing),
+        label = "flower_growth",
+    )
+    val flowerAlpha by animateFloatAsState(
+        targetValue = if (grown) 1f else 0f,
+        animationSpec = tween(350),
+        label = "flower_alpha",
+    )
+
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Canvas(
             modifier = Modifier
-                .size(144.dp)
-                .clip(RoundedCornerShape(40.dp))
-                .background(
-                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-                ),
-            contentAlignment = Alignment.Center,
+                .fillMaxSize()
+                .scale(flowerScale)
+                .alpha(flowerAlpha),
         ) {
-            Icon(
-                painter = painterResource(slide.iconRes),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(72.dp),
+            val w = size.width
+            val h = size.height
+            val stemPath = Path().apply {
+                moveTo(w * 0.50f, h * 0.91f)
+                cubicTo(
+                    w * 0.48f, h * 0.70f,
+                    w * 0.54f, h * 0.45f,
+                    w * 0.50f, h * 0.23f,
+                )
+            }
+            drawPath(
+                path = stemPath,
+                color = stem,
+                style = Stroke(width = w * 0.035f, cap = StrokeCap.Round),
             )
+            drawOval(
+                color = stem,
+                topLeft = Offset(w * 0.24f, h * 0.54f),
+                size = Size(w * 0.25f, h * 0.10f),
+            )
+            drawOval(
+                color = stem,
+                topLeft = Offset(w * 0.51f, h * 0.43f),
+                size = Size(w * 0.24f, h * 0.10f),
+            )
+            drawBloom(
+                center = Offset(w * 0.50f, h * 0.20f),
+                petalRadius = w * 0.09f,
+                petalColor = if (page == 1) BloomYellow else BloomCoral,
+            )
+            if (page == 2) {
+                drawBloom(
+                    center = Offset(w * 0.72f, h * 0.34f),
+                    petalRadius = w * 0.065f,
+                    petalColor = BloomCoral,
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = stringResource(slide.titleRes),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onPrimary,
-            textAlign = TextAlign.Center,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = stringResource(slide.descriptionRes),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
-@Preview(name = "Página 1", showBackground = true, showSystemUi = true)
-@Composable
-private fun OnboardingPage1Preview() {
-    OnboardingContent(
-        initialPage = 0,
-        onSkip = {},
-        onComplete = {},
+private fun DrawScope.drawBloom(
+    center: Offset,
+    petalRadius: Float,
+    petalColor: Color,
+) {
+    repeat(5) { index ->
+        val angle = Math.toRadians((index * 72.0) - 90.0)
+        drawCircle(
+            color = petalColor,
+            radius = petalRadius,
+            center = Offset(
+                center.x + cos(angle).toFloat() * petalRadius * 0.72f,
+                center.y + sin(angle).toFloat() * petalRadius * 0.72f,
+            ),
+        )
+    }
+    drawCircle(
+        color = BloomYellow,
+        radius = petalRadius * 0.48f,
+        center = center,
     )
 }
 
-@Preview(name = "Página 2", showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun OnboardingPage2Preview() {
-    OnboardingContent(
-        initialPage = 1,
-        onSkip = {},
-        onComplete = {},
-    )
-}
-
-@Preview(name = "Página 3 (Final)", showBackground = true, showSystemUi = true)
-@Composable
-private fun OnboardingPage3Preview() {
-    OnboardingContent(
-        initialPage = 2,
-        onSkip = {},
-        onComplete = {},
-    )
+private fun OnboardingContentPreview() {
+    InstaDevTheme {
+        OnboardingContent(onComplete = {})
+    }
 }

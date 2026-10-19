@@ -52,6 +52,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
+import com.marta.habittracker.presentation.theme.HabitCream
 import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
@@ -60,7 +61,7 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.SuccessColor
 import com.marta.habittracker.presentation.utils.toHex
-import com.marta.habittracker.presentation.components.ProgressRing
+import com.marta.habittracker.presentation.components.ProgressFlower
 import com.marta.habittracker.presentation.utils.dayLabel
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
@@ -136,7 +137,7 @@ fun HomeContent(
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
     val overallStreak = remember(allHabits) {
-        allHabits.maxOfOrNull { calculateStreak(it.records) } ?: 0
+        allHabits.maxOfOrNull { calculateStreak(it) } ?: 0
     }
 
     Scaffold(
@@ -322,7 +323,7 @@ private fun HomeHeader(
                 avatarColor = HabitPrimaryLight.toHex(),
                 size = 40.dp,
                 contentDescription = stringResource(R.string.cd_profile_avatar),
-                borderColor = Color.White,
+                borderColor = HabitCream,
                 borderWidth = 2.dp,
             )
         }
@@ -419,15 +420,14 @@ private fun HomeProgressCard(
         horizontalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            ProgressRing(
+            ProgressFlower(
                 progress = if (totalCount == 0) 0f else completedCount.toFloat() / totalCount,
-                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = stringResource(R.string.home_percent, pct),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary,
+                color = HabitOnSurface,
             )
         }
 
@@ -481,7 +481,7 @@ private fun HomeHabitCard(
     onToggle: () -> Unit,
 ) {
     val accentColor = habitAccentColor(habit)
-    val streak = calculateStreak(habit.records)
+    val streak = calculateStreak(habit)
 
     Row(
         modifier = Modifier

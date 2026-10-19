@@ -27,6 +27,10 @@ val HabitIconOptions: List<String> = listOf(
     HabitIconKeys.HEART,
     HabitIconKeys.TARGET,
     HabitIconKeys.BOLT,
+    HabitIconKeys.FLOWER_BLOOM,
+    HabitIconKeys.FLOWER_TULIP,
+    HabitIconKeys.FLOWER_LOTUS,
+    HabitIconKeys.FLOWER_BLOSSOM,
 )
 
 object HabitIconKeys {
@@ -42,6 +46,10 @@ object HabitIconKeys {
     const val HEART = "favorite_border"
     const val TARGET = "track_changes"
     const val BOLT = "bolt"
+    const val FLOWER_BLOOM = "flower_bloom"
+    const val FLOWER_TULIP = "flower_tulip"
+    const val FLOWER_LOTUS = "flower_lotus"
+    const val FLOWER_BLOSSOM = "flower_blossom"
 
     const val DEFAULT = WATER
 }
@@ -60,6 +68,10 @@ fun habitIconRes(iconKey: String?): Int = when (iconKey) {
     HabitIconKeys.HEART -> R.drawable.ic_habit_favorite_border
     HabitIconKeys.TARGET -> R.drawable.ic_habit_track_changes
     HabitIconKeys.BOLT -> R.drawable.ic_habit_bolt
+    HabitIconKeys.FLOWER_BLOOM -> R.drawable.ic_flower_bloom
+    HabitIconKeys.FLOWER_TULIP -> R.drawable.ic_flower_tulip
+    HabitIconKeys.FLOWER_LOTUS -> R.drawable.ic_flower_lotus
+    HabitIconKeys.FLOWER_BLOSSOM -> R.drawable.ic_flower_blossom
     else -> R.drawable.ic_habit_water_drop
 }
 

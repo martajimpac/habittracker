@@ -19,7 +19,7 @@ import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.usecase.ComputeChallengeProgress
-import com.marta.habittracker.domain.usecase.calculateHabitStreak
+import com.marta.habittracker.domain.usecase.calculateScheduledStreak
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -59,7 +59,16 @@ class FriendsRepositoryImpl @Inject constructor(
                 val habits = mapHabits(habitDtos, records)
                 FriendListItem(
                     profile = profile,
-                    bestStreak = habits.maxOfOrNull { calculateHabitStreak(it.records, today) } ?: 0,
+                    bestStreak = habits.maxOfOrNull { habit ->
+                        calculateScheduledStreak(
+                            daysOfWeek = habit.daysOfWeek,
+                            records = habit.records,
+                            today = today,
+                            createdOn = LocalDate.parse(
+                                habit.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString(),
+                            ),
+                        )
+                    } ?: 0,
                     publicHabitsCount = habits.size,
                     activeChallengeCount = activeChallenges.count {
                         it.challengerId == peerId || it.challengedId == peerId

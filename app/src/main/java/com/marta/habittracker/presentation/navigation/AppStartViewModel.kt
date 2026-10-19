@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.BuildConfig
+import com.marta.habittracker.core.debug.DebugFlags
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.OnboardingRepository
@@ -37,15 +38,13 @@ class AppStartViewModel @Inject constructor(
             val isLoggedIn = authRepository.isLoggedIn()
             Log.d(TAG, "isLoggedIn: $isLoggedIn, BuildConfig.DEBUG: ${BuildConfig.DEBUG}")
             
-            val onboardingCompleted = onboardingRepository.isCompleted()
-
-            /* Código para testear el onboarding
-                if (BuildConfig.DEBUG) {
-                Log.d(TAG, "DEBUG mode: forcing onboarding off (but respecting session)")
-                false
-            } else {
-                onboardingRepository.isCompleted()
-            }*/
+            val onboardingCompleted = DebugFlags.onboardingAlreadyCompleted(
+                storedCompleted = onboardingRepository.isCompleted(),
+                isDebugBuild = BuildConfig.DEBUG,
+            )
+            if (BuildConfig.DEBUG && DebugFlags.ALWAYS_SHOW_ONBOARDING) {
+                Log.d(TAG, "ALWAYS_SHOW_ONBOARDING is on; showing onboarding")
+            }
             
             Log.d(TAG, "onboardingCompleted: $onboardingCompleted")
             

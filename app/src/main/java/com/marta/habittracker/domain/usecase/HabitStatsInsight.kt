@@ -39,7 +39,14 @@ fun statsStreakHighlight(habits: List<Habit>, today: LocalDate): StatsStreakHigh
 
     val kotlinToday = KotlinLocalDate.parse(today.toString())
     val longest = habits.mapNotNull { habit ->
-        val streak = calculateHabitStreak(habit.records, kotlinToday)
+        val streak = calculateScheduledStreak(
+            daysOfWeek = habit.daysOfWeek,
+            records = habit.records,
+            today = kotlinToday,
+            createdOn = KotlinLocalDate.parse(
+                habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate().toString(),
+            ),
+        )
         if (streak >= StatsStreakMinimums.SINGLE_HABIT_DAYS) {
             StatsStreakHighlight.Habit(habit.id, habit.name, streak)
         } else {

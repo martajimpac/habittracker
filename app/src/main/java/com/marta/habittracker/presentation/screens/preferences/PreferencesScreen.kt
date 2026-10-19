@@ -1,5 +1,8 @@
 package com.marta.habittracker.presentation.screens.preferences
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,9 +32,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -85,6 +90,11 @@ fun PreferencesScreen(
                     snackbarHostState.showSnackbar(context.getString(event.messageRes))
                 }
             }
+            PreferencesEvent.UsernameCopied -> {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.preferences_username_copied))
+                }
+            }
         }
     }
 
@@ -100,8 +110,18 @@ fun PreferencesScreen(
             )
         },
         onRemovePhoto = viewModel::onRemovePhoto,
+        onCopyUsername = {
+            copyUsername(context, uiState.username)
+            viewModel.onUsernameCopied()
+        },
         onDeleteAccount = onDeleteAccount,
     )
+}
+
+private fun copyUsername(context: Context, username: String) {
+    if (username.isBlank()) return
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(ClipData.newPlainText("username", username))
 }
 
 @Composable
@@ -114,6 +134,7 @@ fun PreferencesContent(
     onSave: () -> Unit,
     onChangePhoto: () -> Unit,
     onRemovePhoto: () -> Unit,
+    onCopyUsername: () -> Unit,
     onDeleteAccount: () -> Unit,
 ) {
     val isBusy = uiState.isLoading || uiState.isSaving
@@ -180,6 +201,26 @@ fun PreferencesContent(
                 }
             }
             Column(modifier = Modifier.profileCard()) {
+                if (uiState.username.isNotBlank()) {
+                    Text(
+                        text = stringResource(R.string.preferences_username_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    UsernameCopyRow(
+                        username = uiState.username,
+                        onCopy = onCopyUsername,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.profile_username_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 CustomTextField(
                     value = uiState.displayName,
                     onValueChange = onDisplayNameChanged,
@@ -286,6 +327,7 @@ private fun PreferencesContentPreview() {
     PreferencesContent(
         uiState = PreferencesUiState(
             displayName = "Marta",
+            username = "marta",
             avatarUrl = null,
             avatarColor = HabitPrimary.toHex(),
         ),
@@ -295,7 +337,40 @@ private fun PreferencesContentPreview() {
         onSave = {},
         onChangePhoto = {},
         onRemovePhoto = {},
+        onCopyUsername = {},
         onDeleteAccount = {},
     )
+}
+
+@Composable
+private fun UsernameCopyRow(
+    username: String,
+    onCopy: () -> Unit,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline, shape)
+            .padding(start = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.profile_username, username),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        IconButton(onClick = onCopy) {
+            Icon(
+                imageVector = Icons.Rounded.ContentCopy,
+                contentDescription = stringResource(R.string.preferences_copy_username),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
 }
 

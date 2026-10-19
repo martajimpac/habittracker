@@ -54,6 +54,7 @@ class PreferencesViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Alex Rivera", viewModel.uiState.value.displayName)
+        assertEquals("marta", viewModel.uiState.value.username)
         assertEquals(FakeProfileRepository.defaultProfile.avatarColor, viewModel.uiState.value.avatarColor)
         assertFalse(viewModel.uiState.value.isLoading)
     }
@@ -175,6 +176,21 @@ class PreferencesViewModelTest {
         )
         assertFalse(event.await() is PreferencesEvent.NavigateBack)
         assertFalse(viewModel.uiState.value.isSaving)
+    }
+
+    @Test
+    fun `copy username emits a one shot copied message`() = runTest {
+        val viewModel = createViewModel(FakeProfileRepository())
+        advanceUntilIdle()
+
+        val event = async { viewModel.events.first() }
+        viewModel.onUsernameCopied()
+        advanceUntilIdle()
+
+        assertEquals(
+            PreferencesEvent.UsernameCopied,
+            event.await(),
+        )
     }
 
     private fun createViewModel(

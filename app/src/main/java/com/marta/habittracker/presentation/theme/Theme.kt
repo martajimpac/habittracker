@@ -59,12 +59,12 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = HabitPrimary,
-    onPrimary = Color.White,
+    onPrimary = HabitCream,
     primaryContainer = HabitPrimaryContainer,
     onPrimaryContainer = HabitOnPrimaryContainer,
 
     secondary = HabitSecondary,
-    onSecondary = Color.White,
+    onSecondary = HabitCream,
     secondaryContainer = HabitSecondaryContainer,
     onSecondaryContainer = HabitOnSecondaryContainer,
 
@@ -119,16 +119,16 @@ fun habitDangerColors(): HabitDangerColors = if (isHabitDarkTheme()) {
         content = Color.White,
         icon = Color.White,
         button = HabitDangerButtonDark,
-        onButton = Color.White,
+        onButton = HabitOnDanger,
     )
 } else {
     HabitDangerColors(
         container = HabitDangerContainer,
-        border = HabitDanger,
-        content = HabitOnDanger,
-        icon = HabitDanger,
+        border = HabitDangerIcon,
+        content = HabitOnSurface,
+        icon = HabitDangerIcon,
         button = HabitDanger,
-        onButton = Color.White,
+        onButton = HabitOnDanger,
     )
 }
 

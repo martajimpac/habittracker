@@ -1,8 +1,11 @@
 package com.marta.habittracker.presentation.navigation
 
+import com.marta.habittracker.core.debug.DebugFlags
 import com.marta.habittracker.presentation.navigation.AppStartDestination
 import com.marta.habittracker.presentation.navigation.resolveAppStartDestination
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppStartDestinationResolverTest {
@@ -41,5 +44,38 @@ class AppStartDestinationResolverTest {
             isLoggedIn = true,
         )
         assertEquals(AppStartDestination.Onboarding, destination)
+    }
+
+    @Test
+    fun `debug flag forces onboarding even when it was completed`() {
+        assertFalse(
+            DebugFlags.onboardingAlreadyCompleted(
+                storedCompleted = true,
+                isDebugBuild = true,
+                alwaysShowOnboarding = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `debug flag off keeps the stored onboarding state`() {
+        assertTrue(
+            DebugFlags.onboardingAlreadyCompleted(
+                storedCompleted = true,
+                isDebugBuild = true,
+                alwaysShowOnboarding = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `release ignores the always show onboarding flag`() {
+        assertTrue(
+            DebugFlags.onboardingAlreadyCompleted(
+                storedCompleted = true,
+                isDebugBuild = false,
+                alwaysShowOnboarding = true,
+            ),
+        )
     }
 }

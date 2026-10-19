@@ -158,7 +158,7 @@ class ComputeChallengeProgressTest {
     }
 
     @Test
-    fun `habit streak mirrors Home consecutive completed days ending today`() {
+    fun `calendar streak counts consecutive completed days ending today`() {
         val records = listOf(
             HabitRecord("1", habitId, LocalDate(2026, 7, 28), true),
             HabitRecord("2", habitId, LocalDate(2026, 7, 29), false),

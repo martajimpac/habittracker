@@ -269,17 +269,18 @@ fun HabitIconButton(
     enabled: Boolean = true,
     backgroundColor: Color = Color.Unspecified,
     iconTint: Color = Color.Unspecified,
+    borderColor: Color = Color.Unspecified,
 ) {
     val colors = MaterialTheme.colorScheme
     val resolvedBackground = when {
+        !enabled -> colors.surfaceContainerHighest
         backgroundColor != Color.Unspecified -> backgroundColor
-        enabled -> colors.primary
-        else -> colors.surfaceContainerHighest
+        else -> colors.primary
     }
     val resolvedTint = when {
+        !enabled -> colors.onSurfaceVariant
         iconTint != Color.Unspecified -> iconTint
-        enabled -> colors.onPrimary
-        else -> colors.onSurfaceVariant
+        else -> colors.onPrimary
     }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -296,6 +297,11 @@ fun HabitIconButton(
             .size(40.dp),
         shape = HabitButtonShape,
         color = resolvedBackground,
+        border = if (enabled && borderColor != Color.Unspecified) {
+            BorderStroke(1.dp, borderColor)
+        } else {
+            null
+        },
         interactionSource = interactionSource,
     ) {
         Box(contentAlignment = Alignment.Center) {

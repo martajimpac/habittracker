@@ -33,8 +33,9 @@ import javax.inject.Inject
  *
  * ## Streak
  * `currentInWindowStreak / totalChallengeDays * 100`
- * - Current streak mirrors Home `calculateStreak`: consecutive completed days ending at
+ * - Current streak is consecutive completed calendar days ending at
  *   `min(today, lastChallengeDay)`, walking backward, but never before [startDate].
+ *   It does not follow the habit weekday schedule; that schedule is `calculateScheduledStreak`.
  * - Mapped to a percentage of total challenge days (capped at 100).
  *
  * Returns 0 when [today] is before [startDate] or when [totalChallengeDays] is zero.
@@ -120,7 +121,7 @@ class ComputeChallengeProgress @Inject constructor() {
         challengeDaysLeft(startsAt, endsAt, today)
 }
 
-/** Consecutive completed days ending on [today], shared by social data and Home semantics. */
+/** Consecutive completed calendar days ending on [today]. Habit schedule streaks use [calculateScheduledStreak]. */
 fun calculateHabitStreak(records: List<HabitRecord>, today: LocalDate): Int {
     val completedDates = records
         .filter { it.isCompleted }

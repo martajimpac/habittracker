@@ -69,7 +69,7 @@ class HabitGlanceWidget : GlanceAppWidget() {
                 markCompleteText = context.getString(R.string.habit_widget_mark_complete),
                 markIncompleteText = context.getString(R.string.habit_widget_mark_incomplete),
                 streakText = habit?.let {
-                    val streak = calculateStreak(it.records)
+                    val streak = calculateStreak(it)
                     if (streak > 0) {
                         context.getString(R.string.habit_widget_streak, streak)
                     } else {

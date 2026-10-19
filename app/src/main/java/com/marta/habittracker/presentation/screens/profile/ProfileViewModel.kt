@@ -27,6 +27,7 @@ import javax.inject.Inject
 
 data class ProfileUiState(
     val displayName: String = "",
+    val username: String = "",
     val email: String = "",
     val avatarUrl: String? = null,
     val avatarColor: String = "",
@@ -38,6 +39,7 @@ data class ProfileUiState(
 
 private data class ProfileIdentity(
     val displayName: String,
+    val username: String,
     val email: String,
     val avatarUrl: String?,
     val avatarColor: String,
@@ -61,12 +63,14 @@ class ProfileViewModel @Inject constructor(
                 when (val result = profileRepository.getMyProfile()) {
                     is DataResult.Success -> ProfileIdentity(
                         displayName = result.data.displayName,
+                        username = result.data.username,
                         email = email,
                         avatarUrl = result.data.avatarUrl,
                         avatarColor = result.data.avatarColor,
                     )
                     is DataResult.Error -> ProfileIdentity(
                         displayName = fallbackDisplayNameFromEmail(email),
+                        username = "",
                         email = email,
                         avatarUrl = null,
                         avatarColor = "",
@@ -99,10 +103,11 @@ class ProfileViewModel @Inject constructor(
         val today = LocalDate.now()
         ProfileUiState(
             displayName = identity.displayName,
+            username = identity.username,
             email = identity.email,
             avatarUrl = identity.avatarUrl,
             avatarColor = identity.avatarColor,
-            dayStreak = habits.maxOfOrNull { calculateStreak(it.records, today) } ?: 0,
+            dayStreak = habits.maxOfOrNull { calculateStreak(it, today = today) } ?: 0,
             completedCount = habits.sumOf { habit -> habit.records.count { it.isCompleted } },
             habitsCount = habits.size,
             isReady = true,

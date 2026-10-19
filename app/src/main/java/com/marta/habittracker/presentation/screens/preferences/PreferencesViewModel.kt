@@ -31,10 +31,12 @@ import javax.inject.Inject
 sealed interface PreferencesEvent {
     data object NavigateBack : PreferencesEvent
     data class ShowError(@StringRes val messageRes: Int) : PreferencesEvent
+    data object UsernameCopied : PreferencesEvent
 }
 
 data class PreferencesUiState(
     val displayName: String = "",
+    val username: String = "",
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val avatarUrl: String? = null,
@@ -65,6 +67,13 @@ class PreferencesViewModel @Inject constructor(
 
     fun onDisplayNameChanged(displayName: String) {
         _uiState.update { it.copy(displayName = displayName) }
+    }
+
+    fun onUsernameCopied() {
+        if (_uiState.value.username.isBlank()) return
+        viewModelScope.launch {
+            _events.send(PreferencesEvent.UsernameCopied)
+        }
     }
 
     fun save() {
@@ -148,6 +157,7 @@ class PreferencesViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             displayName = result.data.displayName,
+                            username = result.data.username,
                             avatarUrl = result.data.avatarUrl,
                             avatarColor = result.data.avatarColor,
                             isLoading = false,

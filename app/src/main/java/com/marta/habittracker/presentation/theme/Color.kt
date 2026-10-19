@@ -20,13 +20,16 @@ val HabitSecondaryLight = Color(0xFF3D6E50)
 // Surfaces
 // ─────────────────────────────────────
 
-val HabitSurface = Color(0xFFF1F1F1) //Fondo
+// Cream stand-in for white. Lightest tone is the reference; the rest step down from it.
+val HabitCream = Color(0xFFFDF9F1)
+
+val HabitSurface = Color(0xFFEFEBE3) //Fondo
 val HabitOnSurface = Color(0xFF1A1D1F)
 
-val HabitSurfaceVariant = Color(0xFFFFFDFD) //HABITO COMPLETADO
+val HabitSurfaceVariant = Color(0xFFFDF7EF) //HABITO COMPLETADO
 val HabitOnSurfaceVariant = Color(0xFF5D5D60) //HABITO COMPLETADO TEXTO
 
-val HabitField = Color(0xFFFFFFFF) //Tarjeta
+val HabitField = HabitCream //Tarjeta
 
 
 
@@ -71,13 +74,18 @@ val ErrorColor = Color(0xFF79170D)
 val ErrorColorLight = Color(0xFFEF5146)
 val SuccessColor = Color(0xFF4ADE80)
 
-// Cerrar sesión y eliminar cuenta. No son el rol `error`.
-val HabitDanger = Color(0xFF8E3A41)
-val HabitDangerContainer = Color(0xFFF6E4E8)
-val HabitOnDanger = Color(0xFF4A1C1C)
-val HabitDangerContainerDark = Color(0xFF3C242A)
-val HabitDangerBorderDark = Color(0xFFD7A3A7)
-val HabitDangerButtonDark = Color(0xFF7A3A3A)
+// Cerrar sesión y eliminar cuenta. Coral, no el rol `error`.
+private val BloomCoral = Color(0xFFFF7775)
+private val BloomCoralDeep = Color(0xFFD94E4C)
+private val BloomCoralInk = Color(0xFF5C2422)
+
+val HabitDanger = BloomCoral
+val HabitDangerContainer = Color(0xFFFFE8E6)
+val HabitOnDanger = BloomCoralInk
+val HabitDangerIcon = BloomCoralDeep
+val HabitDangerContainerDark = Color(0xFF3F2626)
+val HabitDangerBorderDark = BloomCoral
+val HabitDangerButtonDark = BloomCoral
 
 // ─────────────────────────────────────
 // M3 ColorScheme containers
@@ -88,16 +96,16 @@ val HabitOnPrimaryContainer = Color(0xFF294536)
 val HabitSecondaryContainer = Color(0xFFE4EBE6)
 val HabitOnSecondaryContainer = Color(0xFF294536)
 val HabitTertiary = Color(0xFF1F6B45)
-val HabitOnTertiary = Color.White
+val HabitOnTertiary = HabitCream
 val HabitTertiaryContainer = Color(0xFFC9E6D4)
 val HabitOnTertiaryContainer = Color(0xFF0E2F1C)
 val HabitErrorContainer = Color(0xFFFFDAD6)
 val HabitOnErrorContainer = Color(0xFF410002)
-val HabitSurfaceContainerLowest = Color(0xFFFFFFFF)
-val HabitSurfaceContainerLow = Color(0xFFF1F1F1)
-val HabitSurfaceContainer = Color(0xFFECECEC)
-val HabitSurfaceContainerHigh = Color(0xFFE6E6E6)
-val HabitSurfaceContainerHighest = Color(0xFFE0E0E0)
+val HabitSurfaceContainerLowest = HabitCream
+val HabitSurfaceContainerLow = Color(0xFFEFEBE3)
+val HabitSurfaceContainer = Color(0xFFEAE6DE)
+val HabitSurfaceContainerHigh = Color(0xFFE4E0D8)
+val HabitSurfaceContainerHighest = Color(0xFFDEDAD2)
 
 val HabitPrimaryContainerDark = Color(0xFF1B3328)
 val HabitOnPrimaryContainerDark = Color(0xFFDCE8E0)

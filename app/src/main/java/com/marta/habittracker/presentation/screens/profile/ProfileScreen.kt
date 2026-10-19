@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -31,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,8 +48,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
+import com.marta.habittracker.presentation.components.HabitButton
+import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.domain.model.ThemeMode
+import com.marta.habittracker.presentation.theme.HabitCream
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.habitDangerColors
@@ -67,6 +74,7 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    var showSignOutConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -78,12 +86,41 @@ fun ProfileScreen(
 
     ProfileContent(
         uiState = uiState,
-        onSignOut = viewModel::onSignOutClicked,
+        onSignOut = { showSignOutConfirm = true },
         onPreferences = onPreferences,
         onGoals = onGoals,
         themeMode = themeMode,
         onDarkModeChanged = viewModel::onDarkModeChanged,
     )
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = { Text(stringResource(R.string.profile_sign_out_title)) },
+            text = { Text(stringResource(R.string.profile_sign_out_message)) },
+            confirmButton = {
+                HabitButton(
+                    text = stringResource(R.string.profile_sign_out),
+                    onClick = {
+                        showSignOutConfirm = false
+                        viewModel.onSignOutClicked()
+                    },
+                    variant = HabitButtonVariant.Destructive,
+                    fillMaxWidth = false,
+                    compact = true,
+                )
+            },
+            dismissButton = {
+                HabitButton(
+                    text = stringResource(R.string.add_habit_cancel),
+                    onClick = { showSignOutConfirm = false },
+                    variant = HabitButtonVariant.Secondary,
+                    fillMaxWidth = false,
+                    compact = true,
+                )
+            },
+        )
+    }
 }
 
 @Composable
@@ -175,7 +212,7 @@ private fun ProfileHeader(
             avatarColor = HabitPrimaryLight.toHex(),
             size = 80.dp,
             contentDescription = stringResource(R.string.cd_profile_avatar),
-            borderColor = Color.White,
+            borderColor = HabitCream,
             borderWidth = 3.dp,
         )
 
@@ -187,6 +224,16 @@ private fun ProfileHeader(
             fontWeight = FontWeight.Black,
             color = onPrimary,
         )
+
+        if (uiState.username.isNotBlank()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.profile_username, uiState.username),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = onPrimary,
+            )
+        }
 
         Text(
             text = email,
@@ -392,6 +439,7 @@ private fun ProfileContentPreview() {
     ProfileContent(
         uiState = ProfileUiState(
             displayName = "John Doe",
+            username = "johndoe",
             email = "john@example.com",
             avatarUrl = null,
             avatarColor = HabitPrimaryLight.toHex(),

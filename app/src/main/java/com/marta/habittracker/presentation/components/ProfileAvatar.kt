@@ -27,6 +27,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.utils.toHex
 
 @Composable
@@ -52,7 +53,7 @@ fun ProfileAvatar(
             )
             .padding(if (borderColor != null) borderWidth else 0.dp)
             .clip(CircleShape)
-            .background(avatarColor.toComposeColor()),
+            .background(avatarBackgroundColor(avatarUrl, avatarColor.toComposeColor())),
         contentAlignment = Alignment.Center,
     ) {
         val url = avatarUrl?.takeIf { it.isNotBlank() }
@@ -95,6 +96,9 @@ fun userAvatarInitials(displayName: String): String {
 
 fun String.toComposeColor(): Color =
     runCatching { Color(parseColor(this)) }.getOrDefault(HabitPrimary)
+
+fun avatarBackgroundColor(avatarUrl: String?, storedColor: Color): Color =
+    if (avatarUrl.isNullOrBlank()) HabitPrimaryLight else storedColor
 
 @Composable
 private fun initialsTextStyle(size: Dp) = when {

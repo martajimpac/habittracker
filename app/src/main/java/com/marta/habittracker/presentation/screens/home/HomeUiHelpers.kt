@@ -6,7 +6,10 @@ import com.marta.habittracker.R
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.usecase.calculateScheduledStreak
 import java.time.LocalDate
+import java.time.ZoneId
+import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 
 @Composable
@@ -14,19 +17,20 @@ fun habitTimeLabel(habit: Habit): String =
     habit.reminderTime?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.home_all_day)
 
-fun calculateStreak(records: List<HabitRecord>, today: LocalDate = LocalDate.now()): Int {
-    val completedDates = records
-        .filter { it.isCompleted }
-        .map { it.date.toJava() }
-        .toSet()
-
-    var streak = 0
-    var date = today
-    while (completedDates.contains(date)) {
-        streak++
-        date = date.minusDays(1)
-    }
-    return streak
+fun calculateStreak(
+    habit: Habit,
+    records: List<HabitRecord> = habit.records,
+    today: LocalDate = LocalDate.now(),
+): Int {
+    val createdOn = KotlinLocalDate.parse(
+        habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate().toString(),
+    )
+    return calculateScheduledStreak(
+        daysOfWeek = habit.daysOfWeek,
+        records = records,
+        today = KotlinLocalDate.parse(today.toString()),
+        createdOn = createdOn,
+    )
 }
 
 fun isHabitCompletedOnDate(habit: Habit, date: LocalDate): Boolean =

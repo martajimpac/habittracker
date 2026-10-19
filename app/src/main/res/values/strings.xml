@@ -2,15 +2,17 @@
     <string name="app_name">Bloom</string>
 
     <!-- Onboarding -->
+    <string name="onboarding_wordmark">bloom</string>
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_get_started">Get started</string>
-    <string name="onboarding_slide1_title">Build habits that\nactually stick</string>
-    <string name="onboarding_slide1_description">Track your daily routines and watch consistency transform into lasting change.</string>
-    <string name="onboarding_slide2_title">Visualize your\nprogress</string>
-    <string name="onboarding_slide2_description">Beautiful charts and streaks keep you motivated and show how far you\'ve come.</string>
-    <string name="onboarding_slide3_title">Achieve your\nbest self</string>
-    <string name="onboarding_slide3_description">Set goals, earn streaks, and celebrate every milestone on your journey.</string>
+    <string name="onboarding_lets_bloom">Let\'s bloom</string>
+    <string name="onboarding_slide1_title">Become who you want to be.</string>
+    <string name="onboarding_slide1_description">Small habits. Big growth. Better together.</string>
+    <string name="onboarding_slide2_title">Little habits. Big changes.</string>
+    <string name="onboarding_slide2_description">Build your routine, track your progress, and celebrate every little win.</string>
+    <string name="onboarding_slide3_title">Better habits, together.</string>
+    <string name="onboarding_slide3_description">Challenge your friends, cheer each other on, and grow together.</string>
 
     <!-- Login -->
     <string name="login_welcome_title">Welcome back!</string>
@@ -303,6 +305,9 @@
     <string name="profile_preferences">Preferences</string>
     <string name="profile_dark_mode">Dark mode</string>
     <string name="preferences_display_name_label">Display name</string>
+    <string name="preferences_username_label">Username</string>
+    <string name="preferences_copy_username">Copy username</string>
+    <string name="preferences_username_copied">Username copied</string>
     <string name="preferences_save">Save</string>
     <string name="preferences_saving">Saving…</string>
     <string name="preferences_back">Back</string>
@@ -319,6 +324,10 @@
     <string name="preferences_delete_deleting">Deleting…</string>
     <string name="profile_achievements">Achievements</string>
     <string name="profile_sign_out">Sign Out</string>
+    <string name="profile_sign_out_title">Sign out?</string>
+    <string name="profile_sign_out_message">You will need to sign in again to see your habits.</string>
+    <string name="profile_username">\@%1$s</string>
+    <string name="profile_username_hint">Friends search for you with this name</string>
     <string name="profile_stat_day_streak">Day streak</string>
     <string name="profile_stat_completed">Completed</string>
     <string name="profile_stat_habits">Habits</string>

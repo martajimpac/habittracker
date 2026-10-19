@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,6 +62,7 @@ import com.marta.habittracker.presentation.components.MonthCalendar
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOutline
+import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import kotlinx.datetime.DayOfWeek
@@ -139,6 +141,7 @@ fun HabitDetailContent(
     val reminder = habit?.reminderTime?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.home_all_day)
     val actionsEnabled = habit != null
+    val danger = habitDangerColors()
 
     Column(
         modifier = Modifier
@@ -170,7 +173,9 @@ fun HabitDetailContent(
                 icon = Icons.Rounded.Delete,
                 contentDescription = stringResource(R.string.detail_delete_habit),
                 enabled = actionsEnabled,
-                iconTint = MaterialTheme.colorScheme.error,
+                backgroundColor = danger.container,
+                iconTint = danger.icon,
+                borderColor = danger.border,
             )
         }
 
@@ -212,54 +217,58 @@ private fun DetailOverviewCard(
     accent: Color,
     reminder: String,
 ) {
-    val streak = if (habit == null) 0 else calculateStreak(records)
+    val streak = if (habit == null) 0 else calculateStreak(habit, records)
     val description = habit?.description?.takeIf { it.isNotBlank() }
     Column(
         modifier = Modifier
-            .padding(top = 8.dp)
-            .detailCard(),
+            .padding(top = 4.dp)
+            .detailCard(contentPadding = 14.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(accent.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
                 HabitLineIcon(
                     iconKey = iconKey,
                     tint = accent,
-                    size = 28.dp,
+                    size = 22.dp,
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = habitName,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = reminder,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (streak > 0) {
-                    Row(
-                        modifier = Modifier.padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = reminder,
+                        modifier = Modifier.weight(1f, fill = false),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (streak > 0) {
                         Icon(
                             imageVector = Icons.Rounded.LocalFireDepartment,
                             contentDescription = null,
                             tint = accent,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(14.dp),
                         )
                         Text(
                             text = pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak),
@@ -274,16 +283,16 @@ private fun DetailOverviewCard(
         if (description != null) {
             Text(
                 text = description,
-                modifier = Modifier.padding(top = 16.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (habit != null) {
             Text(
                 text = stringResource(R.string.detail_scheduled_days),
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 10.dp, bottom = 6.dp),
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -316,8 +325,8 @@ private fun ScheduledDays(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .height(26.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(
                         if (selected) accent else MaterialTheme.colorScheme.surfaceContainerHighest,
                     ),
@@ -349,16 +358,17 @@ private fun DetailChartsCard(
     ) {
         Text(
             text = stringResource(R.string.detail_overall_performance),
-            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Box(contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
                 progress = { completionRate / 100f },
-                modifier = Modifier.size(180.dp),
-                strokeWidth = 16.dp,
+                modifier = Modifier.size(120.dp),
+                strokeWidth = 12.dp,
                 color = accent,
                 trackColor = accent.copy(alpha = 0.2f),
                 strokeCap = StrokeCap.Round,
@@ -366,7 +376,7 @@ private fun DetailChartsCard(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${completionRate.toInt()}%",
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
                     color = accent,
                 )
@@ -586,13 +596,13 @@ private fun DetailCalendar(
 }
 
 @Composable
-private fun Modifier.detailCard(): Modifier = this
+private fun Modifier.detailCard(contentPadding: Dp = 20.dp): Modifier = this
     .fillMaxWidth()
     .padding(horizontal = 20.dp)
     .clip(DetailCardShape)
     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
     .border(1.dp, HabitOutline, DetailCardShape)
-    .padding(20.dp)
+    .padding(contentPadding)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
