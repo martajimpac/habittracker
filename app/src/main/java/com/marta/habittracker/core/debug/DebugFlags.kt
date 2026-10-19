@@ -6,7 +6,7 @@ package com.marta.habittracker.core.debug
  */
 object DebugFlags {
     /** When true, debug builds open onboarding on every cold start. */
-    const val ALWAYS_SHOW_ONBOARDING = true
+    const val ALWAYS_SHOW_ONBOARDING = false
 
     fun onboardingAlreadyCompleted(
         storedCompleted: Boolean,

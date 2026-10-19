@@ -419,25 +419,28 @@ private fun HomeProgressCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            ProgressFlower(
-                progress = if (totalCount == 0) 0f else completedCount.toFloat() / totalCount,
-            )
-            Text(
-                text = stringResource(R.string.home_percent, pct),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
-                color = HabitOnSurface,
-            )
-        }
+        ProgressFlower(
+            progress = if (totalCount == 0) 0f else completedCount.toFloat() / totalCount,
+        )
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(R.string.home_percent, pct),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
                 text = if (isToday) {
                     stringResource(R.string.home_completed_today)
