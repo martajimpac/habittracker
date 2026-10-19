@@ -10,7 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
-import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.theme.HabitAppTheme
 import com.marta.habittracker.presentation.navigation.NavigationWrapper
 import com.marta.habittracker.presentation.auth.AuthDeeplinkCoordinator
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
@@ -37,8 +37,12 @@ class MainActivity : ComponentActivity() {
             applyLaunchExtras(intent)
         }
         enableEdgeToEdge()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            window.isStatusBarContrastEnforced = false
+            window.isNavigationBarContrastEnforced = false
+        }
         setContent {
-            InstaDevTheme {
+            HabitAppTheme {
                 NavigationWrapper(
                     initialTabRoute = initialTab,
                     initialHabitId = initialHabitId,

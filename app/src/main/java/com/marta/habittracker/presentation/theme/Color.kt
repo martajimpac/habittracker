@@ -57,19 +57,27 @@ val HabitColor12 = Color(0xFFBE184F)
 // Dark neutrals
 // ─────────────────────────────────────
 
-val Gray20 = Color(0xFF211D1B)
-val Gray30 = Color(0xFF302A28)
-val Gray50 = Color(0xFF756B67)
-val Gray70 = Color(0xFFD0C5C0)
+val Gray20 = Color(0xFF121212)
+val Gray30 = Color(0xFF2A2A2C)
+val Gray50 = Color(0xFF8E8E93)
+val Gray70 = Color(0xFFC8C8CC)
 
 
 // ─────────────────────────────────────
 // Status
 // ─────────────────────────────────────
 
-val ErrorColor = Color(0xFF881C14)
+val ErrorColor = Color(0xFF79170D)
 val ErrorColorLight = Color(0xFFEF5146)
 val SuccessColor = Color(0xFF4ADE80)
+
+// Cerrar sesión y eliminar cuenta. No son el rol `error`.
+val HabitDanger = Color(0xFF8E3A41)
+val HabitDangerContainer = Color(0xFFF6E4E8)
+val HabitOnDanger = Color(0xFF4A1C1C)
+val HabitDangerContainerDark = Color(0xFF3C242A)
+val HabitDangerBorderDark = Color(0xFFD7A3A7)
+val HabitDangerButtonDark = Color(0xFF7A3A3A)
 
 // ─────────────────────────────────────
 // M3 ColorScheme containers
@@ -93,8 +101,10 @@ val HabitSurfaceContainerHighest = Color(0xFFE0E0E0)
 
 val HabitPrimaryContainerDark = Color(0xFF163A7A)
 val HabitOnPrimaryContainerDark = Color(0xFFD6E3F8)
-val HabitSurfaceContainerDark = Color(0xFF302A28)
-val HabitSurfaceContainerLowestDark = Color(0xFF161210)
-val HabitSurfaceContainerHighDark = Color(0xFF3A3330)
+val HabitSurfaceContainerDark = Color(0xFF2A2A2C)
+val HabitSurfaceContainerLowestDark = Color(0xFF1C1C1E)
+val HabitSurfaceContainerLowDark = Color(0xFF222224)
+val HabitSurfaceContainerHighDark = Color(0xFF323234)
+val HabitSurfaceContainerHighestDark = Color(0xFF3A3A3C)
 val HabitErrorContainerDark = Color(0xFF93000A)
 val HabitOnErrorContainerDark = Color(0xFFFFDAD6)

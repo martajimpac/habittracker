@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,27 +31,29 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -60,6 +65,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
+import com.marta.habittracker.presentation.components.HabitButton
+import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconOptions
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ReminderToggleRow
@@ -71,7 +78,11 @@ import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import androidx.compose.ui.platform.LocalLocale
+import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.utils.HabitColorOptions
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddContentScreen(
@@ -127,6 +138,7 @@ fun AddContentScreen(
         onDayToggled = viewModel::onDayToggled,
         onPublicChanged = viewModel::onPublicChanged,
         onSaveClicked = viewModel::onSaveClicked,
+        focusField = viewModel.focusField,
     )
 }
 
@@ -144,9 +156,39 @@ fun AddContentContent(
     onDayToggled: (DayOfWeek) -> Unit,
     onPublicChanged: (Boolean) -> Unit,
     onSaveClicked: () -> Unit,
+    focusField: Flow<AddContentField> = emptyFlow(),
 ) {
     val selectedColor = uiState.color
     val canSave = uiState.name.isNotBlank() && uiState.selectedDays.isNotEmpty() && !uiState.isSaving
+    val nameMissing = uiState.errorMessageRes == R.string.add_habit_error_name_required
+    val daysMissing = uiState.errorMessageRes == R.string.add_habit_error_days_required
+    val reminderInvalid = uiState.errorMessageRes == R.string.add_habit_error_reminder_format
+    val nameFocus = remember { FocusRequester() }
+    val daysFocus = remember { FocusRequester() }
+    val reminderFocus = remember { FocusRequester() }
+    val nameBringIntoView = remember { BringIntoViewRequester() }
+    val daysBringIntoView = remember { BringIntoViewRequester() }
+    val reminderBringIntoView = remember { BringIntoViewRequester() }
+    val focusScope = rememberCoroutineScope()
+
+    ObserveAsEvents(flow = focusField) { field ->
+        focusScope.launch {
+            when (field) {
+                AddContentField.Name -> {
+                    nameBringIntoView.bringIntoView()
+                    nameFocus.requestFocus()
+                }
+                AddContentField.Days -> {
+                    daysBringIntoView.bringIntoView()
+                    daysFocus.requestFocus()
+                }
+                AddContentField.Reminder -> {
+                    reminderBringIntoView.bringIntoView()
+                    reminderFocus.requestFocus()
+                }
+            }
+        }
+    }
     var showTimePicker by remember { mutableStateOf(false) }
 
     if (showTimePicker) {
@@ -161,21 +203,26 @@ fun AddContentContent(
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
-                TextButton(
+                HabitButton(
+                    text = stringResource(R.string.add_habit_save),
                     onClick = {
                         onReminderTimeChanged(
                             "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
                         )
                         showTimePicker = false
                     },
-                ) {
-                    Text(stringResource(R.string.add_habit_save))
-                }
+                    fillMaxWidth = false,
+                    compact = true,
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.add_habit_cancel))
-                }
+                HabitButton(
+                    text = stringResource(R.string.add_habit_cancel),
+                    onClick = { showTimePicker = false },
+                    variant = HabitButtonVariant.Secondary,
+                    fillMaxWidth = false,
+                    compact = true,
+                )
             },
             text = { TimePicker(state = timePickerState) },
         )
@@ -198,29 +245,22 @@ fun AddContentContent(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f))
-                        .clickable(onClick = onBack),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.add_habit_close),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
                 Text(
-                    text = stringResource(R.string.add_habit_title),
+                    text = stringResource(
+                        if (uiState.isEditing) R.string.detail_edit_habit else R.string.add_habit_title,
+                    ),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.weight(1f),
+                )
+                HabitIconButton(
+                    onClick = onBack,
+                    icon = Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.add_habit_close),
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
         }
@@ -252,10 +292,19 @@ fun AddContentContent(
             }
 
             CustomTextField(
+                modifier = Modifier
+                    .focusRequester(nameFocus)
+                    .bringIntoViewRequester(nameBringIntoView),
                 label = stringResource(R.string.add_habit_name_label),
                 value = uiState.name,
                 onValueChange = onNameChanged,
                 placeholder = stringResource(R.string.add_habit_name_placeholder),
+                isError = nameMissing,
+                supportingText = if (nameMissing) {
+                    stringResource(R.string.add_habit_error_name_required)
+                } else {
+                    ""
+                },
             )
 
             CustomTextField(
@@ -344,7 +393,7 @@ fun AddContentContent(
                                 ) {
                                     if (selected) {
                                         Icon(
-                                            imageVector = Icons.Default.Check,
+                                            imageVector = Icons.Rounded.Check,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(18.dp),
@@ -360,19 +409,68 @@ fun AddContentContent(
                 }
             }
 
-            ReminderToggleRow(
-                enabled = uiState.reminderEnabled,
-                reminderTime = uiState.reminderTime,
-                onEnabledChange = onReminderEnabledChange,
-                onTimeClick = { showTimePicker = true },
-            )
+            Column(
+                modifier = Modifier
+                    .focusRequester(reminderFocus)
+                    .focusable()
+                    .bringIntoViewRequester(reminderBringIntoView)
+                    .then(
+                        if (reminderInvalid) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.error,
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .padding(if (reminderInvalid) 8.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ReminderToggleRow(
+                    enabled = uiState.reminderEnabled,
+                    reminderTime = uiState.reminderTime,
+                    onEnabledChange = onReminderEnabledChange,
+                    onTimeClick = { showTimePicker = true },
+                )
+                if (reminderInvalid) {
+                    Text(
+                        text = stringResource(R.string.add_habit_error_reminder_format),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .focusRequester(daysFocus)
+                    .focusable()
+                    .bringIntoViewRequester(daysBringIntoView)
+                    .then(
+                        if (daysMissing) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.error,
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .padding(if (daysMissing) 8.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
                     text = stringResource(R.string.add_habit_frequency),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (daysMissing) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                 )
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -398,6 +496,13 @@ fun AddContentContent(
                         }
                     }
                 }
+                if (daysMissing) {
+                    Text(
+                        text = stringResource(R.string.add_habit_error_days_required),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
 
             Row(
@@ -421,7 +526,12 @@ fun AddContentContent(
                 )
             }
 
-            uiState.errorMessageRes?.let { messageRes ->
+            val otherError = uiState.errorMessageRes?.takeUnless {
+                it == R.string.add_habit_error_name_required ||
+                    it == R.string.add_habit_error_days_required ||
+                    it == R.string.add_habit_error_reminder_format
+            }
+            otherError?.let { messageRes ->
                 Text(
                     text = stringResource(messageRes),
                     color = MaterialTheme.colorScheme.error,
@@ -430,40 +540,14 @@ fun AddContentContent(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp)
-                    .shadow(if (canSave) 6.dp else 2.dp, RoundedCornerShape(16.dp))
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        if (canSave) {
-                            Brush.linearGradient(
-                                listOf(selectedColor, selectedColor.copy(alpha = 0.7f)),
-                            )
-                        } else {
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                ),
-                            )
-                        },
-                    )
-                    .clickable(enabled = canSave, onClick = onSaveClicked),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.add_habit_create),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (canSave) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
+            HabitButton(
+                text = stringResource(
+                    if (uiState.isEditing) R.string.add_habit_save else R.string.add_habit_create,
+                ),
+                onClick = onSaveClicked,
+                enabled = canSave,
+                clickableWhenDisabled = !uiState.isSaving,
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
         }

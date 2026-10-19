@@ -26,11 +26,17 @@ fun dayShortLabel(date: LocalDate): String {
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }
 
+fun dayLabel(date: LocalDate): String {
+    val locale = Locale.getDefault()
+    return date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+}
+
 fun isSameDay(a: LocalDate, b: LocalDate): Boolean = a == b
 
 @StringRes
 fun greetingForHour(hour: Int): Int = when {
-    hour < 12 -> R.string.home_greeting_morning
-    hour < 17 -> R.string.home_greeting_afternoon
+    hour < 14 -> R.string.home_greeting_morning
+    hour < 21 -> R.string.home_greeting_afternoon
     else -> R.string.home_greeting_evening
 }

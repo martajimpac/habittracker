@@ -15,12 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -42,12 +40,12 @@ import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.presentation.components.HabitButton
+import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.toComposeColor
-import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import java.time.Instant
 
@@ -95,7 +93,7 @@ fun ChallengeDetailContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.detail_back),
                         enabled = !state.isSubmitting,
                     )
@@ -127,7 +125,7 @@ fun ChallengeDetailContent(
                     Text(
                         text = stringResource(state.errorRes),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = HabitOnSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -157,20 +155,21 @@ fun ChallengeDetailContent(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                OutlinedButton(
+                                HabitButton(
+                                    text = stringResource(R.string.challenge_decline),
                                     onClick = onDecline,
                                     enabled = !state.isSubmitting,
+                                    variant = HabitButtonVariant.Secondary,
+                                    fillMaxWidth = false,
                                     modifier = Modifier.weight(1f),
-                                ) {
-                                    Text(stringResource(R.string.challenge_decline))
-                                }
-                                Button(
+                                )
+                                HabitButton(
+                                    text = stringResource(R.string.challenge_accept),
                                     onClick = onAccept,
                                     enabled = !state.isSubmitting,
+                                    fillMaxWidth = false,
                                     modifier = Modifier.weight(1f),
-                                ) {
-                                    Text(stringResource(R.string.challenge_accept))
-                                }
+                                )
                             }
                         }
                     }
@@ -198,7 +197,7 @@ private fun ChallengeDetailCard(card: ChallengeCard) {
                 text = card.habitName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black,
-                color = HabitOnSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -206,7 +205,7 @@ private fun ChallengeDetailCard(card: ChallengeCard) {
         Text(
             text = stringResource(criteriaLabelRes(card.challenge.criteria)),
             style = MaterialTheme.typography.labelLarge,
-            color = HabitOnSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
         )
 
@@ -232,7 +231,7 @@ private fun ChallengeDetailCard(card: ChallengeCard) {
             text = stringResource(R.string.friends_days_left, card.daysLeft),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = HabitOnSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -243,7 +242,7 @@ private fun ChallengeDetailProgress(
     progress: Int,
     accent: Color,
 ) {
-    Text(label, style = MaterialTheme.typography.labelMedium, color = HabitOnSurface)
+    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
     LinearProgressIndicator(
         progress = { progress.coerceIn(0, 100) / 100f },
         modifier = Modifier

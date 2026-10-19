@@ -1,6 +1,7 @@
 package com.marta.habittracker.presentation.screens.auth.register
 
 import androidx.compose.foundation.background
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,10 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,10 +54,10 @@ import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.theme.HabitField
-import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 
 @Composable
 fun RegisterScreen(
@@ -94,6 +95,7 @@ fun RegisterContent(
     onTermsChecked: (Boolean) -> Unit,
     onRegisterClicked: () -> Unit,
 ) {
+    SyncStatusBarIcons(lightBackground = !isHabitDarkTheme())
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -101,7 +103,7 @@ fun RegisterContent(
                     navigationIcon = {
                         HabitIconButton(
                             onClick = onBack,
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            icon = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = stringResource(R.string.register_back),
                         )
                     },
@@ -161,12 +163,12 @@ fun RegisterContent(
                         IconButton(onClick = onTogglePasswordVisibility) {
                             Icon(
                                 imageVector = if (uiState.isPasswordVisible) {
-                                    Icons.Outlined.VisibilityOff
+                                    Icons.Rounded.VisibilityOff
                                 } else {
-                                    Icons.Outlined.Visibility
+                                    Icons.Rounded.Visibility
                                 },
                                 contentDescription = null,
-                                tint = HabitOnSurfaceVariant,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     },
@@ -200,7 +202,7 @@ fun RegisterContent(
                     ) {
                         if (uiState.termsAccepted) {
                             Icon(
-                                imageVector = Icons.Outlined.Check,
+                                imageVector = Icons.Rounded.Check,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(14.dp),
@@ -214,7 +216,7 @@ fun RegisterContent(
                             append(" ")
                             withStyle(
                                 SpanStyle(
-                                    color = HabitPrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     textDecoration = TextDecoration.Underline,
                                 ),
@@ -226,7 +228,7 @@ fun RegisterContent(
                             append(" ")
                             withStyle(
                                 SpanStyle(
-                                    color = HabitPrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     textDecoration = TextDecoration.Underline,
                                 ),

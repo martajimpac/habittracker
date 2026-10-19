@@ -30,7 +30,7 @@ import com.marta.habittracker.data.local.datastore.WidgetPreferencesDataSource
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.presentation.components.HabitLineIcon
-import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.theme.HabitAppTheme
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -64,7 +64,7 @@ class HabitWidgetConfigActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            InstaDevTheme {
+            HabitAppTheme {
                 HabitWidgetConfigContent(
                     habits = habits,
                     isLoading = isLoading,

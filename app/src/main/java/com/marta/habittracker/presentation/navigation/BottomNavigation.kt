@@ -2,11 +2,11 @@ package com.marta.habittracker.presentation.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ShowChart
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PeopleOutline
-import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.PeopleOutline
+import androidx.compose.material.icons.rounded.PersonOutline
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.marta.habittracker.R
 
@@ -22,31 +22,31 @@ sealed class BottomNavigation(
 
     data object TabHome : BottomNavigation(
         label = R.string.tab_home,
-        icon = Icons.Outlined.Home,
+        icon = Icons.Rounded.Home,
         tabScreen = TabScreens.TabHome,
     )
 
     data object TabStats : BottomNavigation(
         label = R.string.tab_stats,
-        icon = Icons.AutoMirrored.Outlined.ShowChart,
+        icon = Icons.AutoMirrored.Rounded.ShowChart,
         tabScreen = TabScreens.TabStats,
     )
 
     data object TabNew : BottomNavigation(
         label = R.string.tab_new,
-        icon = Icons.Outlined.Add,
+        icon = Icons.Rounded.Add,
         tabScreen = TabScreens.TabAddContent,
     )
 
     data object TabFriends : BottomNavigation(
         label = R.string.tab_friends,
-        icon = Icons.Outlined.PeopleOutline,
+        icon = Icons.Rounded.PeopleOutline,
         tabScreen = TabScreens.TabFriends,
     )
 
     data object TabProfile : BottomNavigation(
         label = R.string.tab_profile,
-        icon = Icons.Outlined.PersonOutline,
+        icon = Icons.Rounded.PersonOutline,
         tabScreen = TabScreens.TabProfile,
     )
 }

@@ -14,15 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -59,8 +60,8 @@ import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.SuccessColor
 import com.marta.habittracker.presentation.utils.toHex
-import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.components.ProgressRing
+import com.marta.habittracker.presentation.utils.dayLabel
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
 import com.marta.habittracker.presentation.utils.habitAccentColor
@@ -78,7 +79,6 @@ fun HomeScreen(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
-    val avatarColor by viewModel.avatarColor.collectAsStateWithLifecycle()
     val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -92,7 +92,6 @@ fun HomeScreen(
         today = viewModel.today,
         userDisplayName = userDisplayName,
         avatarUrl = avatarUrl,
-        avatarColor = avatarColor,
         actionErrorRes = actionErrorRes,
         weekDays = viewModel.weekDays,
         onDateSelected = viewModel::onDateSelected,
@@ -109,7 +108,6 @@ fun HomeContent(
     today: LocalDate,
     userDisplayName: String,
     avatarUrl: String?,
-    avatarColor: String,
     actionErrorRes: Int?,
     weekDays: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
@@ -118,7 +116,6 @@ fun HomeContent(
 ) {
     val isToday = selectedDate == today
     val isPast = selectedDate.isBefore(today)
-    val isFuture = selectedDate.isAfter(today)
 
     val (completedCount, totalCount) = remember(habits, selectedDate) {
         completionStats(habits, selectedDate)
@@ -153,7 +150,6 @@ fun HomeContent(
                 greetingRes = greetingRes,
                 userDisplayName = userDisplayName,
                 avatarUrl = avatarUrl,
-                avatarColor = avatarColor,
                 weekDays = weekDays,
                 allHabits = allHabits,
                 onDateSelected = onDateSelected,
@@ -192,7 +188,7 @@ fun HomeContent(
                         completedCount = completedCount,
                         totalCount = totalCount,
                         isToday = isToday,
-                        dayLabel = dayShortLabel(selectedDate),
+                        dayLabel = dayLabel(selectedDate),
                         habits = habits,
                         selectedDate = selectedDate,
                     )
@@ -208,7 +204,7 @@ fun HomeContent(
                             text = if (isToday) {
                                 stringResource(R.string.home_todays_habits)
                             } else {
-                                stringResource(R.string.home_day_habits, dayShortLabel(selectedDate))
+                                stringResource(R.string.home_day_habits, dayLabel(selectedDate))
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
@@ -250,15 +246,15 @@ fun HomeContent(
                     }
                 }
 
-                item {
-                    when {
-                        isToday && overallStreak > 2 -> HomeMotivationCard(overallStreak = overallStreak)
-                        else -> HomeDayInfoCard(
+                when {
+                    isToday && overallStreak > 2 -> item {
+                        HomeMotivationCard(overallStreak = overallStreak)
+                    }
+                    isPast && pct < 100 -> item {
+                        HomeDayInfoCard(
                             pct = pct,
                             completedCount = completedCount,
                             totalCount = totalCount,
-                            isPast = isPast,
-                            isFuture = isFuture,
                         )
                     }
                 }
@@ -276,7 +272,6 @@ private fun HomeHeader(
     greetingRes: Int,
     userDisplayName: String,
     avatarUrl: String?,
-    avatarColor: String,
     weekDays: List<LocalDate>,
     allHabits: List<Habit>,
     onDateSelected: (LocalDate) -> Unit,
@@ -286,6 +281,7 @@ private fun HomeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+            .statusBarsPadding()
             .padding(horizontal = 20.dp)
             .padding(top = 16.dp, bottom = 20.dp),
     ) {
@@ -323,9 +319,11 @@ private fun HomeHeader(
             ProfileAvatar(
                 avatarUrl = avatarUrl,
                 displayName = userDisplayName,
-                avatarColor = avatarColor,
+                avatarColor = HabitPrimaryLight.toHex(),
                 size = 40.dp,
                 contentDescription = stringResource(R.string.cd_profile_avatar),
+                borderColor = Color.White,
+                borderWidth = 2.dp,
             )
         }
 
@@ -423,13 +421,13 @@ private fun HomeProgressCard(
         Box(contentAlignment = Alignment.Center) {
             ProgressRing(
                 progress = if (totalCount == 0) 0f else completedCount.toFloat() / totalCount,
-                color = HabitPrimary,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = stringResource(R.string.home_percent, pct),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black,
-                color = HabitPrimary,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -438,7 +436,7 @@ private fun HomeProgressCard(
                 text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
-                color = HabitOnSurface,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = if (isToday) {
@@ -448,7 +446,7 @@ private fun HomeProgressCard(
                 },
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = HabitOnSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (habits.isNotEmpty()) {
                 Row(
@@ -516,7 +514,11 @@ private fun HomeHabitCard(
                 text = habit.name,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = if (isDone) HabitOnSurfaceVariant else HabitOnSurface,
+                color = if (isDone) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 textDecoration = if (isDone) TextDecoration.LineThrough else null,
             )
             Row(
@@ -525,7 +527,7 @@ private fun HomeHabitCard(
                 modifier = Modifier.padding(top = 2.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.LocalFireDepartment,
+                    imageVector = Icons.Rounded.LocalFireDepartment,
                     contentDescription = null,
                     tint = accentColor,
                     modifier = Modifier.size(12.dp),
@@ -539,7 +541,7 @@ private fun HomeHabitCard(
                 Text(
                     text = stringResource(R.string.home_time_separator, habitTimeLabel(habit)),
                     style = MaterialTheme.typography.labelSmall,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -558,7 +560,7 @@ private fun HomeHabitCard(
         ) {
             if (isDone) {
                 Icon(
-                    imageVector = Icons.Default.Check,
+                    imageVector = Icons.Rounded.Check,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(16.dp),
@@ -574,7 +576,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Brush.horizontalGradient(listOf(HabitSurfaceVariant, HabitOutline)))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -587,7 +589,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Bolt,
+                imageVector = Icons.Rounded.Bolt,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp),
@@ -603,7 +605,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
             Text(
                 text = stringResource(R.string.home_overall_streak, overallStreak),
                 style = MaterialTheme.typography.labelSmall,
-                color = HabitOnSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -614,8 +616,6 @@ private fun HomeDayInfoCard(
     pct: Int,
     completedCount: Int,
     totalCount: Int,
-    isPast: Boolean,
-    isFuture: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -628,11 +628,7 @@ private fun HomeDayInfoCard(
     ) {
         Icon(
             painter = painterResource(
-                when {
-                    pct == 100 -> R.drawable.ic_onboarding_trophy
-                    pct >= 50 -> R.drawable.ic_onboarding_chart
-                    else -> R.drawable.ic_home_calendar
-                },
+                if (pct >= 50) R.drawable.ic_onboarding_chart else R.drawable.ic_home_calendar,
             ),
             contentDescription = null,
             tint = HabitPrimary,
@@ -640,25 +636,18 @@ private fun HomeDayInfoCard(
         )
         Column {
             Text(
-                text = when {
-                    pct == 100 -> stringResource(R.string.home_perfect_day)
-                    isPast -> stringResource(R.string.home_past_record)
-                    else -> stringResource(R.string.home_upcoming_day)
-                },
+                text = stringResource(R.string.home_past_record),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
                 color = HabitOnSurface,
             )
             Text(
-                text = when {
-                    isFuture -> stringResource(R.string.home_future_message)
-                    else -> stringResource(
-                        R.string.home_past_message,
-                        completedCount,
-                        totalCount,
-                        pct,
-                    )
-                },
+                text = stringResource(
+                    R.string.home_past_message,
+                    completedCount,
+                    totalCount,
+                    pct,
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = HabitOnSurfaceVariant,
             )
@@ -676,7 +665,6 @@ private fun HomeContentPreview() {
         today = LocalDate.now(),
         userDisplayName = "John",
         avatarUrl = null,
-        avatarColor = HabitPrimary.toHex(),
         actionErrorRes = null,
         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
         onDateSelected = {},

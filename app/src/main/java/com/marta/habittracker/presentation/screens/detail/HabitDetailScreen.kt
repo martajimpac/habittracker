@@ -1,96 +1,85 @@
 package com.marta.habittracker.presentation.screens.detail
 
-import android.Manifest
-import android.app.AlarmManager
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.presentation.components.ActivityHeatmap
+import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.core.toJava
 import com.marta.habittracker.presentation.components.HabitButton
+import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
-import com.marta.habittracker.presentation.components.ReminderToggleRow
-import com.marta.habittracker.presentation.components.buildRollingFourWeeks
-import com.marta.habittracker.presentation.components.habitDayIntensity
-import com.marta.habittracker.presentation.components.toHeatmapWeeks
-import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.components.MonthCalendar
+import com.marta.habittracker.presentation.screens.home.calculateStreak
+import com.marta.habittracker.presentation.theme.HabitOnSurface
+import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.parseHabitColor
+import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
-import kotlinx.coroutines.launch
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun HabitDetailScreen(
     onBack: () -> Unit,
+    onEdit: (String) -> Unit,
     viewModel: HabitDetailViewModel = hiltViewModel(),
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
-    val reminderEnabled by viewModel.reminderEnabled.collectAsStateWithLifecycle()
-    val reminderTime by viewModel.reminderTime.collectAsStateWithLifecycle()
-    val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        if (granted) {
-            viewModel.onReminderEnabled(true)
-        } else {
-            viewModel.onReminderEnabled(false)
-            viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
-        }
-    }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     ObserveAsEvents(flow = viewModel.habitDeleted) {
         onBack()
@@ -98,192 +87,279 @@ fun HabitDetailScreen(
 
     HabitDetailContent(
         habit = habit,
+        records = history,
         completionRate = completionRate,
-        reminderEnabled = reminderEnabled,
-        reminderTime = reminderTime,
-        actionErrorRes = actionErrorRes,
         onBack = onBack,
-        onReminderEnabledChange = { enabled ->
-            if (!enabled) {
-                viewModel.onReminderEnabled(false)
-            } else if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() != true
-            ) {
-                viewModel.onReminderEnabled(false)
-                viewModel.onReminderDenied(R.string.habit_reminder_exact_alarm_denied)
-            } else if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS,
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                viewModel.onReminderEnabled(true)
-            }
-        },
-        onReminderTimeChanged = viewModel::onReminderTimeChanged,
-        onSaveReminder = viewModel::saveReminder,
+        onEdit = { habit?.id?.let(onEdit) },
+        onDelete = { showDeleteConfirm = true },
     )
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.detail_delete_title)) },
+            text = { Text(stringResource(R.string.detail_delete_message)) },
+            confirmButton = {
+                HabitButton(
+                    text = stringResource(R.string.detail_delete_habit),
+                    onClick = {
+                        showDeleteConfirm = false
+                        viewModel.deleteHabit()
+                    },
+                    fillMaxWidth = false,
+                    compact = true,
+                )
+            },
+            dismissButton = {
+                HabitButton(
+                    text = stringResource(R.string.add_habit_cancel),
+                    onClick = { showDeleteConfirm = false },
+                    variant = HabitButtonVariant.Secondary,
+                    fillMaxWidth = false,
+                    compact = true,
+                )
+            },
+        )
+    }
 }
 
 @Composable
 fun HabitDetailContent(
     habit: Habit?,
+    records: List<HabitRecord>,
     completionRate: Float,
     onBack: () -> Unit,
-    reminderEnabled: Boolean = false,
-    reminderTime: String = "08:00",
-    actionErrorRes: Int? = null,
-    onReminderEnabledChange: (Boolean) -> Unit = {},
-    onReminderTimeChanged: (String) -> Unit = {},
-    onSaveReminder: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
     val accent = parseHabitColor(habit?.colorHex.orEmpty())
     val reminder = habit?.reminderTime?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.home_all_day)
+    val actionsEnabled = habit != null
 
-    val tabs = listOf(
-        stringResource(R.string.detail_tab_stats),
-        stringResource(R.string.detail_tab_calendar),
-        stringResource(R.string.detail_tab_settings),
-    )
-    val pagerState = rememberPagerState(pageCount = { tabs.size })
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        HabitDetailHeader(
-            name = habitName,
-            iconKey = iconKey,
-            accentColor = accent,
-            reminderTime = reminder,
-            onBack = onBack,
-        )
-
-        SecondaryTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = accent,
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    text = { Text(text = title) },
-                )
-            }
+            HabitIconButton(
+                onClick = onBack,
+                icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = stringResource(R.string.detail_back),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            HabitIconButton(
+                onClick = onEdit,
+                icon = Icons.Rounded.Edit,
+                contentDescription = stringResource(R.string.detail_edit_habit),
+                enabled = actionsEnabled,
+            )
+            HabitIconButton(
+                onClick = onDelete,
+                icon = Icons.Rounded.Delete,
+                contentDescription = stringResource(R.string.detail_delete_habit),
+                enabled = actionsEnabled,
+                iconTint = MaterialTheme.colorScheme.error,
+            )
         }
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.Top,
-        ) { pageIndex ->
-            when (pageIndex) {
-                0 -> StatisticsTab(completionRate = completionRate, accentColor = accent)
-                1 -> CalendarTab(habit = habit)
-                2 -> SettingsTab(
-                    reminderEnabled = reminderEnabled,
-                    reminderTime = reminderTime,
-                    actionErrorRes = actionErrorRes,
-                    canSaveReminder = habit != null,
-                    onReminderEnabledChange = onReminderEnabledChange,
-                    onReminderTimeChanged = onReminderTimeChanged,
-                    onSaveReminder = onSaveReminder,
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp),
+        ) {
+            DetailOverviewCard(
+                habit = habit,
+                records = records,
+                habitName = habitName,
+                iconKey = iconKey,
+                accent = accent,
+                reminder = reminder,
+            )
+
+            DetailChartsCard(
+                habit = habit,
+                records = records,
+                accent = accent,
+                completionRate = completionRate,
+            )
+
+            DetailCalendar(records = records, accent = accent)
+        }
+    }
+}
+
+private val DetailCardShape = RoundedCornerShape(20.dp)
+
+@Composable
+private fun DetailOverviewCard(
+    habit: Habit?,
+    records: List<HabitRecord>,
+    habitName: String,
+    iconKey: String?,
+    accent: Color,
+    reminder: String,
+) {
+    val streak = if (habit == null) 0 else calculateStreak(records)
+    val description = habit?.description?.takeIf { it.isNotBlank() }
+    Column(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .detailCard(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(accent.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                HabitLineIcon(
+                    iconKey = iconKey,
+                    tint = accent,
+                    size = 28.dp,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = habitName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = reminder,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (streak > 0) {
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.LocalFireDepartment,
+                            contentDescription = null,
+                            tint = accent,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            text = pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = accent,
+                        )
+                    }
+                }
+            }
+        }
+        if (description != null) {
+            Text(
+                text = description,
+                modifier = Modifier.padding(top = 16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (habit != null) {
+            Text(
+                text = stringResource(R.string.detail_scheduled_days),
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            ScheduledDays(days = habit.daysOfWeek, accent = accent)
+        }
+    }
+}
+
+@Composable
+private fun ScheduledDays(
+    days: Set<DayOfWeek>,
+    accent: Color,
+) {
+    val labels = listOf(
+        DayOfWeek.MONDAY to stringResource(R.string.activity_day_mon),
+        DayOfWeek.TUESDAY to stringResource(R.string.activity_day_tue),
+        DayOfWeek.WEDNESDAY to stringResource(R.string.activity_day_wed),
+        DayOfWeek.THURSDAY to stringResource(R.string.activity_day_thu),
+        DayOfWeek.FRIDAY to stringResource(R.string.activity_day_fri),
+        DayOfWeek.SATURDAY to stringResource(R.string.activity_day_sat),
+        DayOfWeek.SUNDAY to stringResource(R.string.activity_day_sun),
+    )
+    val onAccent = if (accent.luminance() > 0.6f) HabitOnSurface else Color.White
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        labels.forEach { (day, label) ->
+            val selected = day in days
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (selected) accent else MaterialTheme.colorScheme.surfaceContainerHighest,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (selected) onAccent else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitDetailHeader(
-    name: String,
-    iconKey: String?,
-    accentColor: Color,
-    reminderTime: String,
-    onBack: () -> Unit,
+private fun DetailChartsCard(
+    habit: Habit?,
+    records: List<HabitRecord>,
+    accent: Color,
+    completionRate: Float,
 ) {
-    TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(accentColor.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    HabitLineIcon(
-                        iconKey = iconKey,
-                        tint = accentColor,
-                        size = 22.dp,
-                    )
-                }
-                Column {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = reminderTime,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.detail_back),
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-    )
-}
-
-@Composable
-fun StatisticsTab(completionRate: Float, accentColor: Color) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+            .padding(top = 12.dp)
+            .detailCard(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResource(R.string.detail_overall_performance),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
+        Spacer(modifier = Modifier.height(20.dp))
         Box(contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
                 progress = { completionRate / 100f },
-                modifier = Modifier.size(200.dp),
+                modifier = Modifier.size(180.dp),
                 strokeWidth = 16.dp,
-                color = accentColor,
-                trackColor = accentColor.copy(alpha = 0.2f),
+                color = accent,
+                trackColor = accent.copy(alpha = 0.2f),
                 strokeCap = StrokeCap.Round,
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -291,7 +367,7 @@ fun StatisticsTab(completionRate: Float, accentColor: Color) {
                     text = "${completionRate.toInt()}%",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = accentColor,
+                    color = accent,
                 )
                 Text(
                     text = stringResource(R.string.detail_completed),
@@ -300,110 +376,144 @@ fun StatisticsTab(completionRate: Float, accentColor: Color) {
                 )
             }
         }
-    }
-}
-
-@Composable
-fun CalendarTab(habit: Habit?) {
-    val today = remember { LocalDate.now() }
-    val weeks = remember(habit?.id, habit?.records, today) {
-        val current = habit
-        toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->
-            if (current == null) 0f else habitDayIntensity(current, date)
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-    ) {
-        ActivityHeatmap(
-            weeks = weeks,
-            today = today,
-            filledColor = habit?.let { parseHabitColor(it.colorHex) } ?: HabitPrimary,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsTab(
-    reminderEnabled: Boolean,
-    reminderTime: String,
-    actionErrorRes: Int?,
-    canSaveReminder: Boolean,
-    onReminderEnabledChange: (Boolean) -> Unit,
-    onReminderTimeChanged: (String) -> Unit,
-    onSaveReminder: () -> Unit,
-) {
-    var showTimePicker by remember { mutableStateOf(false) }
-
-    if (showTimePicker) {
-        val parts = reminderTime.split(":")
-        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 8
-        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-        val timePickerState = rememberTimePickerState(
-            initialHour = hour,
-            initialMinute = minute,
-            is24Hour = true,
-        )
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onReminderTimeChanged(
-                            "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
-                        )
-                        showTimePicker = false
-                    },
-                ) {
-                    Text(stringResource(R.string.add_habit_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.add_habit_cancel))
-                }
-            },
-            text = { TimePicker(state = timePickerState) },
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        ReminderToggleRow(
-            enabled = reminderEnabled,
-            reminderTime = reminderTime,
-            onEnabledChange = onReminderEnabledChange,
-            onTimeClick = { showTimePicker = true },
-        )
-        actionErrorRes?.let { errorRes ->
-            Text(
-                text = stringResource(errorRes),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
+        if (habit != null) {
+            Spacer(modifier = Modifier.height(28.dp))
+            LastFourWeeksChart(
+                habit = habit,
+                records = records,
+                accent = accent,
             )
         }
-        HabitButton(
-            text = stringResource(R.string.habit_reminder_save),
-            onClick = onSaveReminder,
-            enabled = canSaveReminder,
-        )
     }
 }
+
+@Composable
+private fun LastFourWeeksChart(
+    habit: Habit,
+    records: List<HabitRecord>,
+    accent: Color,
+) {
+    val today = remember { LocalDate.now() }
+    val weeks = remember(habit.daysOfWeek, habit.createdAt, records, today) {
+        recentWeekCompletions(
+            daysOfWeek = habit.daysOfWeek,
+            records = records,
+            createdOn = habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate(),
+            today = today,
+        )
+    }
+    val formatter = remember {
+        DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+    }
+    Text(
+        text = stringResource(R.string.detail_last_four_weeks),
+        modifier = Modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        weeks.forEach { week ->
+            val label = week.weekStart.format(formatter)
+            val percent = if (week.scheduled == 0) {
+                stringResource(R.string.detail_week_empty)
+            } else {
+                "${(week.rate * 100).toInt()}%"
+            }
+            val description = stringResource(
+                R.string.detail_week_bar,
+                label,
+                if (week.scheduled == 0) 0 else (week.rate * 100).toInt(),
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { contentDescription = description },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = percent,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accent,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.15f)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .fillMaxHeight(week.rate.coerceIn(0f, 1f))
+                            .background(accent),
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailCalendar(
+    records: List<HabitRecord>,
+    accent: Color,
+) {
+    val today = remember { LocalDate.now() }
+    var month by remember { mutableStateOf(YearMonth.from(today)) }
+    val completedDates = remember(records) {
+        records
+            .filter { it.isCompleted }
+            .map { it.date.toJava() }
+            .toSet()
+    }
+
+    MonthCalendar(
+        month = month,
+        completedDates = completedDates,
+        accentColor = accent,
+        today = today,
+        onPreviousMonth = { month = month.minusMonths(1) },
+        onNextMonth = { month = month.plusMonths(1) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+    )
+}
+
+@Composable
+private fun Modifier.detailCard(): Modifier = this
+    .fillMaxWidth()
+    .padding(horizontal = 20.dp)
+    .clip(DetailCardShape)
+    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+    .border(1.dp, HabitOutline, DetailCardShape)
+    .padding(20.dp)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun HabitDetailContentPreview() {
     HabitDetailContent(
         habit = null,
+        records = emptyList(),
         completionRate = 75f,
         onBack = {},
     )

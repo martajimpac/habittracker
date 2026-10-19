@@ -1,10 +1,13 @@
 package com.marta.habittracker.presentation.screens.add_content
 
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.SavedStateHandle
 import com.marta.habittracker.R
+import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.SaveHabit
 import com.marta.habittracker.presentation.theme.HabitColor1
+import kotlinx.datetime.DayOfWeek as KotlinDayOfWeek
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -21,6 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.DayOfWeek
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddContentViewModelTest {
@@ -42,11 +46,15 @@ class AddContentViewModelTest {
         val viewModel = createViewModel()
 
         viewModel.onDayToggled(DayOfWeek.MONDAY)
+        var focused: AddContentField? = null
+        val collectJob = launch { viewModel.focusField.collect { focused = it } }
         viewModel.onSaveClicked()
         advanceUntilIdle()
 
         assertEquals(R.string.add_habit_error_name_required, viewModel.uiState.value.errorMessageRes)
+        assertEquals(AddContentField.Name, focused)
         assertFalse(viewModel.uiState.value.isSaving)
+        collectJob.cancel()
     }
 
     @Test
@@ -54,16 +62,20 @@ class AddContentViewModelTest {
         val viewModel = createViewModel()
 
         viewModel.onNameChanged("Morning Run")
+        var focused: AddContentField? = null
+        val collectJob = launch { viewModel.focusField.collect { focused = it } }
         viewModel.onSaveClicked()
         advanceUntilIdle()
 
         assertEquals(R.string.add_habit_error_days_required, viewModel.uiState.value.errorMessageRes)
+        assertEquals(AddContentField.Days, focused)
+        collectJob.cancel()
     }
 
     @Test
     fun `save with valid data persists visuals and emits saved`() = runTest {
         val repository = FakeHabitRepository()
-        val viewModel = AddContentViewModel(SaveHabit(repository))
+        val viewModel = createViewModel(repository)
         var saved = false
         val collectJob = launch {
             viewModel.habitSaved.collect { saved = true }
@@ -93,7 +105,7 @@ class AddContentViewModelTest {
     @Test
     fun `save with reminder disabled sends null reminderTime even if time is set`() = runTest {
         val repository = FakeHabitRepository()
-        val viewModel = AddContentViewModel(SaveHabit(repository))
+        val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
         viewModel.onDayToggled(DayOfWeek.MONDAY)
@@ -108,7 +120,7 @@ class AddContentViewModelTest {
     @Test
     fun `save with reminder enabled persists reminderTime`() = runTest {
         val repository = FakeHabitRepository()
-        val viewModel = AddContentViewModel(SaveHabit(repository))
+        val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
         viewModel.onDayToggled(DayOfWeek.MONDAY)
@@ -124,7 +136,7 @@ class AddContentViewModelTest {
     @Test
     fun `invalid reminder format only errors when reminder is enabled`() = runTest {
         val disabledRepository = FakeHabitRepository()
-        val disabledViewModel = AddContentViewModel(SaveHabit(disabledRepository))
+        val disabledViewModel = createViewModel(disabledRepository)
         disabledViewModel.onNameChanged("Morning Run")
         disabledViewModel.onDayToggled(DayOfWeek.MONDAY)
         disabledViewModel.onReminderTimeChanged("25:99")
@@ -135,7 +147,7 @@ class AddContentViewModelTest {
         assertNull(disabledRepository.insertedHabits.single().reminderTime)
 
         val enabledRepository = FakeHabitRepository()
-        val enabledViewModel = AddContentViewModel(SaveHabit(enabledRepository))
+        val enabledViewModel = createViewModel(enabledRepository)
         enabledViewModel.onNameChanged("Morning Run")
         enabledViewModel.onDayToggled(DayOfWeek.MONDAY)
         enabledViewModel.onReminderEnabled(true)
@@ -177,6 +189,53 @@ class AddContentViewModelTest {
         )
     }
 
-    private fun createViewModel(): AddContentViewModel =
-        AddContentViewModel(SaveHabit(FakeHabitRepository()))
+    @Test
+    fun `editing an existing habit prefills the form and updates instead of inserting`() = runTest {
+        val habit = Habit(
+            id = "habit-1",
+            name = "Read",
+            description = "A chapter",
+            daysOfWeek = setOf(KotlinDayOfWeek.MONDAY, KotlinDayOfWeek.FRIDAY),
+            icon = "book",
+            colorHex = "#F04F45",
+            reminderTime = "07:30",
+            createdAt = Instant.parse("2026-01-01T00:00:00Z"),
+            records = emptyList(),
+            isPublic = true,
+        )
+        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
+        val viewModel = AddContentViewModel(
+            saveHabit = SaveHabit(repository),
+            habitRepository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+        )
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isEditing)
+        assertEquals("Read", viewModel.uiState.value.name)
+        assertEquals("A chapter", viewModel.uiState.value.description)
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), viewModel.uiState.value.selectedDays)
+        assertEquals("book", viewModel.uiState.value.icon)
+        assertTrue(viewModel.uiState.value.reminderEnabled)
+        assertEquals("07:30", viewModel.uiState.value.reminderTime)
+        assertTrue(viewModel.uiState.value.isPublic)
+
+        viewModel.onNameChanged("Read more")
+        viewModel.onSaveClicked()
+        advanceUntilIdle()
+
+        val updated = repository.updatedHabits.single()
+        assertEquals(habit.id, updated.id)
+        assertEquals("Read more", updated.name)
+        assertEquals(habit.createdAt, updated.createdAt)
+        assertTrue(repository.insertedHabits.isEmpty())
+    }
+
+    private fun createViewModel(
+        repository: FakeHabitRepository = FakeHabitRepository(),
+    ): AddContentViewModel = AddContentViewModel(
+        saveHabit = SaveHabit(repository),
+        habitRepository = repository,
+        savedStateHandle = SavedStateHandle(),
+    )
 }

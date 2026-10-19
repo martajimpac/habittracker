@@ -1,16 +1,21 @@
 package com.marta.habittracker.presentation.screens.deleteaccount
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -36,6 +42,7 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.coroutines.launch
 
@@ -96,7 +103,7 @@ fun DeleteAccountContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.preferences_back),
                         enabled = !uiState.isDeleting,
                     )
@@ -116,12 +123,21 @@ fun DeleteAccountContent(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            val danger = habitDangerColors()
             Text(
                 text = stringResource(R.string.preferences_delete_explanation),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(danger.container)
+                    .border(1.dp, danger.border, RoundedCornerShape(24.dp))
+                    .padding(16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = danger.content,
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             CustomTextField(
                 value = uiState.confirmation,
                 onValueChange = onConfirmationChanged,
@@ -139,7 +155,7 @@ fun DeleteAccountContent(
                 onClick = onDeleteConfirmed,
                 enabled = uiState.isDeleteEnabled && !uiState.isDeleting,
                 loading = uiState.isDeleting,
-                variant = HabitButtonVariant.Primary,
+                variant = HabitButtonVariant.Destructive,
             )
             Spacer(modifier = Modifier.height(8.dp))
             HabitButton(

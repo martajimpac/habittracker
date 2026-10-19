@@ -34,7 +34,7 @@ import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
-import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.theme.HabitAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -74,7 +74,7 @@ class ChallengeWidgetConfigActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            InstaDevTheme {
+            HabitAppTheme {
                 ChallengeWidgetConfigContent(
                     challenges = challenges,
                     isLoading = isLoading,

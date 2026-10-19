@@ -6,6 +6,7 @@ import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -88,6 +89,27 @@ class HabitDetailViewModelTest {
         advanceUntilIdle()
 
         assertEquals("07:30", repository.updatedHabits.single().reminderTime)
+    }
+
+    @Test
+    fun `deleteHabit emits habitDeleted`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
+        val viewModel = HabitDetailViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+        )
+        advanceUntilIdle()
+        var deleted = false
+        val collectJob = launch {
+            viewModel.habitDeleted.collect { deleted = true }
+        }
+
+        viewModel.deleteHabit()
+        advanceUntilIdle()
+
+        assertTrue(deleted)
+        collectJob.cancel()
     }
 
     @Test

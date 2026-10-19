@@ -2,56 +2,108 @@ package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.Habit
-import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 
-data class StreakAtRisk(
-    val habitId: String,
-    val habitName: String,
-    val streakDays: Int,
-)
+/**
+ * Stats streak cards show up once a streak reaches these lengths.
+ * Change the two values here to move both thresholds.
+ */
+object StatsStreakMinimums {
+    const val ALL_HABITS_DAYS = 3
+    const val SINGLE_HABIT_DAYS = 3
+}
 
-data class HabitStatsInsight(
-    val strongestWeekday: DayOfWeek?,
-    val strongestWeekdayCount: Int,
-    val streakAtRisk: StreakAtRisk?,
-)
+sealed interface StatsStreakHighlight {
+    data class AllHabits(val days: Int, val isLongestSoFar: Boolean) : StatsStreakHighlight
+    data class Habit(val habitId: String, val habitName: String, val days: Int) : StatsStreakHighlight
+}
+
+private const val STREAK_LOOKBACK_DAYS = 730
 
 /**
- * Strongest weekday counts completed records. A tie keeps the earlier weekday, Monday first.
- * The streak that breaks tomorrow is the longest streak still alive today, using the same
- * rule as Home: consecutive completed days ending on [today]. A habit not completed today
- * already has no streak, so it is not waiting on tomorrow.
+ * Prefers a current run of days where every scheduled habit was completed.
+ * Days with nothing scheduled are skipped, so a rest day does not break the run.
+ * Otherwise highlights the habit with the longest streak still alive today.
+ * Either card stays hidden until its minimum in [StatsStreakMinimums].
  */
-fun habitStatsInsight(habits: List<Habit>, today: LocalDate): HabitStatsInsight {
-    val counts = habits
-        .asSequence()
-        .flatMap { it.records }
-        .filter { it.isCompleted }
-        .groupingBy { it.date.toJava().dayOfWeek }
-        .eachCount()
-    val strongest = counts.entries.maxWithOrNull(
-        compareBy<Map.Entry<DayOfWeek, Int>> { it.value }.thenBy { -it.key.ordinal },
-    )
+fun statsStreakHighlight(habits: List<Habit>, today: LocalDate): StatsStreakHighlight? {
+    val current = perfectStreakEnding(habits, today)
+    if (current >= StatsStreakMinimums.ALL_HABITS_DAYS) {
+        return StatsStreakHighlight.AllHabits(
+            days = current,
+            isLongestSoFar = current == bestPerfectStreak(habits, today),
+        )
+    }
 
     val kotlinToday = KotlinLocalDate.parse(today.toString())
-    val atRisk = habits.mapNotNull { habit ->
+    val longest = habits.mapNotNull { habit ->
         val streak = calculateHabitStreak(habit.records, kotlinToday)
-        if (streak == 0) {
-            null
+        if (streak >= StatsStreakMinimums.SINGLE_HABIT_DAYS) {
+            StatsStreakHighlight.Habit(habit.id, habit.name, streak)
         } else {
-            StreakAtRisk(habitId = habit.id, habitName = habit.name, streakDays = streak)
+            null
         }
     }.maxWithOrNull(
-        compareBy<StreakAtRisk> { it.streakDays }
-            .thenByDescending { it.habitName }
-            .thenByDescending { it.habitId },
+        compareBy<StatsStreakHighlight.Habit> { it.days }
+            .thenBy { it.habitName }
+            .thenBy { it.habitId },
     )
+    return longest
+}
 
-    return HabitStatsInsight(
-        strongestWeekday = strongest?.key,
-        strongestWeekdayCount = strongest?.value ?: 0,
-        streakAtRisk = atRisk,
-    )
+/** Stable index into a list of copy variants. Same streak and day always pick the same line. */
+fun statsStreakCopyVariant(streakDays: Int, dayOfYear: Int, variantCount: Int): Int {
+    if (variantCount <= 1) return 0
+    return Math.floorMod(streakDays + dayOfYear, variantCount)
+}
+
+private enum class ScheduledDay { Perfect, Miss, Rest }
+
+private fun perfectStreakEnding(habits: List<Habit>, today: LocalDate): Int {
+    var streak = 0
+    var date = today
+    repeat(STREAK_LOOKBACK_DAYS) {
+        when (scheduledDay(habits, date)) {
+            ScheduledDay.Perfect -> streak++
+            ScheduledDay.Miss -> return streak
+            ScheduledDay.Rest -> Unit
+        }
+        date = date.minusDays(1)
+    }
+    return streak
+}
+
+private fun bestPerfectStreak(habits: List<Habit>, today: LocalDate): Int {
+    var best = 0
+    var run = 0
+    var date = today.minusDays((STREAK_LOOKBACK_DAYS - 1).toLong())
+    repeat(STREAK_LOOKBACK_DAYS) {
+        when (scheduledDay(habits, date)) {
+            ScheduledDay.Perfect -> {
+                run++
+                best = maxOf(best, run)
+            }
+            ScheduledDay.Miss -> run = 0
+            ScheduledDay.Rest -> Unit
+        }
+        date = date.plusDays(1)
+    }
+    return best
+}
+
+private fun scheduledDay(habits: List<Habit>, date: LocalDate): ScheduledDay {
+    val due = habits.filter { isScheduled(it, date) }
+    if (due.isEmpty()) return ScheduledDay.Rest
+    val allDone = due.all { habit ->
+        habit.records.any { record -> record.isCompleted && record.date.toJava() == date }
+    }
+    return if (allDone) ScheduledDay.Perfect else ScheduledDay.Miss
+}
+
+private fun isScheduled(habit: Habit, date: LocalDate): Boolean {
+    val created = habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate()
+    if (date.isBefore(created)) return false
+    return habit.daysOfWeek.any { it.name == date.dayOfWeek.name }
 }

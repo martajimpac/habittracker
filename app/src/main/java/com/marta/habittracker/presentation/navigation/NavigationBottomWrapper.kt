@@ -9,6 +9,7 @@ import com.marta.habittracker.presentation.navigation.TabScreens.TabAddContent
 import com.marta.habittracker.presentation.navigation.TabScreens.TabDeleteAccount
 import com.marta.habittracker.presentation.navigation.TabScreens.TabChallengeDetail
 import com.marta.habittracker.presentation.navigation.TabScreens.TabDetail
+import com.marta.habittracker.presentation.navigation.TabScreens.TabEditHabit
 import com.marta.habittracker.presentation.navigation.TabScreens.TabFriends
 import com.marta.habittracker.presentation.navigation.TabScreens.TabHome
 import com.marta.habittracker.presentation.navigation.TabScreens.TabGoals
@@ -38,7 +39,13 @@ fun NavigationBottomWrapper(
             HomeScreen()
         }
 
-        composable<TabStats> { StatsScreen() }
+        composable<TabStats> {
+            StatsScreen(
+                onHabitClick = { habitId ->
+                    navHostController.navigate(TabDetail(habitId))
+                },
+            )
+        }
 
         composable<TabFriends> {
             FriendsScreen(
@@ -84,6 +91,15 @@ fun NavigationBottomWrapper(
 
         composable<TabDetail> {
             HabitDetailScreen(
+                onBack = { navHostController.popBackStack() },
+                onEdit = { habitId ->
+                    navHostController.navigate(TabEditHabit(habitId))
+                },
+            )
+        }
+
+        composable<TabEditHabit> {
+            AddContentScreen(
                 onBack = { navHostController.popBackStack() },
             )
         }

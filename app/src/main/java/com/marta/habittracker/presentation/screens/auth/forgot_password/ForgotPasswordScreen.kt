@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.auth.forgot_password
 
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 
 @Composable
 fun ForgotPasswordScreen(
@@ -69,6 +71,7 @@ fun ForgotPasswordContent(
     onEmailChanged: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
+    SyncStatusBarIcons(lightBackground = !isHabitDarkTheme())
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -77,7 +80,7 @@ fun ForgotPasswordContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.forgot_password_back),
                     )
                 },
@@ -113,7 +116,7 @@ fun ForgotPasswordContent(
                 ),
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Outlined.Email,
+                        imageVector = Icons.Rounded.Email,
                         contentDescription = null,
                     )
                 },

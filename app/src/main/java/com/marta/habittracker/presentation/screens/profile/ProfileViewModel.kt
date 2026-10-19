@@ -3,9 +3,11 @@ package com.marta.habittracker.presentation.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
+import com.marta.habittracker.domain.repository.ThemeRepository
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +33,7 @@ data class ProfileUiState(
     val dayStreak: Int = 0,
     val completedCount: Int = 0,
     val habitsCount: Int = 0,
+    val isReady: Boolean = false,
 )
 
 private data class ProfileIdentity(
@@ -45,6 +48,7 @@ class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     habitRepository: HabitRepository,
     private val profileRepository: ProfileRepository,
+    private val themeRepository: ThemeRepository,
 ) : ViewModel() {
 
     private val profileRefresh = MutableStateFlow(0)
@@ -75,6 +79,19 @@ class ProfileViewModel @Inject constructor(
     private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
     val navigateToLogin = _navigateToLogin.receiveAsFlow()
 
+    val themeMode: StateFlow<ThemeMode> = themeRepository.themeMode()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ThemeMode.System,
+        )
+
+    fun onDarkModeChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            themeRepository.setThemeMode(if (enabled) ThemeMode.Dark else ThemeMode.Light)
+        }
+    }
+
     val uiState: StateFlow<ProfileUiState> = combine(
         identityFlow,
         habitRepository.getAllHabitsWithRecords(),
@@ -88,6 +105,7 @@ class ProfileViewModel @Inject constructor(
             dayStreak = habits.maxOfOrNull { calculateStreak(it.records, today) } ?: 0,
             completedCount = habits.sumOf { habit -> habit.records.count { it.isCompleted } },
             habitsCount = habits.size,
+            isReady = true,
         )
     }.stateIn(
         scope = viewModelScope,

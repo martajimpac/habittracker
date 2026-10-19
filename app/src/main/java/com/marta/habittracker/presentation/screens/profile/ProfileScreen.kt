@@ -1,6 +1,5 @@
 package com.marta.habittracker.presentation.screens.profile
 
-import android.R.style.Theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,15 +18,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.TrackChanges
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -47,8 +45,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.ProfileAvatar
-import com.marta.habittracker.presentation.theme.HabitOnSurface
+import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.presentation.theme.HabitPrimary
+import com.marta.habittracker.presentation.theme.HabitPrimaryLight
+import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.toHex
 
@@ -66,6 +66,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -80,6 +81,8 @@ fun ProfileScreen(
         onSignOut = viewModel::onSignOutClicked,
         onPreferences = onPreferences,
         onGoals = onGoals,
+        themeMode = themeMode,
+        onDarkModeChanged = viewModel::onDarkModeChanged,
     )
 }
 
@@ -89,11 +92,24 @@ fun ProfileContent(
     onSignOut: () -> Unit = {},
     onPreferences: () -> Unit = {},
     onGoals: () -> Unit = {},
+    themeMode: ThemeMode = ThemeMode.System,
+    onDarkModeChanged: (Boolean) -> Unit = {},
 ) {
+    if (!uiState.isReady) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+        )
+        return
+    }
+    val darkMode = when (themeMode) {
+        ThemeMode.Dark -> true
+        ThemeMode.Light -> false
+        ThemeMode.System -> isSystemInDarkTheme()
+    }
     val menuItems = listOf(
-        ProfileMenuItem(R.string.profile_notifications, Icons.Outlined.Notifications, MaterialTheme.colorScheme.primary),
-        ProfileMenuItem(R.string.profile_goals, Icons.Outlined.TrackChanges, MaterialTheme.colorScheme.primary),
-        ProfileMenuItem(R.string.profile_preferences, Icons.Outlined.Settings, MaterialTheme.colorScheme.primary),
+        ProfileMenuItem(R.string.profile_preferences, Icons.Rounded.Settings, MaterialTheme.colorScheme.primary),
     )
 
     Column(
@@ -118,11 +134,15 @@ fun ProfileContent(
                     tint = item.tint,
                     onClick = when (item.labelRes) {
                         R.string.profile_preferences -> onPreferences
-                        R.string.profile_goals -> onGoals
                         else -> ({})
                     },
                 )
             }
+
+            ProfileDarkModeRow(
+                checked = darkMode,
+                onCheckedChange = onDarkModeChanged,
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -152,9 +172,11 @@ private fun ProfileHeader(
         ProfileAvatar(
             avatarUrl = uiState.avatarUrl,
             displayName = displayName,
-            avatarColor = uiState.avatarColor,
+            avatarColor = HabitPrimaryLight.toHex(),
             size = 80.dp,
             contentDescription = stringResource(R.string.cd_profile_avatar),
+            borderColor = Color.White,
+            borderWidth = 3.dp,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -180,14 +202,17 @@ private fun ProfileHeader(
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             ProfileStat(
+                modifier = Modifier.weight(1f),
                 value = uiState.dayStreak.toString(),
                 label = stringResource(R.string.profile_stat_day_streak),
             )
             ProfileStat(
+                modifier = Modifier.weight(1f),
                 value = uiState.completedCount.toString(),
                 label = stringResource(R.string.profile_stat_completed),
             )
             ProfileStat(
+                modifier = Modifier.weight(1f),
                 value = uiState.habitsCount.toString(),
                 label = stringResource(R.string.profile_stat_habits),
             )
@@ -199,9 +224,13 @@ private fun ProfileHeader(
 private fun ProfileStat(
     value: String,
     label: String,
+    modifier: Modifier,
 ) {
     val onPrimary = MaterialTheme.colorScheme.onPrimary
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge,
@@ -256,11 +285,11 @@ private fun ProfileMenuRow(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = HabitOnSurface,
+            color = colors.onSurface,
         )
 
         Icon(
-            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
             contentDescription = null,
             tint = colors.outline,
             modifier = Modifier.size(18.dp),
@@ -269,16 +298,64 @@ private fun ProfileMenuRow(
 }
 
 @Composable
-private fun ProfileSignOutRow(
-    onClick: () -> Unit,
+private fun ProfileDarkModeRow(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(colors.errorContainer)
-            .border(1.dp, colors.error.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
+            .background(colors.surfaceContainerLowest)
+            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.primary.copy(alpha = 0.09f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.DarkMode,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.profile_dark_mode),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.onSurface,
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = colors.primary,
+                checkedThumbColor = colors.onPrimary,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun ProfileSignOutRow(
+    onClick: () -> Unit,
+) {
+    val danger = habitDangerColors()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(danger.container)
+            .border(1.dp, danger.border, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -288,13 +365,13 @@ private fun ProfileSignOutRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(colors.error.copy(alpha = 0.09f)),
+                .background(danger.icon.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                imageVector = Icons.AutoMirrored.Rounded.Logout,
                 contentDescription = null,
-                tint = colors.error,
+                tint = danger.icon,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -304,7 +381,7 @@ private fun ProfileSignOutRow(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = colors.error,
+            color = danger.content,
         )
     }
 }
@@ -317,10 +394,11 @@ private fun ProfileContentPreview() {
             displayName = "John Doe",
             email = "john@example.com",
             avatarUrl = null,
-            avatarColor = HabitPrimary.toHex(),
+            avatarColor = HabitPrimaryLight.toHex(),
             dayStreak = 7,
             completedCount = 42,
             habitsCount = 5,
+            isReady = true,
         ),
         onPreferences = {},
         onGoals = {},

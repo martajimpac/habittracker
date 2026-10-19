@@ -14,15 +14,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,9 +53,6 @@ import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.navigation.LoginMessage
-import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
-import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 
 @Composable
@@ -94,6 +92,7 @@ fun LoginContent(
     onNavigateToRegister: () -> Unit,
     messageRes: Int? = null,
 ) {
+    SyncStatusBarIcons(lightBackground = false)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -142,14 +141,14 @@ fun LoginContent(
                     text = stringResource(R.string.login_welcome_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = HabitOnSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.login_welcome_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = HabitOnSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -172,7 +171,7 @@ fun LoginContent(
                     onValueChange = onEmailChanged,
                     placeholder = stringResource(R.string.login_email_placeholder),
                     leadingIcon = {
-                        Icon(Icons.Outlined.Email, contentDescription = null, tint = HabitOnSurfaceVariant)
+                        Icon(Icons.Rounded.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
@@ -185,18 +184,18 @@ fun LoginContent(
                     onValueChange = onPasswordChanged,
                     placeholder = stringResource(R.string.login_password_placeholder),
                     leadingIcon = {
-                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = HabitOnSurfaceVariant)
+                        Icon(Icons.Rounded.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     },
                     trailingIcon = {
                         IconButton(onClick = onTogglePasswordVisibility) {
                             Icon(
                                 imageVector = if (uiState.isPasswordVisible) {
-                                    Icons.Outlined.VisibilityOff
+                                    Icons.Rounded.VisibilityOff
                                 } else {
-                                    Icons.Outlined.Visibility
+                                    Icons.Rounded.Visibility
                                 },
                                 contentDescription = null,
-                                tint = HabitOnSurfaceVariant,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     },
@@ -246,12 +245,12 @@ fun LoginContent(
                     Text(
                         text = stringResource(R.string.login_no_account),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = HabitOnSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = stringResource(R.string.login_sign_up),
                         style = MaterialTheme.typography.labelMedium,
-                        color = HabitPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier
                             .padding(start = 4.dp)

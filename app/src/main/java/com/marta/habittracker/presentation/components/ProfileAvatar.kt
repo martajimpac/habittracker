@@ -2,8 +2,10 @@ package com.marta.habittracker.presentation.components
 
 import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -35,10 +37,20 @@ fun ProfileAvatar(
     size: Dp,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
+    borderColor: Color? = null,
+    borderWidth: Dp = 2.dp,
 ) {
     Box(
         modifier = modifier
             .size(size)
+            .then(
+                if (borderColor != null) {
+                    Modifier.border(borderWidth, borderColor, CircleShape)
+                } else {
+                    Modifier
+                },
+            )
+            .padding(if (borderColor != null) borderWidth else 0.dp)
             .clip(CircleShape)
             .background(avatarColor.toComposeColor()),
         contentAlignment = Alignment.Center,

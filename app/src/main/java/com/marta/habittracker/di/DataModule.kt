@@ -13,6 +13,7 @@ import com.marta.habittracker.data.repository.FriendsRepositoryImpl
 import com.marta.habittracker.data.repository.HabitRepositoryImpl
 import com.marta.habittracker.data.repository.OnboardingRepositoryImpl
 import com.marta.habittracker.data.repository.ProfileRepositoryImpl
+import com.marta.habittracker.data.repository.ThemeRepositoryImpl
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
 import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.repository.AuthRepository
@@ -20,6 +21,7 @@ import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.OnboardingRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
+import com.marta.habittracker.domain.repository.ThemeRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -67,6 +69,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindProfileRepository(impl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository
 
     @Binds
     @Singleton

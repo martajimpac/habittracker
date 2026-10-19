@@ -9,9 +9,14 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.domain.model.ThemeMode
+import androidx.compose.runtime.getValue
 
 private val DarkColorScheme = darkColorScheme(
     primary = HabitPrimaryLight,
@@ -39,10 +44,10 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = Gray70,
 
     surfaceContainerLowest = HabitSurfaceContainerLowestDark,
-    surfaceContainerLow = Gray20,
+    surfaceContainerLow = HabitSurfaceContainerLowDark,
     surfaceContainer = HabitSurfaceContainerDark,
     surfaceContainerHigh = HabitSurfaceContainerHighDark,
-    surfaceContainerHighest = HabitSurfaceContainerHighDark,
+    surfaceContainerHighest = HabitSurfaceContainerHighestDark,
 
     outline = Gray50,
 
@@ -92,6 +97,57 @@ private val LightColorScheme = lightColorScheme(
 )
 
 
+val LocalHabitDarkTheme = staticCompositionLocalOf { false }
+
+@Composable
+fun isHabitDarkTheme(): Boolean = LocalHabitDarkTheme.current
+
+data class HabitDangerColors(
+    val container: Color,
+    val border: Color,
+    val content: Color,
+    val icon: Color,
+    val button: Color,
+    val onButton: Color,
+)
+
+@Composable
+fun habitDangerColors(): HabitDangerColors = if (isHabitDarkTheme()) {
+    HabitDangerColors(
+        container = HabitDangerContainerDark,
+        border = HabitDangerBorderDark,
+        content = Color.White,
+        icon = Color.White,
+        button = HabitDangerButtonDark,
+        onButton = Color.White,
+    )
+} else {
+    HabitDangerColors(
+        container = HabitDangerContainer,
+        border = HabitDanger,
+        content = HabitOnDanger,
+        icon = HabitDanger,
+        button = HabitDanger,
+        onButton = Color.White,
+    )
+}
+
+@Composable
+fun ThemeMode.isDarkTheme(): Boolean = when (this) {
+    ThemeMode.System -> isSystemInDarkTheme()
+    ThemeMode.Light -> false
+    ThemeMode.Dark -> true
+}
+
+@Composable
+fun HabitAppTheme(
+    viewModel: AppThemeViewModel = hiltViewModel(),
+    content: @Composable () -> Unit,
+) {
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    InstaDevTheme(darkTheme = themeMode.isDarkTheme(), content = content)
+}
+
 @Composable
 fun InstaDevTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -108,8 +164,7 @@ fun InstaDevTheme(
         else -> LightColorScheme
     }
 
-
-    CompositionLocalProvider() {
+    CompositionLocalProvider(LocalHabitDarkTheme provides darkTheme) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

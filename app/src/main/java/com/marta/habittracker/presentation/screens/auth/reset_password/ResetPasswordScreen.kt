@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.auth.reset_password
 
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 
 @Composable
 fun ResetPasswordScreen(
@@ -63,6 +65,7 @@ fun ResetPasswordContent(
     onConfirmPasswordChanged: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
+    SyncStatusBarIcons(lightBackground = !isHabitDarkTheme())
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmationVisible by remember { mutableStateOf(false) }
 
@@ -99,15 +102,15 @@ fun ResetPasswordContent(
                     PasswordVisualTransformation()
                 },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Outlined.Lock, contentDescription = null)
+                    Icon(imageVector = Icons.Rounded.Lock, contentDescription = null)
                 },
                 trailingIcon = {
                     IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Icon(
                             imageVector = if (isPasswordVisible) {
-                                Icons.Outlined.VisibilityOff
+                                Icons.Rounded.VisibilityOff
                             } else {
-                                Icons.Outlined.Visibility
+                                Icons.Rounded.Visibility
                             },
                             contentDescription = null,
                         )
@@ -128,15 +131,15 @@ fun ResetPasswordContent(
                     PasswordVisualTransformation()
                 },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Outlined.Lock, contentDescription = null)
+                    Icon(imageVector = Icons.Rounded.Lock, contentDescription = null)
                 },
                 trailingIcon = {
                     IconButton(onClick = { isConfirmationVisible = !isConfirmationVisible }) {
                         Icon(
                             imageVector = if (isConfirmationVisible) {
-                                Icons.Outlined.VisibilityOff
+                                Icons.Rounded.VisibilityOff
                             } else {
-                                Icons.Outlined.Visibility
+                                Icons.Rounded.Visibility
                             },
                             contentDescription = null,
                         )

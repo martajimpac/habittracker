@@ -1,21 +1,30 @@
 package com.marta.habittracker.presentation.screens.bottom_nav_screen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -23,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import com.marta.habittracker.presentation.navigation.BottomNavigation
 import com.marta.habittracker.presentation.navigation.NavigationBottomWrapper
 import com.marta.habittracker.presentation.navigation.TabScreens
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 import com.marta.habittracker.presentation.theme.InstaDevTheme
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 
@@ -88,10 +98,17 @@ fun BottomNavScreen(
     val hideBottomBar =
         destinationRoute.contains(TabScreens.TabAddContent::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabDetail::class.qualifiedName.toString()) ||
+            destinationRoute.contains(TabScreens.TabEditHabit::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabPreferences::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabGoals::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabDeleteAccount::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabChallengeDetail::class.qualifiedName.toString())
+
+    val darkTop = destinationRoute.contains(TabScreens.TabHome::class.qualifiedName.toString()) ||
+        destinationRoute.contains(TabScreens.TabProfile::class.qualifiedName.toString()) ||
+        destinationRoute.contains(TabScreens.TabAddContent::class.qualifiedName.toString()) ||
+        destinationRoute.contains(TabScreens.TabEditHabit::class.qualifiedName.toString())
+    SyncStatusBarIcons(lightBackground = !isHabitDarkTheme() && !darkTop)
 
     BottomNavContent(
         selectedTab = selectedTab,
@@ -111,8 +128,13 @@ fun BottomNavContent(
     onSignedOut: () -> Unit,
 ) {
     Scaffold(
-        modifier = Modifier
-            .safeDrawingPadding(),
+        modifier = Modifier.windowInsetsPadding(
+            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+        ),
+        // The top inset must stay available so each screen paints its own header
+        // through the status bar. Default insets would pad the content down and
+        // leave the notch in the scaffold surface color.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 HabitBottomBar(
@@ -155,13 +177,54 @@ fun HabitBottomBar(
         windowInsets = WindowInsets(0),
     ) {
         BottomNavigation.tabBarItems.forEach { tab ->
-            val selected = tab != BottomNavigation.TabNew && tab == selectedTab
-            NavigationBarItem(
-                selected = selected,
-                onClick = { if (tab == BottomNavigation.TabNew) onAdd() else onTabSelected(tab) },
-                icon = { Icon(tab.icon, contentDescription = null) },
-                label = { Text(stringResource(tab.label)) },
-            )
+            if (tab == BottomNavigation.TabNew) {
+                NewHabitBarButton(
+                    onClick = onAdd,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                NavigationBarItem(
+                    selected = tab == selectedTab,
+                    onClick = { onTabSelected(tab) },
+                    icon = {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = stringResource(tab.label),
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NewHabitBarButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            onClick = onClick,
+            modifier = Modifier.size(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shadowElevation = 6.dp,
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = BottomNavigation.TabNew.icon,
+                    contentDescription = stringResource(BottomNavigation.TabNew.label),
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         }
     }
 }

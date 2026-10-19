@@ -127,11 +127,6 @@ class HabitDetailViewModel @Inject constructor(
     }
 
     val completionPercentage: StateFlow<Float> = history.map { records ->
-        if (records.isEmpty()) {
-            0f
-        } else {
-            val completed = records.count { it.isCompleted }
-            completed.toFloat() / records.size
-        }
+        completionPercent(records)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
 }

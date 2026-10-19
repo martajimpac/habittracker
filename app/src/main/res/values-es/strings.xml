@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Habit Tracker</string>
+    <string name="app_name">Bloom</string>
 
     <!-- Onboarding -->
     <string name="onboarding_skip">Saltar</string>
@@ -129,6 +129,7 @@
     <string name="friends_view">Ver</string>
     <string name="friends_challenge">Desafiar</string>
     <string name="friends_add_friend">Añadir amigo</string>
+    <string name="friends_sheet_close">Cerrar</string>
     <string name="friends_search_label">Buscar amigos</string>
     <string name="friends_search_hint">Buscar por nombre de usuario</string>
     <string name="friends_send_request">Enviar solicitud</string>
@@ -176,13 +177,14 @@
     <string name="home_completed_today">Hábitos completados hoy</string>
     <string name="home_completed_day">Hábitos completados · %1$s</string>
     <string name="home_streak_days">racha de %1$d días</string>
+    <plurals name="stats_habit_row_streak">
+        <item quantity="one">racha de %1$d día</item>
+        <item quantity="other">racha de %1$d días</item>
+    </plurals>
     <string name="home_time_separator">· %1$s</string>
     <string name="home_keep_it_up">¡Sigue así!</string>
     <string name="home_overall_streak">Estás en una racha de %1$d días en total</string>
-    <string name="home_perfect_day">¡Día perfecto!</string>
     <string name="home_past_record">Registro pasado</string>
-    <string name="home_upcoming_day">Próximo día</string>
-    <string name="home_future_message">Hábitos no disponibles aún para días futuros</string>
     <string name="home_past_message">%1$d de %2$d hábitos completados · %3$d%%</string>
     <string name="home_add_habit">Añadir hábito</string>
     <string name="home_all_day">Todo el día</string>
@@ -215,13 +217,19 @@
     <!-- Detail -->
     <string name="detail_loading">Cargando…</string>
     <string name="detail_back">Atrás</string>
-    <string name="detail_tab_stats">Estadísticas</string>
-    <string name="detail_tab_calendar">Calendario</string>
-    <string name="detail_tab_settings">Configuración</string>
     <string name="detail_overall_performance">Desempeño general</string>
     <string name="detail_completed">Completado</string>
     <string name="detail_calendar_placeholder">Historial de completados</string>
+    <string name="detail_calendar_previous_month">Mes anterior</string>
+    <string name="detail_calendar_next_month">Mes siguiente</string>
     <string name="detail_edit_habit">Editar hábito</string>
+    <string name="detail_delete_habit">Eliminar hábito</string>
+    <string name="detail_delete_title">¿Eliminar este hábito?</string>
+    <string name="detail_delete_message">Se eliminarán el hábito y su historial.</string>
+    <string name="detail_scheduled_days">Días</string>
+    <string name="detail_last_four_weeks">Últimas 4 semanas</string>
+    <string name="detail_week_empty">—</string>
+    <string name="detail_week_bar">Semana del %1$s, %2$d por ciento</string>
 
     <!-- Activity heatmap -->
     <string name="activity_title">Actividad</string>
@@ -240,17 +248,46 @@
     <string name="stats_title">Estadísticas</string>
     <string name="stats_coming_soon">Estadísticas próximamente</string>
     <string name="stats_empty">Sin hábitos aún</string>
-    <string name="stats_weekday_monday">Lunes</string>
-    <string name="stats_weekday_tuesday">Martes</string>
-    <string name="stats_weekday_wednesday">Miércoles</string>
-    <string name="stats_weekday_thursday">Jueves</string>
-    <string name="stats_weekday_friday">Viernes</string>
-    <string name="stats_weekday_saturday">Sábado</string>
-    <string name="stats_weekday_sunday">Domingo</string>
-    <string name="stats_strongest_day">%1$s es tu día más fuerte (%2$d completados)</string>
-    <string name="stats_strongest_day_empty">Todavía no hay hábitos completados</string>
-    <string name="stats_streak_risk">%1$s pierde una racha de %2$d días si mañana no lo haces</string>
-    <string name="stats_streak_risk_empty">Ninguna racha se rompe mañana</string>
+    <plurals name="stats_all_habits_record_1">
+        <item quantity="one">Racha de %1$d día cumpliendo todos tus hábitos. Tu racha más larga hasta el momento.</item>
+        <item quantity="other">Racha de %1$d días cumpliendo todos tus hábitos. Tu racha más larga hasta el momento.</item>
+    </plurals>
+    <plurals name="stats_all_habits_record_2">
+        <item quantity="one">Llevas %1$d día seguido con todos los hábitos hechos. Es tu mejor racha.</item>
+        <item quantity="other">Llevas %1$d días seguidos con todos los hábitos hechos. Es tu mejor racha.</item>
+    </plurals>
+    <plurals name="stats_all_habits_record_3">
+        <item quantity="one">%1$d día cumpliendo todo. Tu racha más larga hasta el momento.</item>
+        <item quantity="other">%1$d días cumpliendo todo. Tu racha más larga hasta el momento.</item>
+    </plurals>
+    <plurals name="stats_all_habits_current_1">
+        <item quantity="one">Racha de %1$d día cumpliendo todos tus hábitos.</item>
+        <item quantity="other">Racha de %1$d días cumpliendo todos tus hábitos.</item>
+    </plurals>
+    <plurals name="stats_all_habits_current_2">
+        <item quantity="one">Llevas %1$d día seguido con todos los hábitos hechos.</item>
+        <item quantity="other">Llevas %1$d días seguidos con todos los hábitos hechos.</item>
+    </plurals>
+    <plurals name="stats_all_habits_current_3">
+        <item quantity="one">%1$d día cumpliendo todo. ¡Sigue así!</item>
+        <item quantity="other">%1$d días cumpliendo todo. ¡Sigue así!</item>
+    </plurals>
+    <plurals name="stats_habit_streak_1">
+        <item quantity="one">%1$s tiene una racha de %2$d día. ¡Sigue así!</item>
+        <item quantity="other">%1$s tiene una racha de %2$d días. ¡Sigue así!</item>
+    </plurals>
+    <plurals name="stats_habit_streak_2">
+        <item quantity="one">%1$s lleva %2$d día seguido. No lo sueltes.</item>
+        <item quantity="other">%1$s lleva %2$d días seguidos. No lo sueltes.</item>
+    </plurals>
+    <plurals name="stats_habit_streak_3">
+        <item quantity="one">La racha más larga ahora mismo es la de %1$s: %2$d día.</item>
+        <item quantity="other">La racha más larga ahora mismo es la de %1$s: %2$d días.</item>
+    </plurals>
+    <plurals name="stats_habit_streak_4">
+        <item quantity="one">%1$s va por %2$d día. ¡Buen ritmo!</item>
+        <item quantity="other">%1$s va por %2$d días. ¡Buen ritmo!</item>
+    </plurals>
 
     <!-- Profile -->
     <string name="profile_notifications">Notificaciones</string>
@@ -260,6 +297,7 @@
     <string name="goals_reached">Has cumplido la meta de esta semana.</string>
     <string name="profile_reminders">Recordatorios</string>
     <string name="profile_preferences">Preferencias</string>
+    <string name="profile_dark_mode">Modo oscuro</string>
     <string name="preferences_display_name_label">Nombre visible</string>
     <string name="preferences_save">Guardar</string>
     <string name="preferences_saving">Guardando…</string>
@@ -286,14 +324,13 @@
     <string name="cd_profile_avatar">Foto de perfil</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_name">Notificaciones de Habit Tracker</string>
-    <string name="notification_default_title">Habit Tracker</string>
+    <string name="notification_channel_name">Notificaciones de Bloom</string>
+    <string name="notification_default_title">Bloom</string>
     <string name="habit_reminder_channel_name">Recordatorios de hábitos</string>
     <string name="habit_reminder_body">Es hora de registrar el hábito</string>
     <string name="habit_reminder_toggle">Recordatorio</string>
     <string name="habit_reminder_permission_denied">Se necesita permiso de notificaciones para activar los recordatorios.</string>
     <string name="habit_reminder_exact_alarm_denied">Se necesitan alarmas exactas para los recordatorios. Actívalas en los ajustes del sistema.</string>
-    <string name="habit_reminder_save">Guardar</string>
 
     <!-- Habit widget -->
     <string name="habit_widget_label">Vistazo de hábito</string>

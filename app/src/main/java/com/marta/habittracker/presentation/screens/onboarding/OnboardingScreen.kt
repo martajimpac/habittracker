@@ -42,6 +42,7 @@ import com.marta.habittracker.presentation.theme.HabitColor1
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitColor2
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 import kotlinx.coroutines.launch
 
 data class OnboardingSlide(
@@ -102,6 +103,8 @@ fun OnboardingContent(
 
     val currentPage = pagerState.currentPage
     val currentSlide = slides[currentPage]
+
+    SyncStatusBarIcons(lightBackground = false)
 
     val backgroundColor by animateColorAsState(
         targetValue = currentSlide.backgroundColor,

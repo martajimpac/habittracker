@@ -6,7 +6,10 @@ import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
+import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.domain.repository.ProfileRepository
+import com.marta.habittracker.domain.repository.ThemeRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.FakeProfileRepository
@@ -42,6 +45,29 @@ class ProfileViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `profile content stays hidden until profile and habits have loaded`() = runTest {
+        val viewModel = createViewModel(
+            authRepository = FakeAuthRepository(email = "alex@example.com"),
+            profileRepository = FakeProfileRepository(
+                myProfileResult = DataResult.Success(
+                    FakeProfileRepository.defaultProfile.copy(displayName = "Alex Rivera"),
+                ),
+            ),
+        )
+
+        assertEquals(false, viewModel.uiState.value.isReady)
+
+        val collectJob = backgroundScope.launch {
+            viewModel.uiState.collect {}
+        }
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.uiState.value.isReady)
+        assertEquals("Alex Rivera", viewModel.uiState.value.displayName)
+        collectJob.cancel()
     }
 
     @Test
@@ -174,16 +200,44 @@ class ProfileViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun `dark mode switch stores light or dark`() = runTest {
+        val themeRepository = FakeThemeRepository()
+        val viewModel = createViewModel(themeRepository = themeRepository)
+
+        viewModel.onDarkModeChanged(true)
+        advanceUntilIdle()
+        assertEquals(ThemeMode.Dark, themeRepository.saved.last())
+
+        viewModel.onDarkModeChanged(false)
+        advanceUntilIdle()
+        assertEquals(ThemeMode.Light, themeRepository.saved.last())
+    }
+
     private fun createViewModel(
         authRepository: AuthRepository = FakeAuthRepository(),
         habitRepository: HabitRepository = FakeHabitRepository(),
         profileRepository: ProfileRepository = FakeProfileRepository(),
+        themeRepository: ThemeRepository = FakeThemeRepository(),
     ) = ProfileViewModel(
         authRepository = authRepository,
         habitRepository = habitRepository,
         profileRepository = profileRepository,
+        themeRepository = themeRepository,
     )
 
     private fun toKotlinDate(date: LocalDate): KotlinLocalDate =
         KotlinLocalDate(date.year, date.monthValue, date.dayOfMonth)
+}
+
+private class FakeThemeRepository : ThemeRepository {
+    private val mode = MutableStateFlow(ThemeMode.System)
+    val saved = mutableListOf<ThemeMode>()
+
+    override fun themeMode() = mode
+
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        saved += mode
+        this.mode.value = mode
+    }
 }
