@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
@@ -29,9 +30,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.delay
+import java.time.Duration
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,6 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +60,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitCream
@@ -59,9 +70,11 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import com.marta.habittracker.presentation.theme.SuccessColor
 import com.marta.habittracker.presentation.utils.toHex
 import com.marta.habittracker.presentation.components.ProgressFlower
+import com.marta.habittracker.presentation.components.WiltedFlower
 import com.marta.habittracker.presentation.utils.dayLabel
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
@@ -78,9 +91,32 @@ fun HomeScreen(
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val allHabits by viewModel.allHabits.collectAsStateWithLifecycle()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val today by viewModel.today.collectAsStateWithLifecycle()
+    val weekDays by viewModel.weekDays.collectAsStateWithLifecycle()
     val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
     val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
+    val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshDay()
+                viewModel.refreshChallengeHabits()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(today) {
+        val zone = ZoneId.systemDefault()
+        val nextMidnight = today.plusDays(1).atStartOfDay(zone)
+        val waitMs = Duration.between(ZonedDateTime.now(zone), nextMidnight).toMillis()
+        if (waitMs > 0) delay(waitMs)
+        viewModel.refreshDay()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.refreshDisplayName()
@@ -90,14 +126,15 @@ fun HomeScreen(
         habits = habits,
         allHabits = allHabits,
         selectedDate = selectedDate,
-        today = viewModel.today,
+        today = today,
         userDisplayName = userDisplayName,
         avatarUrl = avatarUrl,
         actionErrorRes = actionErrorRes,
-        weekDays = viewModel.weekDays,
+        weekDays = weekDays,
         onDateSelected = viewModel::onDateSelected,
         onToggleHabit = viewModel::toggleComplete,
         onClearActionError = viewModel::clearActionError,
+        challengeHabitIds = challengeHabitIds,
     )
 }
 
@@ -114,6 +151,7 @@ fun HomeContent(
     onDateSelected: (LocalDate) -> Unit,
     onToggleHabit: (Habit) -> Unit,
     onClearActionError: () -> Unit,
+    challengeHabitIds: Set<String> = emptySet(),
 ) {
     val isToday = selectedDate == today
     val isPast = selectedDate.isBefore(today)
@@ -122,7 +160,7 @@ fun HomeContent(
         completionStats(habits, selectedDate)
     }
     val pct = completionPercent(completedCount, totalCount)
-    val greetingRes = remember { greetingForHour(java.time.LocalTime.now().hour) }
+    val greetingRes = greetingForHour(java.time.LocalTime.now().hour)
     val dateLabel = remember(selectedDate) {
         val locale = Locale.getDefault()
         if (locale.language == "es") {
@@ -144,6 +182,7 @@ fun HomeContent(
         topBar = {
             HomeHeader(
                 selectedDate = selectedDate,
+                today = today,
                 isToday = isToday,
                 isPast = isPast,
                 dateLabel = dateLabel,
@@ -226,15 +265,21 @@ fun HomeContent(
 
                 if (habits.isEmpty()) {
                     item {
-                        Text(
-                            text = stringResource(R.string.home_empty_habits),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 24.dp),
-                        )
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            WiltedFlower()
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.home_empty_habits),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 } else {
                     items(habits, key = { it.id }) { habit ->
@@ -242,6 +287,7 @@ fun HomeContent(
                             habit = habit,
                             isDone = habit.isCompleted,
                             isToday = isToday,
+                            inChallenge = habit.id in challengeHabitIds,
                             onToggle = { onToggleHabit(habit) },
                         )
                     }
@@ -266,6 +312,7 @@ fun HomeContent(
 @Composable
 private fun HomeHeader(
     selectedDate: LocalDate,
+    today: LocalDate,
     isToday: Boolean,
     isPast: Boolean,
     dateLabel: String,
@@ -278,10 +325,15 @@ private fun HomeHeader(
     onDateSelected: (LocalDate) -> Unit,
 ) {
     val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val headerGreen = if (isHabitDarkTheme()) {
+        Modifier.background(MaterialTheme.colorScheme.primary)
+    } else {
+        Modifier.background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Brush.linearGradient(listOf(HabitPrimary, HabitPrimaryLight)))
+            .then(headerGreen)
             .statusBarsPadding()
             .padding(horizontal = 20.dp)
             .padding(top = 16.dp, bottom = 20.dp),
@@ -299,7 +351,7 @@ private fun HomeHeader(
                         else -> stringResource(R.string.home_upcoming_label, dateLabel)
                     },
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                     color = onPrimary.copy(alpha = 0.75f),
                 )
                 Text(
@@ -344,6 +396,7 @@ private fun HomeHeader(
                     label = dayShortLabel(date),
                     dayNumber = date.dayOfMonth,
                     active = active,
+                    isToday = date == today,
                     dayPct = dayPct,
                     onClick = { onDateSelected(date) },
                 )
@@ -357,10 +410,12 @@ private fun RowScope.WeekDayChip(
     label: String,
     dayNumber: Int,
     active: Boolean,
+    isToday: Boolean,
     dayPct: Int,
     onClick: () -> Unit,
 ) {
     val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val primary = MaterialTheme.colorScheme.primary
     Column(
         modifier = Modifier
             .weight(1f)
@@ -373,15 +428,15 @@ private fun RowScope.WeekDayChip(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = if (isToday) FontWeight.Black else FontWeight.Medium,
             fontSize = 10.sp,
-            color = if (active) HabitPrimary else onPrimary.copy(alpha = 0.7f),
+            color = if (active) primary else onPrimary.copy(alpha = if (isToday) 1f else 0.7f),
         )
         Text(
             text = dayNumber.toString(),
             style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Black,
-            color = if (active) HabitPrimary else onPrimary,
+            fontWeight = if (isToday) FontWeight.Black else FontWeight.Medium,
+            color = if (active) primary else onPrimary,
         )
         Box(
             modifier = Modifier
@@ -391,7 +446,7 @@ private fun RowScope.WeekDayChip(
                 .background(
                     when {
                         dayPct == 100 -> SuccessColor
-                        dayPct > 0 -> if (active) HabitPrimary else onPrimary.copy(alpha = 0.5f)
+                        dayPct > 0 -> if (active) primary else onPrimary.copy(alpha = 0.5f)
                         else -> Color.Transparent
                     }
                 ),
@@ -424,23 +479,12 @@ private fun HomeProgressCard(
         )
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = stringResource(R.string.home_percent, pct),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = stringResource(R.string.home_completed_ratio, completedCount, totalCount),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             Text(
                 text = if (isToday) {
                     stringResource(R.string.home_completed_today)
@@ -481,6 +525,7 @@ private fun HomeHabitCard(
     habit: Habit,
     isDone: Boolean,
     isToday: Boolean,
+    inChallenge: Boolean,
     onToggle: () -> Unit,
 ) {
     val accentColor = habitAccentColor(habit)
@@ -498,18 +543,28 @@ private fun HomeHabitCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(accentColor.copy(alpha = 0.09f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            HabitLineIcon(
-                habit = habit,
-                tint = accentColor,
-                size = 24.dp,
-            )
+        Box {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(accentColor.copy(alpha = 0.09f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                HabitLineIcon(
+                    habit = habit,
+                    tint = accentColor,
+                    size = 24.dp,
+                )
+            }
+            if (inChallenge) {
+                ChallengeHabitMark(
+                    background = accentColor,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = (-4).dp, y = (-4).dp),
+                )
+            }
         }
 
         Column(modifier = Modifier.weight(1f)) {
@@ -523,6 +578,8 @@ private fun HomeHabitCard(
                     MaterialTheme.colorScheme.onSurface
                 },
                 textDecoration = if (isDone) TextDecoration.LineThrough else null,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -588,7 +645,7 @@ private fun HomeMotivationCard(overallStreak: Int) {
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(HabitPrimary),
+                .background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -634,7 +691,7 @@ private fun HomeDayInfoCard(
                 if (pct >= 50) R.drawable.ic_onboarding_chart else R.drawable.ic_home_calendar,
             ),
             contentDescription = null,
-            tint = HabitPrimary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp),
         )
         Column {
@@ -658,20 +715,20 @@ private fun HomeDayInfoCard(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun HomeContentPreview() {
-    HomeContent(
-        habits = emptyList(),
-        allHabits = emptyList(),
-        selectedDate = LocalDate.now(),
-        today = LocalDate.now(),
-        userDisplayName = "John",
-        avatarUrl = null,
-        actionErrorRes = null,
-        weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
-        onDateSelected = {},
-        onToggleHabit = {},
-        onClearActionError = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun HomeContentPreview() {
+    // HomeContent(
+        // habits = emptyList(),
+        // allHabits = emptyList(),
+        // selectedDate = LocalDate.now(),
+        // today = LocalDate.now(),
+        // userDisplayName = "John",
+        // avatarUrl = null,
+        // actionErrorRes = null,
+        // weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
+        // onDateSelected = {},
+        // onToggleHabit = {},
+        // onClearActionError = {},
+    // )
+// }

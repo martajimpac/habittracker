@@ -7,8 +7,11 @@ import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.model.RegisterError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.UserMode
+import com.marta.habittracker.core.auth.AuthLinks
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.repository.HabitRepository
+import com.marta.habittracker.domain.widget.onSignedOut
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
@@ -18,11 +21,14 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
     private val deviceTokenRegistration: DeviceTokenRegistration,
+    private val habitRepository: HabitRepository,
 ) : AuthRepository {
 
     companion object {
@@ -55,12 +61,18 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun doRegister(
         email: String,
         password: String,
+        username: String,
     ): DataResult<User, AppError> {
         return try {
-            supabase.auth.signUpWith(Email) {
+            Log.d(TAG, "Register started")
+            supabase.auth.signUpWith(Email, redirectUrl = AuthLinks.CONFIRM_URL) {
                 this.email = email
                 this.password = password
+                data = buildJsonObject {
+                    put("username", username)
+                }
             }
+            Log.d(TAG, "Register finished")
 
             val currentUser = supabase.auth.currentUserOrNull()
             if (currentUser == null) {
@@ -82,7 +94,7 @@ class AuthRepositoryImpl @Inject constructor(
             Log.d(TAG, "Password reset request started")
             supabase.auth.resetPasswordForEmail(
                 email = email,
-                redirectUrl = "habittracker://auth/reset",
+                redirectUrl = AuthLinks.RESET_URL,
             )
             Log.d(TAG, "Password reset request finished")
             DataResult.Success(Unit)
@@ -155,6 +167,15 @@ class AuthRepositoryImpl @Inject constructor(
                 Log.e(TAG, "clearCurrentToken before sign-out failed", e)
             }
             supabase.auth.signOut()
+            try {
+                onSignedOut(DataResult.Success(Unit)) {
+                    habitRepository.clearLocal()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "clear local account after sign-out failed", e)
+            }
             Log.d(TAG, "Sign out finished ok")
             DataResult.Success(Unit)
         } catch (_: IOException) {

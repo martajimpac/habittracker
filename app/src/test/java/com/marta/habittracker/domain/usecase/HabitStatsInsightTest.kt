@@ -30,19 +30,17 @@ class HabitStatsInsightTest {
     }
 
     @Test
-    fun `all habits card wins over a longer single habit`() {
+    fun `a longer habit wins over the shorter shared streak`() {
+        val habitDays = StatsStreakMinimums.ALL_HABITS_DAYS + 4
         val habits = listOf(
-            dailyHabit("steady", perfectDays("steady", StatsStreakMinimums.ALL_HABITS_DAYS + 4)),
+            dailyHabit("steady", perfectDays("steady", habitDays), name = "Steady"),
             dailyHabit("new", perfectDays("new", StatsStreakMinimums.ALL_HABITS_DAYS)),
         )
 
         val highlight = statsStreakHighlight(habits, today)
 
         assertEquals(
-            StatsStreakHighlight.AllHabits(
-                days = StatsStreakMinimums.ALL_HABITS_DAYS,
-                isLongestSoFar = true,
-            ),
+            StatsStreakHighlight.Habit(habitId = "steady", habitName = "Steady", days = habitDays),
             highlight,
         )
     }
@@ -132,6 +130,24 @@ class HabitStatsInsightTest {
     }
 
     @Test
+    fun `longest live habit is leer not a shorter beber agua streak`() {
+        val today = LocalDate.of(2026, 10, 20)
+        val leer = dailyHabit("leer", completedDays("leer", "2026-09-21", "2026-10-20"), name = "Leer")
+        val beber = dailyHabit(
+            "agua",
+            completedDays("agua", "2026-10-08", "2026-10-20"),
+            name = "Beber agua",
+        )
+
+        val highlight = statsStreakHighlight(listOf(beber, leer), today)
+
+        assertEquals(
+            StatsStreakHighlight.Habit(habitId = "leer", habitName = "Leer", days = 30),
+            highlight,
+        )
+    }
+
+    @Test
     fun `copy variant stays in range and changes with the day`() {
         val count = 3
         val first = statsStreakCopyVariant(streakDays = 5, dayOfYear = 10, variantCount = count)
@@ -152,6 +168,21 @@ class HabitStatsInsightTest {
         days = KotlinDayOfWeek.entries.toSet(),
         records = records,
     )
+
+    private fun completedDays(habitId: String, start: String, end: String): List<HabitRecord> {
+        val first = LocalDate.parse(start)
+        val last = LocalDate.parse(end)
+        val days = java.time.temporal.ChronoUnit.DAYS.between(first, last).toInt()
+        return (0..days).map { offset ->
+            val date = first.plusDays(offset.toLong())
+            record(
+                id = "$habitId-$date",
+                habitId = habitId,
+                date = KotlinLocalDate.parse(date.toString()),
+                completed = true,
+            )
+        }
+    }
 
     private fun perfectDays(habitId: String, count: Int, startDaysAgo: Int = 0): List<HabitRecord> =
         (0 until count).map { offset ->

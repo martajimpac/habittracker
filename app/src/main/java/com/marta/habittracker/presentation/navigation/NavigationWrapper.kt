@@ -37,6 +37,7 @@ fun NavigationWrapper(
     onFriendRequestConsumed: () -> Unit = {},
     appStartViewModel: AppStartViewModel = hiltViewModel(),
     authDeeplinkViewModel: AuthDeeplinkViewModel = hiltViewModel(),
+    loginPromptCoordinator: LoginPromptCoordinator = hiltViewModel<LoginPromptSender>().coordinator,
 ) {
     val startDestination by appStartViewModel.startDestination.collectAsStateWithLifecycle()
 
@@ -48,10 +49,17 @@ fun NavigationWrapper(
     }
 
     val navController = rememberNavController()
+
+    fun openLogin(message: LoginMessage? = null) {
+        if (message != null) loginPromptCoordinator.show(message)
+        navController.navigate(Login) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
     val destination = checkNotNull(startDestination)
     val route = when (destination) {
         AppStartDestination.Onboarding -> Onboarding
-        AppStartDestination.Login -> Login()
+        AppStartDestination.Login -> Login
         AppStartDestination.Home -> Home
     }
 
@@ -86,9 +94,21 @@ fun NavigationWrapper(
             }
 
             AuthDeeplinkEvent.ResetLinkFailed -> {
-                navController.navigate(Login(LoginMessage.ResetLinkInvalid)) {
+                openLogin(LoginMessage.ResetLinkInvalid)
+            }
+
+            AuthDeeplinkEvent.NavigateHome -> {
+                navController.navigate(Home) {
                     popUpTo(0) { inclusive = true }
                 }
+            }
+
+            AuthDeeplinkEvent.EmailConfirmed -> {
+                openLogin(LoginMessage.EmailConfirmed)
+            }
+
+            AuthDeeplinkEvent.EmailConfirmFailed -> {
+                openLogin(LoginMessage.ResetLinkInvalid)
             }
         }
     }
@@ -97,16 +117,13 @@ fun NavigationWrapper(
         composable<Onboarding> {
             OnboardingScreen(
                 navigateToLogin = {
-                    navController.navigate(Login()) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    openLogin()
                 }
             )
         }
 
-        composable<Login> { backStackEntry ->
+        composable<Login> {
             LoginScreen(
-                message = backStackEntry.toRoute<Login>().message,
                 navigateToRegister = { navController.navigate(Register) },
                 navigateToForgotPassword = { email ->
                     navController.navigate(ForgotPassword(email))
@@ -124,9 +141,7 @@ fun NavigationWrapper(
                 initialEmail = backStackEntry.toRoute<ForgotPassword>().email,
                 navigateBack = { navController.popBackStack() },
                 navigateToLogin = {
-                    navController.navigate(Login(LoginMessage.PasswordResetRequestSent)) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    openLogin(LoginMessage.PasswordResetRequestSent)
                 },
             )
         }
@@ -134,9 +149,7 @@ fun NavigationWrapper(
         composable<ResetPassword> {
             ResetPasswordScreen(
                 navigateToLogin = {
-                    navController.navigate(Login(LoginMessage.PasswordUpdated)) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    openLogin(LoginMessage.PasswordUpdated)
                 },
             )
         }
@@ -144,6 +157,9 @@ fun NavigationWrapper(
         composable<Register> {
             RegisterScreen(
                 navigateBack = { navController.popBackStack() },
+                navigateToLogin = {
+                    openLogin(LoginMessage.AccountCreated)
+                },
                 navigateToHome = {
                     navController.navigate(Home) {
                         popUpTo(0) { inclusive = true }
@@ -162,9 +178,7 @@ fun NavigationWrapper(
                 initialFriendRequestId = initialFriendRequestId,
                 onFriendRequestConsumed = onFriendRequestConsumed,
                 onSignedOut = {
-                    navController.navigate(Login()) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    openLogin()
                 },
             )
         }

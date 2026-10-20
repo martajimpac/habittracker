@@ -13,8 +13,7 @@ fun getCalendarDays(): List<LocalDate> {
     return (-3..3).map { today.plusDays(it.toLong()) }
 }
 
-fun getCurrentWeekDays(): List<LocalDate> {
-    val today = LocalDate.now()
+fun getCurrentWeekDays(today: LocalDate = LocalDate.now()): List<LocalDate> {
     val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     return (0..6).map { monday.plusDays(it.toLong()) }
 }

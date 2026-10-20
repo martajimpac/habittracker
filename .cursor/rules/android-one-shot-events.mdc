@@ -107,4 +107,6 @@ ObserveAsEvents(
 
 The goal is to ensure that one-shot events are handled as events rather than being re-emitted when the Composable recomposes or the user navigates back to the screen.
 
+Do not show a dialog from a navigation argument. The argument stays on the back stack, so `remember(message) { mutableStateOf(message == SomeDialog) }` shows the dialog again when the screen is composed after leaving the app. Pass the prompt once, outside the route. The next screen takes it a single time and clears it when the dialog is dismissed. A dialog the user opened themselves (delete, sign out, time picker) may use `remember { mutableStateOf(false) }`.
+
 Prefer the shared `ObserveAsEvents` in `presentation/utils` when it exists (do not duplicate a private copy per screen unless migrating).

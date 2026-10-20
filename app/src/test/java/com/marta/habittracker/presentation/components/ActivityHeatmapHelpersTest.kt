@@ -61,6 +61,26 @@ class ActivityHeatmapHelpersTest {
         assertEquals(0.5f, globalDayIntensity(habits, day))
     }
 
+    @Test
+    fun `monday today is the current week row and the first column`() {
+        val monday = LocalDate.of(2026, 10, 19)
+        val weeks = toHeatmapWeeks(buildRollingFourWeeks(monday)) { 0f }
+
+        assertEquals(4, heatmapTodayWeekIndex(weeks, monday))
+        assertTrue(heatmapColumnIsToday(0, monday))
+        assertTrue(!heatmapColumnIsToday(1, monday))
+    }
+
+    @Test
+    fun `tuesday today is the second column of the current week`() {
+        val tuesday = LocalDate.of(2026, 10, 20)
+        val weeks = toHeatmapWeeks(buildRollingFourWeeks(tuesday)) { 0f }
+
+        assertEquals(4, heatmapTodayWeekIndex(weeks, tuesday))
+        assertTrue(heatmapColumnIsToday(1, tuesday))
+        assertTrue(!heatmapColumnIsToday(0, tuesday))
+    }
+
     private fun sampleHabit(
         id: String = "h1",
         days: Set<KotlinDayOfWeek> = setOf(KotlinDayOfWeek.THURSDAY),

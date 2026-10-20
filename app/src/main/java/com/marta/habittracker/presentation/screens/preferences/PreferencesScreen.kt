@@ -321,26 +321,26 @@ private fun DeleteAccountEntry(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun PreferencesContentPreview() {
-    PreferencesContent(
-        uiState = PreferencesUiState(
-            displayName = "Marta",
-            username = "marta",
-            avatarUrl = null,
-            avatarColor = HabitPrimary.toHex(),
-        ),
-        snackbarHostState = remember { SnackbarHostState() },
-        onBack = {},
-        onDisplayNameChanged = {},
-        onSave = {},
-        onChangePhoto = {},
-        onRemovePhoto = {},
-        onCopyUsername = {},
-        onDeleteAccount = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun PreferencesContentPreview() {
+    // PreferencesContent(
+        // uiState = PreferencesUiState(
+            // displayName = "Marta",
+            // username = "marta",
+            // avatarUrl = null,
+            // avatarColor = HabitPrimary.toHex(),
+        // ),
+        // snackbarHostState = remember { SnackbarHostState() },
+        // onBack = {},
+        // onDisplayNameChanged = {},
+        // onSave = {},
+        // onChangePhoto = {},
+        // onRemovePhoto = {},
+        // onCopyUsername = {},
+        // onDeleteAccount = {},
+    // )
+// }
 
 @Composable
 private fun UsernameCopyRow(

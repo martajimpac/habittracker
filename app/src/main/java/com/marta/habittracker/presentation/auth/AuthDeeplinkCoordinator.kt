@@ -18,9 +18,26 @@ class AuthDeeplinkCoordinator @Inject constructor() {
     fun onResetLinkFailed() {
         _events.trySend(AuthDeeplinkEvent.ResetLinkFailed)
     }
+
+    fun onEmailConfirmed(signedIn: Boolean) {
+        _events.trySend(
+            if (signedIn) {
+                AuthDeeplinkEvent.NavigateHome
+            } else {
+                AuthDeeplinkEvent.EmailConfirmed
+            },
+        )
+    }
+
+    fun onEmailConfirmFailed() {
+        _events.trySend(AuthDeeplinkEvent.EmailConfirmFailed)
+    }
 }
 
 sealed interface AuthDeeplinkEvent {
     data object NavigateToResetPassword : AuthDeeplinkEvent
     data object ResetLinkFailed : AuthDeeplinkEvent
+    data object NavigateHome : AuthDeeplinkEvent
+    data object EmailConfirmed : AuthDeeplinkEvent
+    data object EmailConfirmFailed : AuthDeeplinkEvent
 }

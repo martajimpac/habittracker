@@ -15,6 +15,7 @@ fun AppError.toUserMessageRes(): Int = when (this) {
     RegisterError.WeakPassword -> R.string.error_register_weak_password
     RegisterError.EmailAlreadyRegistered -> R.string.error_register_email_already_registered
     RegisterError.EmailConfirmationRequired -> R.string.error_register_email_confirmation_required
+    RegisterError.InvalidUsername -> R.string.error_register_username_format
     ProfileError.InvalidDisplayName -> R.string.error_preferences_invalid_display_name
     AppError.Common.Network -> R.string.error_no_internet
     AppError.Common.Unauthorized -> R.string.error_common_unauthorized

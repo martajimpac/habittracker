@@ -15,17 +15,21 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.model.sortedForSchedule
 import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.reminder.afterHabitDeleted
 import com.marta.habittracker.domain.reminder.afterHabitPersisted
 import com.marta.habittracker.domain.reminder.afterHabitsSynced
 import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
+import com.marta.habittracker.domain.widget.AppWidgetRefresher
+import com.marta.habittracker.domain.widget.onHabitSyncFinished
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 @Singleton
@@ -35,6 +39,7 @@ class HabitRepositoryImpl @Inject constructor(
     private val remote: HabitRemoteDataSource,
     private val networkChecker: NetworkChecker,
     private val reminderScheduler: HabitReminderScheduler,
+    private val widgetRefresher: AppWidgetRefresher,
 ) : DomainHabitRepository {
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> {
@@ -50,12 +55,13 @@ class HabitRepositoryImpl @Inject constructor(
                         }
                         habit.copy(isCompleted = isCompleted)
                     }
+                    .sortedForSchedule()
             }
     }
 
     override fun getAllHabitsWithRecords(): Flow<List<Habit>> =
         habitDao.getHabitsWithRecords().map { habitsList ->
-            habitsList.map(habitMapper::map)
+            habitsList.map(habitMapper::map).sortedForSchedule()
         }
 
     override suspend fun toggleHabitCompletion(
@@ -195,12 +201,35 @@ class HabitRepositoryImpl @Inject constructor(
             runReminderHook("afterHabitsSynced") {
                 afterHabitsSynced(syncedHabits, reminderScheduler)
             }
-            DataResult.Success(Unit)
+            val success = DataResult.Success(Unit)
+            onHabitSyncFinished(success) { widgetRefresher.refreshAll() }
+            success
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "syncFromRemote failed", e)
             DataResult.Error(AppError.Common.Unknown)
+        }
+    }
+
+    override suspend fun clearLocal() {
+        try {
+            Log.d(TAG, "Clearing local habits")
+            val habitIds = habitDao.getAllHabits().first().map { it.id }
+            habitDao.clearHabitRecords()
+            habitDao.clearHabits()
+            habitIds.forEach { habitId ->
+                runReminderHook("cancel reminder after sign-out id=$habitId") {
+                    reminderScheduler.cancel(habitId)
+                }
+            }
+            widgetRefresher.refreshAll()
+            Log.d(TAG, "Cleared local habits count=${habitIds.size}")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "clearLocal failed", e)
+            throw e
         }
     }
 

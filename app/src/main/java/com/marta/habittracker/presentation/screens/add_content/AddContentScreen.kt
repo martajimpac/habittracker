@@ -35,7 +35,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Fort
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -68,13 +67,13 @@ import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitDialog
 import com.marta.habittracker.presentation.components.HabitIconOptions
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ReminderToggleRow
 import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
-import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -201,31 +200,17 @@ fun AddContentContent(
             initialMinute = minute,
             is24Hour = true,
         )
-        AlertDialog(
+        HabitDialog(
             onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                HabitButton(
-                    text = stringResource(R.string.add_habit_save),
-                    onClick = {
-                        onReminderTimeChanged(
-                            "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
-                        )
-                        showTimePicker = false
-                    },
-                    fillMaxWidth = false,
-                    compact = true,
+            confirmText = stringResource(R.string.add_habit_save),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                onReminderTimeChanged(
+                    "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
                 )
+                showTimePicker = false
             },
-            dismissButton = {
-                HabitButton(
-                    text = stringResource(R.string.add_habit_cancel),
-                    onClick = { showTimePicker = false },
-                    variant = HabitButtonVariant.Secondary,
-                    fillMaxWidth = false,
-                    compact = true,
-                )
-            },
-            text = { TimePicker(state = timePickerState) },
+            content = { TimePicker(state = timePickerState) },
         )
     }
 
@@ -237,9 +222,7 @@ fun AddContentContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    HabitPrimary,
-                )
+                .background(MaterialTheme.colorScheme.primary)
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
@@ -483,7 +466,7 @@ fun AddContentContent(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (selected) HabitPrimary else HabitField)
+                                .background(if (selected) MaterialTheme.colorScheme.primary else HabitField)
                                 .clickable { onDayToggled(day) }
                                 .padding(horizontal = 9.dp, vertical = 9.dp),
                             contentAlignment = Alignment.Center,
@@ -555,20 +538,20 @@ fun AddContentContent(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun AddContentContentPreview() {
-    AddContentContent(
-        uiState = AddContentUiState(),
-        onBack = {},
-        onNameChanged = {},
-        onDescriptionChanged = {},
-        onIconSelected = {},
-        onColorSelected = {},
-        onReminderEnabledChange = {},
-        onReminderTimeChanged = {},
-        onDayToggled = {},
-        onPublicChanged = {},
-        onSaveClicked = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun AddContentContentPreview() {
+    // AddContentContent(
+        // uiState = AddContentUiState(),
+        // onBack = {},
+        // onNameChanged = {},
+        // onDescriptionChanged = {},
+        // onIconSelected = {},
+        // onColorSelected = {},
+        // onReminderEnabledChange = {},
+        // onReminderTimeChanged = {},
+        // onDayToggled = {},
+        // onPublicChanged = {},
+        // onSaveClicked = {},
+    // )
+// }

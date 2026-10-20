@@ -19,10 +19,10 @@ fun HabitLoadingIndicator(
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun HabitLoadingIndicatorPreview() {
-    InstaDevTheme {
-        HabitLoadingIndicator()
-    }
-}
+// @Preview(showBackground = true)
+// @Composable
+// private fun HabitLoadingIndicatorPreview() {
+    // InstaDevTheme {
+        // HabitLoadingIndicator()
+    // }
+// }

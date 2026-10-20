@@ -11,31 +11,30 @@ import com.marta.habittracker.presentation.utils.toHex
 import java.time.Instant
 import kotlinx.datetime.DayOfWeek
 
-@OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 180, heightDp = 110)
-@Composable
-fun HabitGlanceWidgetPreview() {
-    HabitWidgetContent(
-        habit = Habit(
-            id = "preview",
-            name = "Read",
-            description = null,
-            daysOfWeek = setOf(DayOfWeek.MONDAY),
-            icon = HabitIconKeys.BOOK,
-            colorHex = HabitColor1.toHex(),
-            reminderTime = null,
-            createdAt = Instant.EPOCH,
-            records = emptyList(),
-            isCompleted = true,
-            isPublic = false,
-        ),
-        configureText = "Configure",
-        completedText = "Completed today",
-        notCompletedText = "Not completed today",
-        markCompleteText = "Complete",
-        markIncompleteText = "Mark incomplete",
-        streakText = "3 day streak",
-        openAppAction = action { },
-        toggleAction = action { },
-    )
-}
+// @OptIn(ExperimentalGlancePreviewApi::class)
+// @Preview(widthDp = 180, heightDp = 110)
+// @Composable
+// fun HabitGlanceWidgetPreview() {
+    // HabitWidgetContent(
+        // habit = Habit(
+            // id = "preview",
+            // name = "Read",
+            // description = null,
+            // daysOfWeek = setOf(DayOfWeek.MONDAY),
+            // icon = HabitIconKeys.BOOK,
+            // colorHex = HabitColor1.toHex(),
+            // reminderTime = null,
+            // createdAt = Instant.EPOCH,
+            // records = emptyList(),
+            // isCompleted = true,
+            // isPublic = false,
+        // ),
+        // configureText = "Configure",
+        // completedText = "Completed today",
+        // notCompletedText = "Not completed today",
+        // dayName = "Tuesday",
+        // streakText = "3 day streak",
+        // openAppAction = action { },
+        // toggleAction = action { },
+    // )
+// }

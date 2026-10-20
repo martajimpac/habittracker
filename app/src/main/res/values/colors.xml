@@ -5,7 +5,4 @@
     <color name="habit_surface">#FFEFEBE3</color>
     <color name="habit_on_surface">#FF1A1D1F</color>
     <color name="habit_field">#FFFDF9F1</color>
-    <color name="habit_color_1">#FFF04F45</color>
-    <color name="habit_color_1_wash">#1FF04F45</color>
-    <color name="logo_background">@color/habit_primary</color>
 </resources>

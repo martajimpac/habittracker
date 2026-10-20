@@ -4,8 +4,9 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.FriendListItem
-import com.marta.habittracker.domain.model.Friendship
+import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
@@ -19,7 +20,7 @@ class FakeFriendsRepository(
         DataResult.Error(AppError.Common.Unknown),
     private val respondToChallengeResult: DataResult<ChallengeCard, AppError> =
         DataResult.Error(AppError.Common.Unknown),
-    private val pendingFriendRequestsResult: DataResult<List<Friendship>, AppError> =
+    private val pendingFriendRequestsResult: DataResult<List<PendingFriendRequest>, AppError> =
         DataResult.Success(emptyList()),
     private val searchProfilesResult: DataResult<List<Profile>, AppError> =
         DataResult.Success(emptyList()),
@@ -60,9 +61,7 @@ class FakeFriendsRepository(
         private set
     var lastChallengedId: String? = null
         private set
-    var lastChallengerHabitId: String? = null
-        private set
-    var lastChallengedHabitId: String? = null
+    var lastDraft: ChallengeHabitDraft? = null
         private set
     var lastChallengeCriteria: ChallengeCriteria? = null
         private set
@@ -91,7 +90,7 @@ class FakeFriendsRepository(
         return respondToChallengeResult
     }
 
-    override suspend fun getPendingFriendRequests(): DataResult<List<Friendship>, AppError> {
+    override suspend fun getPendingFriendRequests(): DataResult<List<PendingFriendRequest>, AppError> {
         getPendingFriendRequestsCalls++
         return pendingFriendRequestsResult
     }
@@ -128,17 +127,19 @@ class FakeFriendsRepository(
 
     override suspend fun createChallenge(
         challengedId: String,
-        challengerHabitId: String,
-        challengedHabitId: String,
+        draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
     ): DataResult<Unit, AppError> {
         createChallengeCalls++
         lastChallengedId = challengedId
-        lastChallengerHabitId = challengerHabitId
-        lastChallengedHabitId = challengedHabitId
+        lastDraft = draft
         lastChallengeCriteria = criteria
         lastDurationDays = durationDays
         return createChallengeResult
     }
+
+    var challengeHabitIdsResult: DataResult<Set<String>, AppError> = DataResult.Success(emptySet())
+
+    override suspend fun challengeHabitIds(): DataResult<Set<String>, AppError> = challengeHabitIdsResult
 }

@@ -6,10 +6,10 @@ import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Challenge
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.model.FriendListItem
-import com.marta.habittracker.domain.model.Friendship
-import com.marta.habittracker.domain.model.FriendshipStatus
+import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
@@ -52,7 +52,7 @@ class FriendsViewModelTest {
         val profile = profile("friend")
         val friend = FriendListItem(profile, bestStreak = 4, publicHabitsCount = 2, activeChallengeCount = 1)
         val challenge = challengeCard(profile)
-        val request = Friendship("request", "requester", "me", FriendshipStatus.Pending)
+        val request = PendingFriendRequest("request", profile("requester"))
         val myHabit = habit("mine")
         val friendsRepository = FakeFriendsRepository(
             acceptedFriendsResult = DataResult.Success(listOf(friend)),
@@ -150,8 +150,35 @@ class FriendsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(FriendsSheet.CreateChallenge("friend-id"), viewModel.uiState.value.sheet)
-        assertEquals(2, repository.getPublicHabitsForFriendCalls)
+        assertEquals(1, repository.getPublicHabitsForFriendCalls)
         assertEquals("friend-id", repository.lastFriendUserId)
+    }
+
+    @Test
+    fun `create challenge sends the new shared habit`() = runTest {
+        val repository = FakeFriendsRepository()
+        val viewModel = FriendsViewModel(repository, FakeHabitRepository())
+        advanceUntilIdle()
+        val draft = ChallengeHabitDraft(
+            name = "Leer",
+            icon = "menu_book",
+            colorHex = "#3A98EA",
+            daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
+        )
+
+        viewModel.createChallenge(
+            challengedId = "friend-id",
+            draft = draft,
+            criteria = ChallengeCriteria.AllDays,
+            durationDays = 7,
+        )
+        advanceUntilIdle()
+
+        assertEquals(FriendsSheet.None, viewModel.uiState.value.sheet)
+        assertEquals("friend-id", repository.lastChallengedId)
+        assertEquals(draft, repository.lastDraft)
+        assertEquals(ChallengeCriteria.AllDays, repository.lastChallengeCriteria)
+        assertEquals(7, repository.lastDurationDays)
     }
 
     @Test

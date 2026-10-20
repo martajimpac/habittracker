@@ -82,4 +82,24 @@ class SocialMapperTest {
         assertEquals(Instant.parse("2026-07-31T00:00:00Z"), challenge.startsAt)
         assertEquals(Instant.parse("2026-08-07T00:00:00Z"), challenge.endsAt)
     }
+
+    @Test
+    fun `pending challenge can omit the friend habit`() {
+        val challenge = with(mapper) {
+            ChallengeDto(
+                id = "challenge-2",
+                challengerId = "profile-1",
+                challengedId = "profile-2",
+                challengerHabitId = "habit-1",
+                challengedHabitId = null,
+                criteria = "all_days",
+                startsAt = "2026-10-20T00:00:00Z",
+                endsAt = "2026-10-27T00:00:00Z",
+                status = "pending",
+            ).toDomain()
+        }
+
+        assertEquals(null, challenge.challengedHabitId)
+        assertEquals(ChallengeStatus.Pending, challenge.status)
+    }
 }

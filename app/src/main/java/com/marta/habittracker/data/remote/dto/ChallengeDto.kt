@@ -9,7 +9,7 @@ data class ChallengeDto(
     @SerialName("challenger_id") val challengerId: String,
     @SerialName("challenged_id") val challengedId: String,
     @SerialName("challenger_habit_id") val challengerHabitId: String,
-    @SerialName("challenged_habit_id") val challengedHabitId: String,
+    @SerialName("challenged_habit_id") val challengedHabitId: String? = null,
     val criteria: String,
     @SerialName("starts_at") val startsAt: String,
     @SerialName("ends_at") val endsAt: String,
@@ -24,7 +24,7 @@ internal data class ChallengeInsertDto(
     @SerialName("challenger_id") val challengerId: String,
     @SerialName("challenged_id") val challengedId: String,
     @SerialName("challenger_habit_id") val challengerHabitId: String,
-    @SerialName("challenged_habit_id") val challengedHabitId: String,
+    @SerialName("challenged_habit_id") val challengedHabitId: String? = null,
     val criteria: String,
     @SerialName("starts_at") val startsAt: String,
     @SerialName("ends_at") val endsAt: String,
@@ -34,4 +34,10 @@ internal data class ChallengeInsertDto(
 @Serializable
 internal data class ChallengeStatusUpdateDto(
     val status: String,
+)
+
+@Serializable
+internal data class ChallengeAcceptUpdateDto(
+    val status: String,
+    @SerialName("challenged_habit_id") val challengedHabitId: String,
 )

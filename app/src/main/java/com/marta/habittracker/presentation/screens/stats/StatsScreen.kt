@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
@@ -18,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,15 +38,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.components.ActivityHeatmap
+import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.globalDayIntensity
@@ -64,10 +72,16 @@ fun StatsScreen(
     viewModel: StatsViewModel = hiltViewModel(),
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
+    val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshChallengeHabits()
+    }
 
     StatsContent(
         habits = habits,
         onHabitClick = onHabitClick,
+        challengeHabitIds = challengeHabitIds,
     )
 }
 
@@ -75,6 +89,7 @@ fun StatsScreen(
 fun StatsContent(
     habits: List<Habit>,
     onHabitClick: (String) -> Unit = {},
+    challengeHabitIds: Set<String> = emptySet(),
 ) {
     val today = remember { LocalDate.now() }
     val streakHighlight = remember(habits, today) { statsStreakHighlight(habits, today) }
@@ -107,15 +122,32 @@ fun StatsContent(
 
         if (habits.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = stringResource(R.string.stats_empty),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ShowChart,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.stats_empty),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.stats_empty_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         } else {
             LazyColumn(
@@ -131,7 +163,7 @@ fun StatsContent(
                     ActivityHeatmap(
                         weeks = activityWeeks,
                         today = today,
-                        filledColor = HabitPrimary,
+                        filledColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -139,6 +171,7 @@ fun StatsContent(
                     StatsHabitRow(
                         habit = habit,
                         today = today,
+                        inChallenge = habit.id in challengeHabitIds,
                         onClick = { onHabitClick(habit.id) },
                     )
                 }
@@ -234,6 +267,7 @@ private fun streakHighlightText(
 private fun StatsHabitRow(
     habit: Habit,
     today: LocalDate,
+    inChallenge: Boolean,
     onClick: () -> Unit,
 ) {
     val accent = habitAccentColor(habit)
@@ -259,6 +293,7 @@ private fun StatsHabitRow(
             habit = habit,
             accent = accent,
             streak = streak,
+            inChallenge = inChallenge,
             modifier = Modifier.weight(1f),
         )
         ActivityHeatmap(
@@ -276,6 +311,7 @@ private fun StatsHabitSummary(
     habit: Habit,
     accent: Color,
     streak: Int,
+    inChallenge: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -283,18 +319,28 @@ private fun StatsHabitSummary(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(accent.copy(alpha = 0.09f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            HabitLineIcon(
-                habit = habit,
-                tint = accent,
-                size = 22.dp,
-            )
+        Box {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(accent.copy(alpha = 0.09f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                HabitLineIcon(
+                    habit = habit,
+                    tint = accent,
+                    size = 22.dp,
+                )
+            }
+            if (inChallenge) {
+                ChallengeHabitMark(
+                    background = accent,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = (-4).dp, y = (-4).dp),
+                )
+            }
         }
 
         Column(modifier = Modifier.weight(1f)) {
@@ -303,7 +349,7 @@ private fun StatsHabitSummary(
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (streak > 0) {
@@ -340,8 +386,8 @@ private fun StatsHabitSummary(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun StatsContentPreview() {
-    StatsContent(habits = emptyList())
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun StatsContentPreview() {
+    // StatsContent(habits = emptyList())
+// }

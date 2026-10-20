@@ -103,7 +103,7 @@ class AddContentViewModelTest {
     }
 
     @Test
-    fun `save with reminder disabled sends null reminderTime even if time is set`() = runTest {
+    fun `save keeps the time when the reminder is off`() = runTest {
         val repository = FakeHabitRepository()
         val viewModel = createViewModel(repository)
 
@@ -114,7 +114,8 @@ class AddContentViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.reminderEnabled)
-        assertNull(repository.insertedHabits.single().reminderTime)
+        assertEquals("08:00", repository.insertedHabits.single().reminderTime)
+        assertFalse(repository.insertedHabits.single().reminderEnabled)
     }
 
     @Test
@@ -130,6 +131,7 @@ class AddContentViewModelTest {
         advanceUntilIdle()
 
         assertEquals("08:00", repository.insertedHabits.single().reminderTime)
+        assertTrue(repository.insertedHabits.single().reminderEnabled)
         assertNull(viewModel.uiState.value.errorMessageRes)
     }
 
@@ -199,6 +201,7 @@ class AddContentViewModelTest {
             icon = "book",
             colorHex = "#F04F45",
             reminderTime = "07:30",
+            reminderEnabled = true,
             createdAt = Instant.parse("2026-01-01T00:00:00Z"),
             records = emptyList(),
             isPublic = true,

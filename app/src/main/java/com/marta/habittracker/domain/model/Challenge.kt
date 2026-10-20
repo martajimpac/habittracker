@@ -1,5 +1,6 @@
 package com.marta.habittracker.domain.model
 
+import kotlinx.datetime.LocalDate
 import java.time.Instant
 
 enum class ChallengeStatus {
@@ -15,7 +16,7 @@ data class Challenge(
     val challengerId: String,
     val challengedId: String,
     val challengerHabitId: String,
-    val challengedHabitId: String,
+    val challengedHabitId: String?,
     val criteria: ChallengeCriteria,
     val startsAt: Instant,
     val endsAt: Instant,
@@ -32,4 +33,6 @@ data class ChallengeCard(
     val habitName: String,
     val habitIcon: String,
     val habitColorHex: String,
+    val myCompletedDates: Set<LocalDate> = emptySet(),
+    val theirCompletedDates: Set<LocalDate> = emptySet(),
 )

@@ -13,6 +13,7 @@ interface AuthRepository {
     suspend fun doRegister(
         email: String,
         password: String,
+        username: String,
     ): DataResult<User, AppError>
 
     suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError>

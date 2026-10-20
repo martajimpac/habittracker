@@ -10,6 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
+import com.marta.habittracker.core.auth.AuthDeeplinkTarget
+import com.marta.habittracker.core.auth.AuthLinks
+import com.marta.habittracker.core.auth.authDeeplinkTarget
 import com.marta.habittracker.presentation.theme.HabitAppTheme
 import com.marta.habittracker.presentation.navigation.NavigationWrapper
 import com.marta.habittracker.presentation.auth.AuthDeeplinkCoordinator
@@ -17,6 +20,7 @@ import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import com.marta.habittracker.presentation.widgets.WidgetRefresher
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.handleDeeplinks
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -114,28 +118,36 @@ class MainActivity : ComponentActivity() {
 
     private fun handleAuthDeeplink(intent: Intent) {
         val uri = intent.data ?: return
-        if (uri.scheme != AUTH_DEEPLINK_SCHEME || uri.host != AUTH_DEEPLINK_HOST ||
-            !uri.path.orEmpty().startsWith(AUTH_DEEPLINK_PATH)
-        ) {
-            return
+        when (authDeeplinkTarget(uri.scheme, uri.host, uri.path)) {
+            AuthDeeplinkTarget.Reset -> importAuthDeeplink(intent, AuthLinks.RESET_PATH)
+            AuthDeeplinkTarget.Confirm -> importAuthDeeplink(intent, AuthLinks.CONFIRM_PATH)
+            AuthDeeplinkTarget.Ignore -> Unit
         }
+    }
 
+    private fun importAuthDeeplink(intent: Intent, path: String) {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "Handling password reset deep link")
+                Log.d(TAG, "Handling auth deep link path=$path")
                 supabase.handleDeeplinks(intent)
-                authDeeplinkCoordinator.onResetLinkHandled()
+                if (path == AuthLinks.CONFIRM_PATH) {
+                    val signedIn = supabase.auth.currentSessionOrNull() != null
+                    authDeeplinkCoordinator.onEmailConfirmed(signedIn)
+                } else {
+                    authDeeplinkCoordinator.onResetLinkHandled()
+                }
             } catch (exception: Exception) {
-                Log.e(TAG, "Password reset deep link handling failed", exception)
-                authDeeplinkCoordinator.onResetLinkFailed()
+                Log.e(TAG, "Auth deep link handling failed path=$path", exception)
+                if (path == AuthLinks.CONFIRM_PATH) {
+                    authDeeplinkCoordinator.onEmailConfirmFailed()
+                } else {
+                    authDeeplinkCoordinator.onResetLinkFailed()
+                }
             }
         }
     }
 
     private companion object {
         const val TAG = "MainActivity"
-        const val AUTH_DEEPLINK_SCHEME = "habittracker"
-        const val AUTH_DEEPLINK_HOST = "auth"
-        const val AUTH_DEEPLINK_PATH = "/reset"
     }
 }

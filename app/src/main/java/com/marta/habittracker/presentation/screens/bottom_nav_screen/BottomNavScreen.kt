@@ -190,7 +190,7 @@ fun HabitBottomBar(
                     onClick = { onTabSelected(tab) },
                     icon = {
                         Icon(
-                            imageVector = tab.icon,
+                            imageVector = if (tab == selectedTab) tab.selectedIcon else tab.icon,
                             contentDescription = stringResource(tab.label),
                         )
                     },
@@ -231,16 +231,16 @@ private fun NewHabitBarButton(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun BottomNavContentPreview() {
-    InstaDevTheme {
-        BottomNavContent(
-            selectedTab = BottomNavigation.TabHome,
-            tabNavController = rememberNavController(),
-            showBottomBar = true,
-            onAdd = {},
-            onSignedOut = {},
-        )
-    }
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun BottomNavContentPreview() {
+    // InstaDevTheme {
+        // BottomNavContent(
+            // selectedTab = BottomNavigation.TabHome,
+            // tabNavController = rememberNavController(),
+            // showBottomBar = true,
+            // onAdd = {},
+            // onSignedOut = {},
+        // )
+    // }
+// }

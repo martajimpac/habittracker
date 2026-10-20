@@ -2,7 +2,10 @@ package com.marta.habittracker.presentation.screens.detail
 
 import androidx.lifecycle.SavedStateHandle
 import com.marta.habittracker.R
+import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +19,6 @@ import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -38,8 +40,8 @@ class HabitDetailViewModelTest {
     }
 
     @Test
-    fun `load with reminderTime 08 00 enables reminder`() = runTest {
-        val viewModel = createViewModel(sampleHabit(reminderTime = "08:00"))
+    fun `load with reminder enabled shows the saved time`() = runTest {
+        val viewModel = createViewModel(sampleHabit(reminderTime = "08:00", reminderEnabled = true))
         advanceUntilIdle()
 
         assertTrue(viewModel.reminderEnabled.value)
@@ -56,12 +58,13 @@ class HabitDetailViewModelTest {
     }
 
     @Test
-    fun `save with reminder disabled updates habit reminderTime to null`() = runTest {
-        val habit = sampleHabit(reminderTime = "08:00")
+    fun `save with reminder disabled keeps the time`() = runTest {
+        val habit = sampleHabit(reminderTime = "08:00", reminderEnabled = true)
         val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
         val viewModel = HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+            friendsRepository = FakeFriendsRepository(),
         )
         advanceUntilIdle()
 
@@ -69,7 +72,8 @@ class HabitDetailViewModelTest {
         viewModel.saveReminder()
         advanceUntilIdle()
 
-        assertNull(repository.updatedHabits.single().reminderTime)
+        assertEquals("08:00", repository.updatedHabits.single().reminderTime)
+        assertFalse(repository.updatedHabits.single().reminderEnabled)
         assertEquals(habit.id, repository.updatedHabits.single().id)
     }
 
@@ -80,6 +84,7 @@ class HabitDetailViewModelTest {
         val viewModel = HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+            friendsRepository = FakeFriendsRepository(),
         )
         advanceUntilIdle()
 
@@ -89,6 +94,7 @@ class HabitDetailViewModelTest {
         advanceUntilIdle()
 
         assertEquals("07:30", repository.updatedHabits.single().reminderTime)
+        assertTrue(repository.updatedHabits.single().reminderEnabled)
     }
 
     @Test
@@ -98,6 +104,7 @@ class HabitDetailViewModelTest {
         val viewModel = HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+            friendsRepository = FakeFriendsRepository(),
         )
         advanceUntilIdle()
         var deleted = false
@@ -127,15 +134,38 @@ class HabitDetailViewModelTest {
         )
     }
 
-    private fun createViewModel(habit: Habit): HabitDetailViewModel {
+    @Test
+    fun `habit in a challenge stays marked when the next load fails`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val friends = FakeFriendsRepository()
+        friends.challengeHabitIdsResult = DataResult.Success(setOf(habit.id))
+        val viewModel = createViewModel(habit, friends)
+        advanceUntilIdle()
+        assertTrue(viewModel.inChallenge.value)
+
+        friends.challengeHabitIdsResult = DataResult.Error(AppError.Common.Network)
+        viewModel.refreshChallengeMembership()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.inChallenge.value)
+    }
+
+    private fun createViewModel(
+        habit: Habit,
+        friendsRepository: FakeFriendsRepository = FakeFriendsRepository(),
+    ): HabitDetailViewModel {
         val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
         return HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
+            friendsRepository = friendsRepository,
         )
     }
 
-    private fun sampleHabit(reminderTime: String?) = Habit(
+    private fun sampleHabit(
+        reminderTime: String?,
+        reminderEnabled: Boolean = false,
+    ) = Habit(
         id = "habit-1",
         name = "Read",
         description = null,
@@ -143,6 +173,7 @@ class HabitDetailViewModelTest {
         icon = "book",
         colorHex = "#6750A4",
         reminderTime = reminderTime,
+        reminderEnabled = reminderEnabled,
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         records = emptyList(),
     )

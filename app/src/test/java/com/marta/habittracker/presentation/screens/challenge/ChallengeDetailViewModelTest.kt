@@ -227,6 +227,7 @@ class ChallengeDetailViewModelTest {
         override suspend fun doRegister(
             email: String,
             password: String,
+            username: String,
         ) = error("not used")
 
         override suspend fun requestPasswordReset(email: String) = error("not used")

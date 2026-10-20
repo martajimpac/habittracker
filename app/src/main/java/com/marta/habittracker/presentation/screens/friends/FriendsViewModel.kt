@@ -8,8 +8,9 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.FriendListItem
-import com.marta.habittracker.domain.model.Friendship
+import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
@@ -26,7 +27,7 @@ data class FriendsUiState(
     val isLoading: Boolean = true,
     val friends: List<FriendListItem> = emptyList(),
     val challenges: List<ChallengeCard> = emptyList(),
-    val pendingRequests: List<Friendship> = emptyList(),
+    val pendingRequests: List<PendingFriendRequest> = emptyList(),
     val sheet: FriendsSheet = FriendsSheet.None,
     val searchQuery: String = "",
     val searchResults: List<Profile> = emptyList(),
@@ -84,7 +85,12 @@ class FriendsViewModel @Inject constructor(
     }
 
     fun onCreateChallengeClicked(friendId: String) {
-        openFriendSheet(FriendsSheet.CreateChallenge(friendId), friendId)
+        _uiState.update {
+            it.copy(
+                sheet = FriendsSheet.CreateChallenge(friendId),
+                errorRes = null,
+            )
+        }
     }
 
     fun onDismissSheet() {
@@ -148,8 +154,7 @@ class FriendsViewModel @Inject constructor(
 
     fun createChallenge(
         challengedId: String,
-        challengerHabitId: String,
-        challengedHabitId: String,
+        draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
     ) {
@@ -157,8 +162,7 @@ class FriendsViewModel @Inject constructor(
             when (
                 val result = friendsRepository.createChallenge(
                     challengedId = challengedId,
-                    challengerHabitId = challengerHabitId,
-                    challengedHabitId = challengedHabitId,
+                    draft = draft,
                     criteria = criteria,
                     durationDays = durationDays,
                 )

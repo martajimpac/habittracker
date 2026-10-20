@@ -2,6 +2,7 @@ package com.marta.habittracker.presentation.navigation
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -25,5 +26,13 @@ class BottomNavigationTest {
         assertFalse(destinations.contains(BottomNavigation.TabNew))
         assertTrue(destinations.contains(BottomNavigation.TabHome))
         assertEquals(TabScreens.TabAddContent, BottomNavigation.TabNew.tabScreen)
+    }
+
+    @Test
+    fun destinationTabs_swapOutlineForFilledWhenSelected() {
+        BottomNavigation.destinationTabs.forEach { tab ->
+            assertNotEquals(tab.icon, tab.selectedIcon)
+        }
+        assertEquals(BottomNavigation.TabNew.icon, BottomNavigation.TabNew.selectedIcon)
     }
 }

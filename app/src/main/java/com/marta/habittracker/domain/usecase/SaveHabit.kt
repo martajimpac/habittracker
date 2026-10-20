@@ -20,6 +20,7 @@ class SaveHabit @Inject constructor(
         icon: String,
         colorHex: String,
         reminderTime: String?,
+        reminderEnabled: Boolean = false,
         isPublic: Boolean = false,
         id: String? = null,
     ): DataResult<String, AppError> {
@@ -33,6 +34,7 @@ class SaveHabit @Inject constructor(
                 icon = icon,
                 colorHex = colorHex,
                 reminderTime = reminderTime,
+                reminderEnabled = reminderEnabled,
                 isPublic = isPublic,
                 createdAt = Instant.now(),
                 records = emptyList(),

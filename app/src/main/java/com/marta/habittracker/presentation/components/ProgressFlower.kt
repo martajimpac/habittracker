@@ -113,3 +113,54 @@ fun ProgressFlower(
         }
     }
 }
+
+@Composable
+fun WiltedFlower(modifier: Modifier = Modifier) {
+    val stemColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val petalColor = HabitDanger.copy(alpha = 0.5f)
+    val centerColor = BloomYellow.copy(alpha = 0.65f)
+    Canvas(modifier = modifier.size(width = 72.dp, height = 88.dp)) {
+        val ground = Offset(size.width * 0.38f, size.height * 0.94f)
+        val head = Offset(size.width * 0.7f, size.height * 0.58f)
+        val stem = Path().apply {
+            moveTo(ground.x, ground.y)
+            cubicTo(
+                size.width * 0.4f,
+                size.height * 0.42f,
+                size.width * 0.78f,
+                size.height * 0.22f,
+                head.x,
+                head.y,
+            )
+        }
+        drawPath(
+            path = stem,
+            color = stemColor,
+            style = Stroke(width = size.width * 0.06f, cap = StrokeCap.Round),
+        )
+        drawOval(
+            color = stemColor,
+            topLeft = Offset(size.width * 0.22f, size.height * 0.5f),
+            size = Size(size.width * 0.2f, size.height * 0.07f),
+        )
+        val petalRadius = size.minDimension * 0.11f
+        val orbit = size.minDimension * 0.13f
+        repeat(5) { index ->
+            val angle = Math.toRadians(30.0 + index * 72.0)
+            val hang = if (index == 2) 1.35f else 1f
+            drawCircle(
+                color = petalColor,
+                radius = petalRadius,
+                center = Offset(
+                    x = head.x + cos(angle).toFloat() * orbit,
+                    y = head.y + sin(angle).toFloat() * orbit * hang,
+                ),
+            )
+        }
+        drawCircle(
+            color = centerColor,
+            radius = petalRadius * 0.55f,
+            center = head,
+        )
+    }
+}

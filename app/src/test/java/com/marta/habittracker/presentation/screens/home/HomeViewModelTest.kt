@@ -3,6 +3,7 @@ package com.marta.habittracker.presentation.screens.home
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
+import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.FakeProfileRepository
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,7 @@ class HomeViewModelTest {
                     ),
                 ),
             ),
+            friendsRepository = FakeFriendsRepository(),
         )
 
         advanceUntilIdle()
@@ -69,6 +71,7 @@ class HomeViewModelTest {
             profileRepository = FakeProfileRepository(
                 myProfileResult = DataResult.Error(AppError.Common.Network),
             ),
+            friendsRepository = FakeFriendsRepository(),
         )
 
         advanceUntilIdle()
@@ -76,5 +79,68 @@ class HomeViewModelTest {
         assertEquals("alex", viewModel.userDisplayName.value)
         assertEquals(null, viewModel.avatarUrl.value)
         assertEquals("", viewModel.avatarColor.value)
+    }
+
+    @Test
+    fun `midnight moves the marked day when it was still today`() {
+        val monday = java.time.LocalDate.of(2026, 10, 19)
+        val tuesday = monday.plusDays(1)
+        val viewModel = HomeViewModel(
+            repository = FakeHabitRepository(),
+            authRepository = FakeAuthRepository(),
+            profileRepository = FakeProfileRepository(),
+            friendsRepository = FakeFriendsRepository(),
+        )
+        viewModel.currentDate = { monday }
+        viewModel.refreshDay()
+        viewModel.onDateSelected(monday)
+
+        viewModel.currentDate = { tuesday }
+        viewModel.refreshDay()
+
+        assertEquals(tuesday, viewModel.today.value)
+        assertEquals(tuesday, viewModel.selectedDate.value)
+    }
+
+    @Test
+    fun `midnight keeps a day the user picked that was not today`() {
+        val monday = java.time.LocalDate.of(2026, 10, 19)
+        val sunday = monday.minusDays(1)
+        val tuesday = monday.plusDays(1)
+        val viewModel = HomeViewModel(
+            repository = FakeHabitRepository(),
+            authRepository = FakeAuthRepository(),
+            profileRepository = FakeProfileRepository(),
+            friendsRepository = FakeFriendsRepository(),
+        )
+        viewModel.currentDate = { monday }
+        viewModel.refreshDay()
+        viewModel.onDateSelected(sunday)
+
+        viewModel.currentDate = { tuesday }
+        viewModel.refreshDay()
+
+        assertEquals(tuesday, viewModel.today.value)
+        assertEquals(sunday, viewModel.selectedDate.value)
+    }
+
+    @Test
+    fun `challenge habit ids stay after a later failure`() = runTest {
+        val friends = FakeFriendsRepository()
+        friends.challengeHabitIdsResult = DataResult.Success(setOf("habit-1"))
+        val viewModel = HomeViewModel(
+            repository = FakeHabitRepository(),
+            authRepository = FakeAuthRepository(),
+            profileRepository = FakeProfileRepository(),
+            friendsRepository = friends,
+        )
+        advanceUntilIdle()
+        assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
+
+        friends.challengeHabitIdsResult = DataResult.Error(AppError.Common.Network)
+        viewModel.refreshChallengeHabits()
+        advanceUntilIdle()
+
+        assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
     }
 }

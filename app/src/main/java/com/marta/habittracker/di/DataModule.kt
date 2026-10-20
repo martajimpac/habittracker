@@ -14,6 +14,7 @@ import com.marta.habittracker.data.repository.HabitRepositoryImpl
 import com.marta.habittracker.data.repository.OnboardingRepositoryImpl
 import com.marta.habittracker.data.repository.ProfileRepositoryImpl
 import com.marta.habittracker.data.repository.ThemeRepositoryImpl
+import com.marta.habittracker.data.repository.UsernameAvailabilityRepositoryImpl
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
 import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.repository.AuthRepository
@@ -22,6 +23,9 @@ import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.OnboardingRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.repository.ThemeRepository
+import com.marta.habittracker.domain.repository.UsernameAvailabilityRepository
+import com.marta.habittracker.domain.widget.AppWidgetRefresher
+import com.marta.habittracker.presentation.widgets.GlanceAppWidgetRefresher
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -52,6 +56,10 @@ abstract class DataModule {
 
     @Binds
     @Singleton
+    abstract fun bindAppWidgetRefresher(impl: GlanceAppWidgetRefresher): AppWidgetRefresher
+
+    @Binds
+    @Singleton
     abstract fun bindHabitReminderScheduler(impl: AndroidHabitReminderScheduler): HabitReminderScheduler
 
     @Binds
@@ -73,6 +81,12 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUsernameAvailabilityRepository(
+        impl: UsernameAvailabilityRepositoryImpl,
+    ): UsernameAvailabilityRepository
 
     @Binds
     @Singleton

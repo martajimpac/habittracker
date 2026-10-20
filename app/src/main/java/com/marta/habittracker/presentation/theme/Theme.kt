@@ -15,22 +15,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.ThemeMode
 import androidx.compose.runtime.getValue
 
 private val DarkColorScheme = darkColorScheme(
-    primary = HabitPrimaryLight,
-    onPrimary = Color.White,
-    primaryContainer = HabitPrimaryContainerDark,
+    primary = HabitPrimaryOnDark,
+    onPrimary = HabitOnPrimaryDark,
+    primaryContainer = HabitPrimaryLight,
     onPrimaryContainer = HabitOnPrimaryContainerDark,
 
-    secondary = HabitSecondaryLight,
-    onSecondary = Color.White,
+    secondary = HabitPrimaryOnDark,
+    onSecondary = HabitOnPrimaryDark,
     secondaryContainer = Gray30,
     onSecondaryContainer = HabitOnPrimaryContainerDark,
 
-    tertiary = HabitTertiary,
-    onTertiary = HabitOnTertiary,
+    tertiary = HabitPrimaryOnDark,
+    onTertiary = HabitOnPrimaryDark,
     tertiaryContainer = HabitOnTertiaryContainer,
     onTertiaryContainer = HabitTertiaryContainer,
 
@@ -96,11 +97,13 @@ private val LightColorScheme = lightColorScheme(
     onErrorContainer = HabitOnErrorContainer,
 )
 
-
 val LocalHabitDarkTheme = staticCompositionLocalOf { false }
 
 @Composable
 fun isHabitDarkTheme(): Boolean = LocalHabitDarkTheme.current
+
+@Composable
+fun bloomLogoRes(): Int = if (isHabitDarkTheme()) R.drawable.logo_dark else R.drawable.logo
 
 data class HabitDangerColors(
     val container: Color,
@@ -174,22 +177,22 @@ fun InstaDevTheme(
     }
 }
 
-@Preview(name = "Light chrome", showBackground = true)
-@Composable
-private fun LightThemePreview() {
-    InstaDevTheme(darkTheme = false) {
-        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
-            androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}
+// @Preview(name = "Light chrome", showBackground = true)
+// @Composable
+// private fun LightThemePreview() {
+    // InstaDevTheme(darkTheme = false) {
+        // androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
+            // androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
+        // }
+    // }
+// }
 
-@Preview(name = "Dark chrome", showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun DarkThemePreview() {
-    InstaDevTheme(darkTheme = true) {
-        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
-            androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}
+// @Preview(name = "Dark chrome", showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+// @Composable
+// private fun DarkThemePreview() {
+    // InstaDevTheme(darkTheme = true) {
+        // androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.surface) {
+            // androidx.compose.material3.Text("surface", color = MaterialTheme.colorScheme.onSurface)
+        // }
+    // }
+// }

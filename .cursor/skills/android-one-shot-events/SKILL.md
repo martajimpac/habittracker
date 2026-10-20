@@ -117,6 +117,31 @@ ObserveAsEvents(
 
 The goal is to ensure that one-shot events are handled as events rather than being re-emitted when the Composable recomposes or the user navigates back to the screen.
 
+## Navigation arguments are sticky
+
+A route argument is saved with the back stack. It is still there when the screen is composed again after leaving the app or when the activity is recreated. Do not derive a dialog, snackbar, or toast from it.
+
+```kotlin
+// BAD — dismissing the dialog only clears local state.
+// Coming back restores Login(AccountCreated) and remember runs again.
+var showAccountCreated by remember(message) {
+    mutableStateOf(message == LoginMessage.AccountCreated)
+}
+```
+
+Hand the prompt to the next screen once, outside the route. The next screen's ViewModel takes it a single time and clears it when the dialog is dismissed. A later composition must not show it again.
+
+```kotlin
+coordinator.show(LoginMessage.AccountCreated)
+navController.navigate(Login)
+
+// LoginViewModel
+private val _prompt = MutableStateFlow(coordinator.consume())
+fun dismissPrompt() { _prompt.value = null }
+```
+
+A dialog the user opened on purpose (delete, sign out, time picker) can stay in `remember { mutableStateOf(false) }` until they close it. That state starts false, so it does not replay by itself.
+
 ## Forbidden (never ship)
 
 ```kotlin
@@ -138,3 +163,4 @@ CollectAsEffect(viewModel.navigateToHome) { navigateToHome() }
 - [ ] One-shot effects use `Channel(Channel.BUFFERED)` + `receiveAsFlow()`
 - [ ] Compose uses `ObserveAsEvents` (not `collectAsState*`, not sticky flags)
 - [ ] No new `SharedFlow` / `CollectAsEffect` for UI events
+- [ ] No dialog or toast derived from a navigation argument or `remember(routeArg)`

@@ -8,8 +8,11 @@ import com.google.firebase.BuildConfig
 import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
+import com.marta.habittracker.presentation.navigation.LoginMessage
+import com.marta.habittracker.presentation.navigation.LoginPromptCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,13 +28,24 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val syncHabits: SyncHabits,
     private val deviceTokenRegistration: DeviceTokenRegistration,
+    promptCoordinator: LoginPromptCoordinator,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    private val _prompt = MutableStateFlow(promptCoordinator.consume())
+    val prompt: StateFlow<LoginMessage?> = _prompt.asStateFlow()
+
+    fun dismissPrompt() {
+        _prompt.value = null
+    }
+
     private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
     val navigateToHome = _navigateToHome.receiveAsFlow()
+
+    private val _events = Channel<LoginEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     fun onEmailChanged(email: String) {
         _uiState.update { it.copy(email = email, errorMessageRes = null) }
@@ -51,7 +65,7 @@ class LoginViewModel @Inject constructor(
         if (!_uiState.value.isLoginEnabled || _uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorMessageRes = null) }
         viewModelScope.launch {
-            when (loginUseCase(_uiState.value.email, _uiState.value.password)) {
+            when (val result = loginUseCase(_uiState.value.email, _uiState.value.password)) {
                 is DataResult.Success -> {
                     syncHabits()
                     deviceTokenRegistration.registerCurrentToken()
@@ -59,11 +73,16 @@ class LoginViewModel @Inject constructor(
                     _navigateToHome.send(Unit)
                 }
                 is DataResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessageRes = R.string.login_error_unable_to_sign_in,
-                        )
+                    if (result.error is LoginError.EmailNotVerified) {
+                        _uiState.update { it.copy(isLoading = false, errorMessageRes = null) }
+                        _events.send(LoginEvent.AccountNotConfirmed)
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessageRes = R.string.login_error_unable_to_sign_in,
+                            )
+                        }
                     }
                 }
             }
@@ -94,4 +113,8 @@ data class LoginUiState(
         return "LoginUiState(isLoading=$isLoading, isLoginEnabled=$isLoginEnabled, " +
             "isPasswordVisible=$isPasswordVisible, hasError=${errorMessageRes != null})"
     }
+}
+
+sealed interface LoginEvent {
+    data object AccountNotConfirmed : LoginEvent
 }

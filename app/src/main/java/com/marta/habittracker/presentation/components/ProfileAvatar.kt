@@ -26,6 +26,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.marta.habittracker.R
+import com.marta.habittracker.presentation.theme.HabitCream
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.utils.toHex
@@ -77,7 +78,7 @@ fun ProfileAvatar(
                 text = userAvatarInitials(displayName),
                 style = initialsTextStyle(size),
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = HabitCream,
             )
         }
     }
@@ -107,13 +108,13 @@ private fun initialsTextStyle(size: Dp) = when {
     else -> MaterialTheme.typography.labelMedium
 }
 
-@Preview(showBackground = true, name = "ProfileAvatar initials")
-@Composable
-private fun ProfileAvatarInitialsPreview() {
-    ProfileAvatar(
-        avatarUrl = null,
-        displayName = "John Doe",
-        avatarColor = HabitPrimary.toHex(),
-        size = 80.dp,
-    )
-}
+// @Preview(showBackground = true, name = "ProfileAvatar initials")
+// @Composable
+// private fun ProfileAvatarInitialsPreview() {
+    // ProfileAvatar(
+        // avatarUrl = null,
+        // displayName = "John Doe",
+        // avatarColor = HabitPrimary.toHex(),
+        // size = 80.dp,
+    // )
+// }

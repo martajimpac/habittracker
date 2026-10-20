@@ -151,13 +151,13 @@ fun ForgotPasswordContent(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun ForgotPasswordContentPreview() {
-    ForgotPasswordContent(
-        uiState = ForgotPasswordUiState(),
-        onBack = {},
-        onEmailChanged = {},
-        onSubmit = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun ForgotPasswordContentPreview() {
+    // ForgotPasswordContent(
+        // uiState = ForgotPasswordUiState(),
+        // onBack = {},
+        // onEmailChanged = {},
+        // onSubmit = {},
+    // )
+// }

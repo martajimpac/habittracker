@@ -20,10 +20,12 @@ class WeeklyWidgetStateTest {
             )
         }
 
-        val cells = toWeeklyWidgetDayCells(summaries)
+        val cells = toWeeklyWidgetDayCells(summaries, today = monday)
 
         assertEquals(DayOfWeek.entries, cells.map { it.dayOfWeek })
         assertEquals(listOf(0, 50, 100, 150, 200, 250, 300), cells.map { it.percent })
+        assertEquals(true, cells.first().isToday)
+        assertEquals(false, cells[1].isToday)
     }
 
     @Test

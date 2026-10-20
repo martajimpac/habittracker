@@ -3,29 +3,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/habit_surface"
-    android:orientation="vertical"
-    android:padding="12dp">
+    android:orientation="vertical">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/habit_primary"
+        android:padding="12dp"
         android:text="@string/today_widget_title"
-        android:textColor="@color/habit_primary"
+        android:textColor="@color/habit_field"
         android:textSize="14sp"
         android:textStyle="bold" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_margin="8dp"
+        android:background="@color/habit_field"
+        android:padding="10dp"
         android:text="@string/today_widget_preview_done"
         android:textColor="@color/habit_on_surface"
-        android:textSize="13sp" />
+        android:textSize="13sp"
+        android:textStyle="bold" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:background="@color/habit_field"
+        android:padding="10dp"
         android:text="@string/today_widget_preview_pending"
         android:textColor="@color/habit_on_surface"
         android:textSize="13sp" />

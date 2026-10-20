@@ -55,5 +55,12 @@ class FakeHabitRepository(
     override suspend fun deleteHabit(habit: Habit): DataResult<Unit, AppError> =
         DataResult.Success(Unit)
 
+    var clearLocalCalls: Int = 0
+        private set
+
     override suspend fun syncFromRemote(): DataResult<Unit, AppError> = DataResult.Success(Unit)
+
+    override suspend fun clearLocal() {
+        clearLocalCalls++
+    }
 }

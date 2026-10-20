@@ -4,8 +4,9 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.FriendListItem
-import com.marta.habittracker.domain.model.Friendship
+import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 
@@ -14,6 +15,8 @@ interface FriendsRepository {
 
     suspend fun getActiveChallenges(): DataResult<List<ChallengeCard>, AppError>
 
+    suspend fun challengeHabitIds(): DataResult<Set<String>, AppError>
+
     suspend fun getChallenge(challengeId: String): DataResult<ChallengeCard, AppError>
 
     suspend fun respondToChallenge(
@@ -21,7 +24,7 @@ interface FriendsRepository {
         accept: Boolean,
     ): DataResult<ChallengeCard, AppError>
 
-    suspend fun getPendingFriendRequests(): DataResult<List<Friendship>, AppError>
+    suspend fun getPendingFriendRequests(): DataResult<List<PendingFriendRequest>, AppError>
 
     suspend fun searchProfiles(query: String): DataResult<List<Profile>, AppError>
 
@@ -36,8 +39,7 @@ interface FriendsRepository {
 
     suspend fun createChallenge(
         challengedId: String,
-        challengerHabitId: String,
-        challengedHabitId: String,
+        draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
     ): DataResult<Unit, AppError>

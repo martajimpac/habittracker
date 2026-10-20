@@ -326,10 +326,10 @@ private fun DrawScope.drawBloom(
     )
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun OnboardingContentPreview() {
-    InstaDevTheme {
-        OnboardingContent(onComplete = {})
-    }
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun OnboardingContentPreview() {
+    // InstaDevTheme {
+        // OnboardingContent(onComplete = {})
+    // }
+// }

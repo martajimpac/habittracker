@@ -8,9 +8,12 @@ import androidx.compose.ui.graphics.Color
 // Brand
 // ─────────────────────────────────────
 
-// Forest green. Primary is the brand; PrimaryLight is the lighter tone for dark mode and gradients.
+// Forest green. Primary is the brand; PrimaryLight is the lighter tone for gradients.
+// On dark surfaces the accent is lighter so it reads on black, with dark ink on top.
 val HabitPrimary = Color(0xFF294536)
 val HabitPrimaryLight = Color(0xFF3D6E50)
+val HabitPrimaryOnDark = Color(0xFF8FCB97)
+val HabitOnPrimaryDark = Color(0xFF143028)
 
 val HabitSecondary = Color(0xFF294536)
 val HabitSecondaryLight = Color(0xFF3D6E50)
@@ -61,7 +64,7 @@ val HabitColor12 = Color(0xFFBE184F)
 // ─────────────────────────────────────
 
 val Gray20 = Color(0xFF121212)
-val Gray30 = Color(0xFF2A2A2C)
+val Gray30 = Color(0xFF2F2F31)
 val Gray50 = Color(0xFF8E8E93)
 val Gray70 = Color(0xFFC8C8CC)
 

@@ -168,31 +168,31 @@ fun DeleteAccountContent(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun DeleteAccountContentPreview() {
-    DeleteAccountContent(
-        uiState = DeleteAccountUiState(),
-        snackbarHostState = remember { SnackbarHostState() },
-        onBack = {},
-        onConfirmationChanged = {},
-        onDeleteConfirmed = {},
-        onCancel = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun DeleteAccountContentPreview() {
+    // DeleteAccountContent(
+        // uiState = DeleteAccountUiState(),
+        // snackbarHostState = remember { SnackbarHostState() },
+        // onBack = {},
+        // onConfirmationChanged = {},
+        // onDeleteConfirmed = {},
+        // onCancel = {},
+    // )
+// }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun DeleteAccountContentReadyPreview() {
-    DeleteAccountContent(
-        uiState = DeleteAccountUiState(
-            confirmation = "DELETE",
-            isDeleteEnabled = true,
-        ),
-        snackbarHostState = remember { SnackbarHostState() },
-        onBack = {},
-        onConfirmationChanged = {},
-        onDeleteConfirmed = {},
-        onCancel = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun DeleteAccountContentReadyPreview() {
+    // DeleteAccountContent(
+        // uiState = DeleteAccountUiState(
+            // confirmation = "DELETE",
+            // isDeleteEnabled = true,
+        // ),
+        // snackbarHostState = remember { SnackbarHostState() },
+        // onBack = {},
+        // onConfirmationChanged = {},
+        // onDeleteConfirmed = {},
+        // onCancel = {},
+    // )
+// }

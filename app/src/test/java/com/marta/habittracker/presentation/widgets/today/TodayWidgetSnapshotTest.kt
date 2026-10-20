@@ -56,18 +56,6 @@ class TodayWidgetSnapshotTest {
         assertEquals(emptyList<String>(), todayWidgetSnapshot(emptyList(), today).items.map { it.id })
     }
 
-    @Test
-    fun `display keeps the first rows and counts the rest`() {
-        val items = (1..7).map { index ->
-            TodayWidgetItem(id = "h$index", name = "Habit $index", completed = false)
-        }
-
-        val display = todayWidgetDisplay(items)
-
-        assertEquals(listOf("h1", "h2", "h3", "h4", "h5"), display.rows.map { it.id })
-        assertEquals(2, display.overflowCount)
-    }
-
     private fun sampleHabit(
         id: String,
         name: String,

@@ -23,20 +23,13 @@ sealed interface StatsStreakHighlight {
 private const val STREAK_LOOKBACK_DAYS = 730
 
 /**
- * Prefers a current run of days where every scheduled habit was completed.
+ * Names the habit with the longest streak still alive today when that streak is
+ * ahead of the run where every scheduled habit was completed.
+ * The group card is used only when nobody is ahead of that shared run.
  * Days with nothing scheduled are skipped, so a rest day does not break the run.
- * Otherwise highlights the habit with the longest streak still alive today.
  * Either card stays hidden until its minimum in [StatsStreakMinimums].
  */
 fun statsStreakHighlight(habits: List<Habit>, today: LocalDate): StatsStreakHighlight? {
-    val current = perfectStreakEnding(habits, today)
-    if (current >= StatsStreakMinimums.ALL_HABITS_DAYS) {
-        return StatsStreakHighlight.AllHabits(
-            days = current,
-            isLongestSoFar = current == bestPerfectStreak(habits, today),
-        )
-    }
-
     val kotlinToday = KotlinLocalDate.parse(today.toString())
     val longest = habits.mapNotNull { habit ->
         val streak = calculateScheduledStreak(
@@ -57,6 +50,15 @@ fun statsStreakHighlight(habits: List<Habit>, today: LocalDate): StatsStreakHigh
             .thenBy { it.habitName }
             .thenBy { it.habitId },
     )
+
+    val current = perfectStreakEnding(habits, today)
+    val longestDays = longest?.days ?: 0
+    if (current >= StatsStreakMinimums.ALL_HABITS_DAYS && current >= longestDays) {
+        return StatsStreakHighlight.AllHabits(
+            days = current,
+            isLongestSoFar = current == bestPerfectStreak(habits, today),
+        )
+    }
     return longest
 }
 

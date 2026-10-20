@@ -2,6 +2,7 @@ package com.marta.habittracker.presentation.widgets
 
 import com.marta.habittracker.data.local.datastore.WidgetPreferencesDataSource
 import com.marta.habittracker.core.network.NetworkChecker
+import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import dagger.hilt.EntryPoint
@@ -13,6 +14,8 @@ import kotlinx.serialization.json.Json
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
     fun habitRepository(): HabitRepository
+
+    fun authRepository(): AuthRepository
 
     fun friendsRepository(): FriendsRepository
 

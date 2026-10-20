@@ -44,7 +44,7 @@ data class AddContentUiState(
     val icon: String = HabitIconKeys.DEFAULT,
     val color: Color = HabitColorOptions.first(),
     val reminderEnabled: Boolean = false,
-    val reminderTime: String = "08:00",
+    val reminderTime: String = "",
     val selectedDays: Set<DayOfWeek> = emptySet(),
     val isPublic: Boolean = false,
     val isSaving: Boolean = false,
@@ -84,8 +84,8 @@ class AddContentViewModel @Inject constructor(
                             description = habit.description.orEmpty(),
                             icon = habit.icon,
                             color = parseHabitColor(habit.colorHex),
-                            reminderEnabled = habit.reminderTime != null,
-                            reminderTime = habit.reminderTime ?: it.reminderTime,
+                            reminderEnabled = habit.reminderEnabled,
+                            reminderTime = habit.reminderTime.orEmpty(),
                             selectedDays = habit.daysOfWeek.toJavaList().toSet(),
                             isPublic = habit.isPublic,
                             isEditing = true,
@@ -117,7 +117,13 @@ class AddContentViewModel @Inject constructor(
     }
 
     fun onReminderEnabled(enabled: Boolean) {
-        _uiState.update { it.copy(reminderEnabled = enabled, errorMessageRes = null) }
+        _uiState.update {
+            it.copy(
+                reminderEnabled = enabled,
+                reminderTime = if (enabled && it.reminderTime.isBlank()) "08:00" else it.reminderTime,
+                errorMessageRes = null,
+            )
+        }
     }
 
     fun onReminderDenied(@StringRes messageRes: Int) {
@@ -158,11 +164,7 @@ class AddContentViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessageRes = null) }
-            val reminderTime = if (currentState.reminderEnabled) {
-                currentState.reminderTime.trim().ifBlank { null }
-            } else {
-                null
-            }
+            val reminderTime = currentState.reminderTime.trim().takeIf { ReminderTimePattern.matches(it) }
             val result = if (editingHabitId == null) {
                 saveHabit(
                     name = currentState.name.trim(),
@@ -171,6 +173,7 @@ class AddContentViewModel @Inject constructor(
                     icon = currentState.icon,
                     colorHex = currentState.color.toHex(),
                     reminderTime = reminderTime,
+                    reminderEnabled = currentState.reminderEnabled && reminderTime != null,
                     isPublic = currentState.isPublic,
                 )
             } else {
@@ -193,6 +196,7 @@ class AddContentViewModel @Inject constructor(
                             icon = currentState.icon,
                             colorHex = currentState.color.toHex(),
                             reminderTime = reminderTime,
+                            reminderEnabled = currentState.reminderEnabled && reminderTime != null,
                             isPublic = currentState.isPublic,
                         ),
                     )

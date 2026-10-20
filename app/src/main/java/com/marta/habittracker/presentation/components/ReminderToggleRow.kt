@@ -57,56 +57,58 @@ fun ReminderToggleRow(
                 onCheckedChange = onEnabledChange,
             )
         }
-        if (enabled) {
+        Text(
+            text = stringResource(R.string.add_habit_time),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(HabitField)
+                .clickable(onClick = onTimeClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        ) {
             Text(
-                text = stringResource(R.string.add_habit_reminder_time),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = reminderTime.ifBlank { stringResource(R.string.add_habit_no_time) },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (reminderTime.isBlank()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    HabitOnSurface
+                },
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HabitField)
-                    .clickable(onClick = onTimeClick)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-            ) {
-                Text(
-                    text = reminderTime,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = HabitOnSurface,
-                )
-            }
         }
     }
 }
 
-@Preview(showBackground = true, name = "Reminder off")
-@Composable
-private fun ReminderToggleRowOffPreview() {
-    InstaDevTheme {
-        ReminderToggleRow(
-            enabled = false,
-            reminderTime = "08:00",
-            onEnabledChange = {},
-            onTimeClick = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
+// @Preview(showBackground = true, name = "Reminder off")
+// @Composable
+// private fun ReminderToggleRowOffPreview() {
+    // InstaDevTheme {
+        // ReminderToggleRow(
+            // enabled = false,
+            // reminderTime = "08:00",
+            // onEnabledChange = {},
+            // onTimeClick = {},
+            // modifier = Modifier.padding(16.dp),
+        // )
+    // }
+// }
 
-@Preview(showBackground = true, name = "Reminder on")
-@Composable
-private fun ReminderToggleRowOnPreview() {
-    InstaDevTheme {
-        ReminderToggleRow(
-            enabled = true,
-            reminderTime = "08:00",
-            onEnabledChange = {},
-            onTimeClick = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
+// @Preview(showBackground = true, name = "Reminder on")
+// @Composable
+// private fun ReminderToggleRowOnPreview() {
+    // InstaDevTheme {
+        // ReminderToggleRow(
+            // enabled = true,
+            // reminderTime = "08:00",
+            // onEnabledChange = {},
+            // onTimeClick = {},
+            // modifier = Modifier.padding(16.dp),
+        // )
+    // }
+// }

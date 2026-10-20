@@ -13,13 +13,13 @@ La app se llama Bloom. Sirve para crear, consultar y completar habitos personale
 - El estado de UI no debe contener secretos persistentes por defecto.
 - Las credenciales introducidas por el usuario no deben aparecer en logs ni en representaciones persistentes del estado.
 - El login debe empezar deshabilitado hasta que email y password sean validos.
-- Pantalla Login: fondo verde bosque (`colorScheme.primary`). El wordmark `logo` es transparente y va al inicio de la card blanca, para que el verde del dibujo se lea. Debajo sigue el formulario (email, password, acciones existentes).
+- Pantalla Login: fondo verde bosque (`colorScheme.primary`). El wordmark `logo` es transparente y va al inicio de la card. En modo claro las letras son verde oscuro, para que se lean sobre la card clara. En modo oscuro se usa `logo_dark`: el mismo wordmark en blanco, también transparente. El mismo wordmark, según el tema, va arriba del formulario de crear cuenta. Debajo sigue el formulario (email, password, acciones existentes).
 - Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
 - Password reset (aprobado 2026-08-08): ver § Password reset (deep link).
-- El icono de la app (launcher) es una flor de loto: cada pétalo usa un color de la paleta de hábitos y el trazo es gris claro. La marca del login es el wordmark Bloom en `res/drawable-nodpi/logo.png`.
+- El icono de la app (launcher) es una flor de loto: cada pétalo usa un color de la paleta de hábitos y el trazo es gris claro. La marca del login es el wordmark Bloom en `res/drawable-nodpi/logo.png`, y en modo oscuro `res/drawable-nodpi/logo_dark.png`.
 - Bottom navigation: ver § Material 3 chrome (NavigationBar + theme). No hay FAB de alta.
 - Tab Friends (Figma Make — social):
-  - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos, lista de amigos, solicitudes pendientes y bottom sheets (añadir / ver hábitos / crear reto). La hoja de añadir amigo no lleva asa ni divisor bajo el título, y cierra con un botón de solo icono.
+  - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos (la tarjeta usa el mismo fondo que un hábito de Inicio; el color del hábito queda en el icono, la copa y las barras. Muestra quién va ganando junto a una copa; si van iguales, empate), lista de amigos (el nombre y los datos abren sus hábitos; desafiar es un botón de solo icono), solicitudes pendientes (foto y nombre de quien la envía; aceptar y rechazar son dos botones de solo icono, uno encima del otro) y bottom sheets (añadir / ver hábitos / crear reto). La hoja de añadir amigo no lleva asa ni divisor bajo el título, y cierra con un botón de solo icono.
   - Textos en ingles (`strings.xml`).
   - Android usa el contrato de dominio `FriendsRepository` y `SocialRemoteDataSource` (Supabase); el `FriendsViewModel` expone el estado de la UI y recarga los datos al volver a primer plano.
   - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
@@ -36,7 +36,7 @@ Aprobado 2026-10-09.
 **NavigationBar**
 - `NavigationBar` con cinco huecos: Home, Stats, **Nuevo**, Friends, Profile (Nuevo en el centro). Solo iconos; el texto de cada tab queda como `contentDescription`. La barra mide 64 dp de alto.
 - Nuevo es una card verde (`colorScheme.primary`) con el icono Add, más grande que el resto y con elevación. No es un destino seleccionado: navega a crear hábito (`TabAddContent`). Al volver, permanece seleccionada la tab anterior (Home/Stats/Friends/Profile), no Nuevo.
-- Los otros cuatro usan `NavigationBarItem` sin label, con la píldora de selección.
+- Los otros cuatro usan `NavigationBarItem` sin label, con la píldora de selección. Su icono va en contorno y, al seleccionar la pestaña, cambia a la versión rellena.
 - La barra se oculta en Crear, Editar hábito, Detalle de hábito, Detalle de reto, Preferencias y Borrar cuenta.
 - Sin `FloatingActionButton` / `HabitFab` para el alta. `contentDescription` de Nuevo: `tab_new` (`strings.xml`).
 
@@ -48,7 +48,7 @@ Aprobado 2026-10-09.
 
 **Theme**
 - Completar `lightColorScheme` y `darkColorScheme` con roles M3: `primaryContainer` / `onPrimaryContainer`, `secondaryContainer` / `onSecondaryContainer`, `tertiary` / `onTertiary` / `tertiaryContainer`, `errorContainer` / `onErrorContainer`, y `surfaceContainerLowest` … `surfaceContainerHighest` (más `surfaceContainer` / `surfaceContainerHigh` / `Low` según el scheme). En modo oscuro los neutros son gris, sin tinte marrón. El fondo (`surface`) es el tono más oscuro; las cards (`surfaceContainerLowest` y el resto de containers) quedan siempre más claras.
-- Marca: verde bosque (`HabitPrimary` `#294536`, `HabitPrimaryLight` `#3D6E50`). Los contenedores y el terciario son verdes del mismo tono. No volver al navy `#021C4B` ni al púrpura `#6750A4`. En claro, el blanco es crema `HabitCream` `#FDF9F1`: cards, `HabitField` y el texto sobre el primario. El fondo y el resto de containers son esa crema más oscura (`#EFEBE3`, `#EAE6DE`, `#E4E0D8`, `#DEDAD2`). El modo oscuro sigue en grises, con texto blanco.
+- Marca: verde bosque (`HabitPrimary` `#294536`, `HabitPrimaryLight` `#3D6E50`). Los contenedores y el terciario son verdes del mismo tono. No volver al navy `#021C4B` ni al púrpura `#6750A4`. En claro, el blanco es crema `HabitCream` `#FDF9F1`: cards, `HabitField` y el texto sobre el primario. El fondo y el resto de containers son esa crema más oscura (`#EFEBE3`, `#EAE6DE`, `#E4E0D8`, `#DEDAD2`). El modo oscuro sigue en grises, con texto blanco. El verde de acento en oscuro es `#8FCBAA`, con texto `#143028` encima, para que se distinga del negro.
 - Dynamic color **apagado** (`InstaDevTheme(dynamicColor = false)`). Nunito y `shapes` sin cambio.
 
 **Chrome (sí) vs contenido (no)**
@@ -95,7 +95,7 @@ Aprobado 2026-08-08.
 
 **Técnico**
 - Custom scheme: `habittracker://auth/reset` (intent-filter en `MainActivity` / deep link de Navigation).
-- Configuración manual en Supabase Dashboard → Auth → Redirect URLs: incluir `habittracker://auth/reset`.
+- Configuración manual en Supabase Dashboard → Auth → URL Configuration: Site URL y Redirect URLs deben incluir `habittracker://auth/reset` y `habittracker://auth/confirm`. Si Site URL se queda en `http://localhost:3000`, el enlace de confirmar el correo abre una página vacía.
 - Capas: métodos en `AuthRepository` (+ use cases si aportan); Screens/ViewModels Screen/Content; strings EN en `strings.xml`.
 - Logs: no registrar tokens del deep link ni passwords; email solo truncado si hace falta.
 
@@ -115,7 +115,7 @@ Aprobado 2026-08-08.
 - En Stats, pulsar un hábito abre su detalle (`TabDetail`).
 - En el detalle no hay pestañas. La ficha del hábito (icono, nombre, descripción, días programados, recordatorio y racha viva) va en una tarjeta. Debajo, otra tarjeta agrupa los gráficos: el anillo de «Desempeño general», las barras de las últimas 4 semanas y las barras por día de la semana. En las últimas 4 semanas, cada barra es el porcentaje de días programados completados esa semana; no entran los días futuros ni los anteriores a la creación del hábito. Las barras por día de la semana cuentan cuántas veces se completó el hábito cada día, de lunes a domingo; no cuentan los días futuros. El calendario mensual sigue en su propia tarjeta, con el mismo borde. Editar, eliminar y atrás son `HabitIconButton`: cuadrados de 40 dp. Por defecto usa el mismo color primario, el texto `onPrimary` y las esquinas de 16 dp que `HabitButton`. Eliminar usa la paleta `HabitDanger`: fondo del contenedor, icono y borde de 1 dp, los mismos que cerrar sesión y borrar cuenta. El nombre y el icono del hábito van dentro de la ficha. Editar abre el formulario de crear hábito ya relleno (`TabEditHabit`) y guarda con `updateHabit`. Eliminar pide confirmación, llama a `deleteHabit` y vuelve atrás.
 - El usuario puede eliminar habitos y sus registros asociados.
-- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders. El selector de icono incluye cuatro flores sólidas, de un solo color y tintables: bloom, tulipán, loto y flor de cinco pétalos (`flower_bloom`, `flower_tulip`, `flower_lotus`, `flower_blossom`). Se pintan con `HabitLineIcon` y la clave guardada, igual que el resto de iconos.
+- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders. El selector de icono incluye dos flores sólidas, de un solo color y tintables: bloom y loto (`flower_bloom`, `flower_lotus`). Tulipán y la flor de cinco pétalos siguen pintándose si un hábito ya las tenía. También hay pesa, no fumar, no móvil, teléfono, mensaje, portátil, estudio, pasos, dólar, árbol, maletín, sol, manzana, limpieza y carrito. Se pintan con `HabitLineIcon` y la clave guardada, igual que el resto de iconos.
 - Si faltan el nombre, los días o el formato del recordatorio, el botón de crear sigue pulsable con aspecto deshabilitado. Al pulsarlo, el foco va al primer campo incompleto y ese campo muestra el error.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
 - Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
@@ -130,7 +130,7 @@ Aprobado 2026-08-08.
 ### Sync de habitos (Supabase)
 
 - Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS (dueño + excepciones sociales abajo).
-- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
+- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
 - `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
 - Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
 - Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
@@ -142,11 +142,12 @@ Aprobado 2026-08-08.
 Aprobado 2026-10-09.
 
 **Producto**
-- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, solo en los `days_of_week` del hábito.
-- Fuente de verdad: `habits.reminder_time` (`HH:mm` o null). `null` = interruptor off (no hay alarma). No hay columna extra de “enabled”.
-- Hábitos **ya guardados** con `reminder_time` no null se tratan como recordatorio on (`rescheduleAll` al actualizar la app). No hay migración masiva a `null`. Quien no quiera aviso lo apaga al editar el hábito.
-- **Crear hábito:** interruptor Recordatorio **apagado por defecto**. Al encenderlo se muestra el time picker (inicial `08:00` si no había hora). Al apagarlo, al guardar se persiste `reminder_time = null`.
-- **Editar hábito:** el mismo interruptor + hora; se puede cambiar o apagar después. Al **borrar** el hábito se cancelan sus alarmas.
+- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, solo en los `days_of_week` del hábito, y solo si `reminder_enabled` es true.
+- Fuente de verdad: `habits.reminder_time` (`HH:mm` o null) y `habits.reminder_enabled`. La hora se guarda aunque el interruptor esté apagado. La alarma solo existe si el interruptor está encendido y hay una hora válida. `reminder_time` null significa que el hábito no tiene hora.
+- Los hábitos ya guardados con `reminder_time` no vacío quedan con `reminder_enabled = true`.
+- **Crear hábito:** interruptor Recordatorio **apagado por defecto** y sin hora. La fila de hora se ve siempre. Elegir una hora la guarda aunque el recordatorio siga apagado. Al encender el recordatorio sin hora, la hora inicial es `08:00`.
+- **Editar hábito:** el mismo interruptor + hora. Apagar el recordatorio no borra la hora. Al **borrar** el hábito se cancelan sus alarmas.
+- Home y Estadísticas ordenan primero los hábitos con recordatorio, por hora. Los que no tienen recordatorio van al final; entre ellos también por hora, y sin hora los últimos. El widget de hoy usa ese mismo orden. Si un hábito es el del usuario en un reto pendiente o activo, Inicio, Estadísticas y el detalle lo marcan con una insignia de espadas blancas sobre el color del hábito, en la esquina superior izquierda del icono.
 - Al pulsar la notificación: abre el **detalle** de ese hábito. Sin acción “Completar” en la notificación.
 - Si ese día el hábito **ya está completado** (record en Room): no se muestra la notificación; sí se programa la siguiente ocurrencia.
 - La fila Notifications del perfil está oculta de momento. Preferencias no gestiona recordatorios de hábitos.
@@ -155,7 +156,7 @@ Aprobado 2026-10-09.
 - Dominio libre de APIs Android. Puerto `HabitReminderScheduler`: `schedule(habit)`, `cancel(habitId)`, `rescheduleAll()`. Implementación con `AlarmManager.setExactAndAllowWhileIdle`.
 - Una alarma por hábito, hacia la **próxima** fecha/hora válida. Tras disparar (haga o no notify) se programa la siguiente.
 - Programar/cancelar solo **después** de un save/delete OK (online-first: si falla la red, no queda alarma de un hábito no persistido).
-- `BOOT_COMPLETED` y cambio de zona horaria / hora del sistema → `rescheduleAll()` desde Room (hábitos no soft-deleted con `reminder_time` no null).
+- `BOOT_COMPLETED` y cambio de zona horaria / hora del sistema → `rescheduleAll()` desde Room (hábitos no soft-deleted con recordatorio encendido y `reminder_time` no vacío).
 - Permisos: `POST_NOTIFICATIONS` (API 33+) y `SCHEDULE_EXACT_ALARM` (API 31+). Si el usuario deniega, error en UI (`strings.xml`), interruptor off, no se persiste hora. Sin crash si más tarde quita el permiso en Ajustes.
 - Canal de notificación **distinto** del de FCM. `notificationId` estable por `habitId` (varios hábitos a la misma hora no se pisan; no usar `notify(0)` compartido).
 - Título = nombre del hábito; cuerpo desde `strings.xml` (EN + ES).
@@ -164,7 +165,7 @@ Aprobado 2026-10-09.
 **Tests**
 - Cálculo de próxima ocurrencia (hora ya pasada hoy → siguiente día de la frecuencia).
 - Skip notify si ya completado hoy.
-- ViewModel: off → `reminderTime` null; on → `HH:mm`; permiso denegado → error y off.
+- ViewModel: recordatorio apagado conserva la hora; encendido persiste `HH:mm` y `reminder_enabled`; permiso denegado → error e interruptor off.
 - Scheduler con fake del puerto: schedule / cancel / rescheduleAll.
 - No se exigen tests instrumentados de que el OS dispare la alarma.
 
@@ -208,7 +209,7 @@ Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas
 3. `challenges`
    - `id` uuid PK
    - `challenger_id`, `challenged_id` uuid FK `profiles` (deben ser amigos `accepted`)
-   - `challenger_habit_id`, `challenged_habit_id` uuid FK `habits`
+   - `challenger_habit_id` uuid FK `habits` not null; `challenged_habit_id` uuid FK `habits` nullable hasta que la persona retada acepta
    - `criteria` text check: `streak` | `all_days` | `completion_pct`
    - `starts_at`, `ends_at` timestamptz not null (`ends_at` > `starts_at`)
    - `status` text check: `pending` | `active` | `completed` | `declined` | `cancelled`
@@ -228,8 +229,9 @@ Aprobado 2026-10-10.
 - El texto se resuelve en el dispositivo con `strings.xml` (EN + ES): título fijo y cuerpo con el `display_name` de quien reta.
 - Pulsar la notificación abre el detalle de ese reto (`challengeId`).
 - La tarjeta de retos en Amigos abre la misma pantalla.
-- El detalle es online-first y muestra hábito, criterio, progreso propio, progreso del otro, días restantes y estado.
-- Quien fue retado, con el reto en `pending`: **Aceptar** pasa a `active` y se queda en la pantalla, ya sin botones; **Rechazar** pasa a `declined` y vuelve a Amigos. La lista recarga en `ON_RESUME` y deja de mostrar `declined`.
+- El detalle es online-first y usa las mismas tarjetas con borde que el detalle de un hábito. Arriba van el hábito y el criterio con la forma «Criterio: nombre», el estado y los días restantes. La única gráfica es una matriz de semanas, desde el lunes de la semana de inicio hasta el domingo de la semana de fin. Cada persona tiene una fila; un día cumplido va relleno. Los días fuera del reto quedan vacíos. El primer día lleva un borde y el último una marca abajo.
+- Crear un reto no reutiliza hábitos ya existentes. Quien reta define uno nuevo (nombre, icono, color y días). Si pulsa enviar con el botón deshabilitado, el nombre vacío y los días sin elegir se marcan. Junto a Criterio hay un icono de interrogación que explica los tres criterios. Ese hábito, público y con el mismo horario, se crea en su cuenta al enviar. La otra persona recibe el suyo solo al aceptar; si rechaza, no se le crea y el de quien retó se queda. Un reto ya creado con dos hábitos sigue igual.
+- Quien fue retado, con el reto en `pending`: **Aceptar** crea su copia del hábito, pasa a `active` y se queda en la pantalla, ya sin botones; **Rechazar** pasa a `declined` y vuelve a Amigos. La lista recarga en `ON_RESUME` y deja de mostrar `declined`.
 - Quien retó, o un reto que no está `pending`: solo lectura. No se puede cancelar el reto.
 - Sin red, reto inexistente o si quien abre no es participante: error en UI y el estado no cambia. Un rechazo que falla no navega atrás.
 - Sin sesión al abrir la notificación: se muestra Login y el `challengeId` no se reabre después de entrar.
@@ -296,7 +298,7 @@ Aprobado 2026-10-16.
 
 - La tab Profile muestra UI alineada con el diseno Figma Make (header con gradiente, avatar, stats, menu rows, Sign Out).
 - Hasta que el perfil y los hábitos han llegado, la tab no muestra nada: ni nombre de reserva, ni ceros, ni menú. El fondo es el de la superficie. El primer estado real marca `isReady`.
-- Header usa datos reales: `display_name` y `avatar_url` desde `profiles` (no Auth `user_metadata`); email via `AuthRepository`. Si `avatar_url` es null, avatar = iniciales derivadas del display name. Ese círculo usa siempre `HabitPrimaryLight` (`#3D6E50`) en perfil, inicio, preferencias y amigos, e ignora el `avatar_color` guardado. El color guardado solo queda detrás de una foto. En inicio y en el perfil ese círculo lleva un reborde crema `#FDF9F1`. Bajo el nombre visible, el perfil muestra `profiles.username` (el texto con el que un amigo te busca) y una frase que lo explica.
+- Header usa datos reales: `display_name` y `avatar_url` desde `profiles` (no Auth `user_metadata`); email via `AuthRepository`. Si `avatar_url` es null, avatar = iniciales derivadas del display name. Ese círculo usa siempre `HabitPrimaryLight` (`#3D6E50`) en perfil, inicio, preferencias y amigos, e ignora el `avatar_color` guardado. El color guardado solo queda detrás de una foto. En inicio y en el perfil ese círculo lleva un reborde crema `#FDF9F1`. El fondo del header sigue siendo el verde primario, con el estampado `flowers.png` en un verde un poco más claro para que las flores se distingan. Bajo el nombre visible, el perfil muestra `profiles.username` (el texto con el que un amigo te busca) y una frase que lo explica.
 - Stats del header (reales, desde `HabitRepository.getAllHabitsWithRecords()`):
   - **Day Streak:** máximo de `calculateScheduledStreak` entre hábitos, igual que Home: días programados cumplidos seguidos. Un día fuera del horario no suma ni rompe la racha.
   - **Completed:** total de records con `isCompleted`.
@@ -325,9 +327,9 @@ Aprobado 2026-10-08.
 - Ventana: ultimas 4 semanas rolling alineadas a lunes (W4 = semana actual).
 - Colores invertidos vs mock oscuro: fondo claro; celda blanca = Less / no completado; morado oscuro = More / completado (escala intermedia en Stats).
 - **Detalle:** calendario mensual (lunes a domingo) en la misma pantalla que el anillo de porcentaje. Un día se marca si ese hábito tiene un record `isCompleted`. Flechas para el mes anterior y el siguiente. Los días de los meses vecinos se ven atenuados.
-- **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados. Encima, una sola tarjeta de racha. Si la racha actual de cumplir todos los hábitos programados llega a `StatsStreakMinimums.ALL_HABITS_DAYS`, la tarjeta lo dice con un icono de fuego y una de varias frases; si además es la racha perfecta más larga del historial reciente, alguna frase lo señala. Un día sin hábitos programados no rompe esa racha. Si no llega al mínimo, y algún hábito tiene una racha viva de al menos `StatsStreakMinimums.SINGLE_HABIT_DAYS`, la tarjeta destaca ese hábito (el nombre en negrita) con otra frase rotativa. Por debajo de ambos mínimos no hay tarjeta. Los dos mínimos viven en `StatsStreakMinimums` y hoy valen 3. La racha de un hábito cuenta los días programados cumplidos seguidos. Un día que no está en el horario no suma ni la rompe. Un día programado sin completar la rompe, también si es hoy. En cada hábito de la lista, el icono, el nombre, la racha (desde 1 día) y el horario van agrupados a la izquierda, y a la derecha va una matriz de 4 semanas más pequeña, con celdas fijas, e intensidad binaria de ese hábito (color del hábito).
-- Home no muestra la tarjeta «Día perfecto» cuando el día está completado al 100 %. La tarjeta de hábitos completados muestra una flor con tallo que crece con el porcentaje del día: primero el tallo, luego las hojas y al final la flor (tallo verde, pétalos `#FF7775`, centro `#FFB938`). El porcentaje va al lado del conteo. Tampoco muestra la tarjeta de resumen del día en hoy ni en los días próximos. En un día pasado incompleto sigue el registro con el conteo. El saludo es «buenos días» hasta las 14:00, «buenas tardes» desde las 14:00 hasta las 21:00 y «buenas noches» a partir de las 21:00.
-- Leyenda Less → More; etiqueta de hoy con borde sutil opcional.
+- **Stats (tab global):** un heatmap agregado; intensidad = % de habitos programados ese dia que estan completados. Encima, una sola tarjeta de racha. Si un hábito lleva una racha viva más larga que la de cumplir todos los hábitos programados, y llega a `StatsStreakMinimums.SINGLE_HABIT_DAYS`, la tarjeta nombra ese hábito (el nombre en negrita) con una frase rotativa. Si la racha de cumplir todos los programados llega a `StatsStreakMinimums.ALL_HABITS_DAYS` y ningún hábito va por delante, la tarjeta lo dice con un icono de fuego y una de varias frases; si además es la racha perfecta más larga del historial reciente, alguna frase lo señala. Un día sin hábitos programados no rompe esa racha. Por debajo de ambos mínimos no hay tarjeta. Los dos mínimos viven en `StatsStreakMinimums` y hoy valen 3. La racha de un hábito cuenta los días programados cumplidos seguidos. Un día que no está en el horario no suma ni la rompe. Un día programado sin completar la rompe, también si es hoy. En cada hábito de la lista, el icono, el nombre, la racha (desde 1 día) y el horario van agrupados a la izquierda, y a la derecha va una matriz de 4 semanas más pequeña, con celdas fijas, e intensidad binaria de ese hábito (color del hábito). Si no hay hábitos, el vacío sigue el de Amigos: icono, título y una frase.
+- Home no muestra la tarjeta «Día perfecto» cuando el día está completado al 100 %. La tarjeta de hábitos completados muestra una flor con tallo que crece con el porcentaje del día: primero el tallo, luego las hojas y al final la flor (tallo verde, pétalos `#FF7775`, centro `#FFB938`). El porcentaje va al lado del conteo. La lista del día ordena primero los hábitos con recordatorio, por hora; los que no tienen recordatorio van al final. El día marcado es la fecha local: al pasar la medianoche, si seguías en hoy, pasa al día nuevo. En la fila de la semana, el número de hoy y la letra de ese día van en negrita, y la fecha de hoy del encabezado también. Tampoco muestra la tarjeta de resumen del día en hoy ni en los días próximos. En un día pasado incompleto sigue el registro con el conteo. El saludo es «buenos días» hasta las 14:00, «buenas tardes» desde las 14:00 hasta las 21:00 y «buenas noches» a partir de las 21:00. Si el día no tiene hábitos programados, encima del texto hay una flor marchita.
+- Leyenda Less → More. El día de hoy lleva solo el contorno en negro; el relleno sigue la intensidad de ese día. Su fila de semana y su columna de día (por ejemplo S4 y L) también van en negro. En modo oscuro esas marcas son blancas.
 - El detalle muestra la ficha del hábito en una tarjeta, los gráficos (anillo de %, barras de las últimas 4 semanas y barras por día de la semana) en otra, y el calendario mensual en una tercera, sin pestañas ni heatmap de 4 semanas. La racha viva del hábito, si es de al menos 1 día, va en la ficha y usa la misma cuenta de días programados cumplidos seguidos.
 
 ### Home screen widgets (Jetpack Glance)
@@ -338,7 +340,9 @@ Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
 - Implementación con **Jetpack Glance** + App Widget.
 - Textos en ingles (`strings.xml`).
 - Colores alineados al theme Habit: `HabitPrimary`, `HabitSurface`, `HabitOnSurface`, `HabitField` y el color del hábito. Las previews del selector usan los mismos tokens en `colors.xml`.
-- Actualización: tras completar un hábito, al volver a primer plano la app, y refresh periódico razonable (30–60 min).
+- El aspecto sigue la app: cabecera verde, página crema y piezas redondeadas. El de hoy es un inicio reducido (día en negrita, fecha, conteo y filas con icono y tic). El de un hábito es una ficha de inicio. El semanal usa pastillas de día, con la de hoy en verde. El de reto muestra el nombre en la cabecera, quién va ganando junto a una copa y barras de progreso. Si el progreso está empatado, dice empate.
+- Actualización: tras completar un hábito, al volver a primer plano la app, al cerrar sesión, tras sincronizar los hábitos de la cuenta que entra, y refresh periódico razonable (30–60 min). Al cerrar sesión se borra la caché local de hábitos. Sin sesión, o si el reto guardado no pertenece a la cuenta actual, el widget de reto no pinta el snapshot anterior.
+- Al abrir o actualizar, el widget pinta enseguida el logo de Bloom y el texto de carga. Los datos se leen después. Así no aparece el error del sistema mientras Room o la red aún no han respondido.
 - Configuración: **activity de configuración al añadir** el widget (picker clásico), no ajustes dentro de Profile.
 - Mutaciones desde widget siguen **online-first** (igual que la app): sin red no se escribe Room ni Supabase.
 - **Previews (2026-10-08):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) y un `@Preview` de Glance (`androidx.glance.preview`, source set `debug`) en Android Studio. Datos de muestra; no cambian la lógica. El widget de hoy usa el mismo tratamiento.
@@ -363,10 +367,11 @@ Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
 - Datos desde Room.
 
 **4. Today widget (sin picker)**
-- Lista los hábitos programados hoy, en el mismo orden que Home. Los hechos se marcan. Como máximo se pintan 5 filas; el resto sale como `+N`.
+- Lista los hábitos programados hoy, en el mismo orden que Home. Los hechos se marcan. La lista hace scroll y muestra todos, no solo los primeros.
 - Si no hay hábitos hoy, el texto es el estado vacío.
-- Tap: abre el detalle del primer hábito de esa lista que aún no está completado hoy. Si todos están hechos, o no hay ninguno, abre Home.
-- Solo lectura. Datos desde Room.
+- El círculo de cada fila completa o descompleta ese hábito de hoy, online-first, igual que el widget de un hábito. Sin red no cambia.
+- Tap en la fila, fuera del círculo: abre el detalle del primer hábito de esa lista que aún no está completado hoy. Si todos están hechos, o no hay ninguno, abre Home.
+- Datos desde Room.
 
 **Fuera de alcance (widgets)**
 - Completar desde el widget de reto o del semanal.
@@ -380,7 +385,8 @@ Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
 
 - No se aceptan passwords vacias, triviales o demasiado debiles.
 - Una password valida debe tener longitud suficiente y combinar al menos varios tipos de caracteres.
-- En el registro, la contraseña es válida con al menos 8 caracteres, una letra y un número. El campo permanece en error, con el mensaje de contraseña débil, mientras no cumpla esa regla. El botón de crear cuenta usa la misma regla.
+- En el registro, la contraseña es válida con al menos 8 caracteres, una letra y un número. El campo no se marca en rojo mientras está vacío. En cuanto se escribe y no cumple la regla, muestra el mensaje de contraseña débil. El botón de crear cuenta usa la misma regla. Si se pulsa mientras sigue deshabilitado, marca cada dato que falta (nombre, nombre de usuario, correo, contraseña y condiciones) y lleva el foco al primero. El nombre de usuario se comprueba al escribirlo: si ya existe, el campo lo dice y propone alternativas libres. El elegido se guarda en `profiles.username`. El recuadro de las condiciones es una flor: contorno si no está aceptada y rellena si sí. Si crear la cuenta exige confirmar el correo, la app vuelve al login y muestra un diálogo positivo: cuenta creada, revisa el correo. El enlace del correo abre la app en `habittracker://auth/confirm`, no una web. Si la sesión queda importada, entra en inicio; si no, el login avisa de que el correo ya está confirmado. Si se inicia sesión sin haber confirmado, un diálogo negativo avisa de que la cuenta no está confirmada.
+- Los diálogos de la app usan `HabitDialog`. Si el aviso es positivo, arriba hay una flor florecida; si es negativo, una flor caída. Cerrar sesión, eliminar un hábito y la cuenta sin confirmar son negativos. La cuenta creada es positivo. El selector de hora usa la misma tarjeta, sin flor.
 - Las credenciales no deben estar precargadas en `LoginUiState`.
 - `LoginUiState.toString()` no debe exponer email ni password.
 - La app no debe registrar passwords, tokens ni secretos mediante `Log`.

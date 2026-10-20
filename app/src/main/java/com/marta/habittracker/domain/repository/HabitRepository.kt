@@ -17,4 +17,6 @@ interface HabitRepository {
     suspend fun updateHabit(habit: Habit): DataResult<Unit, AppError>
     suspend fun deleteHabit(habit: Habit): DataResult<Unit, AppError>
     suspend fun syncFromRemote(): DataResult<Unit, AppError>
+
+    suspend fun clearLocal()
 }

@@ -52,6 +52,17 @@
                     android:host="auth"
                     android:pathPrefix="/reset" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="habittracker"
+                    android:host="auth"
+                    android:pathPrefix="/confirm" />
+            </intent-filter>
         </activity>
 
         <activity

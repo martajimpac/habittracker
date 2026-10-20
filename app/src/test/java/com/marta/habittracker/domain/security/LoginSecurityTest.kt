@@ -47,6 +47,7 @@ class LoginSecurityTest {
         override suspend fun doRegister(
             email: String,
             password: String,
+            username: String,
         ): DataResult<User, AppError> {
             calls++
             return DataResult.Error(AppError.Common.Unknown)

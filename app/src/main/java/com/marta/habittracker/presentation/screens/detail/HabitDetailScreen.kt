@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,13 +49,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.core.toJava
+import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitDialog
+import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.MonthCalendar
@@ -72,6 +77,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun HabitDetailScreen(
@@ -82,7 +88,12 @@ fun HabitDetailScreen(
     val habit by viewModel.habit.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
+    val inChallenge by viewModel.inChallenge.collectAsStateWithLifecycle()
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshChallengeMembership()
+    }
 
     ObserveAsEvents(flow = viewModel.habitDeleted) {
         onBack()
@@ -95,32 +106,20 @@ fun HabitDetailScreen(
         onBack = onBack,
         onEdit = { habit?.id?.let(onEdit) },
         onDelete = { showDeleteConfirm = true },
+        inChallenge = inChallenge,
     )
 
     if (showDeleteConfirm) {
-        AlertDialog(
+        HabitDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.detail_delete_title)) },
-            text = { Text(stringResource(R.string.detail_delete_message)) },
-            confirmButton = {
-                HabitButton(
-                    text = stringResource(R.string.detail_delete_habit),
-                    onClick = {
-                        showDeleteConfirm = false
-                        viewModel.deleteHabit()
-                    },
-                    fillMaxWidth = false,
-                    compact = true,
-                )
-            },
-            dismissButton = {
-                HabitButton(
-                    text = stringResource(R.string.add_habit_cancel),
-                    onClick = { showDeleteConfirm = false },
-                    variant = HabitButtonVariant.Secondary,
-                    fillMaxWidth = false,
-                    compact = true,
-                )
+            title = stringResource(R.string.detail_delete_title),
+            message = stringResource(R.string.detail_delete_message),
+            tone = HabitDialogTone.Negative,
+            confirmText = stringResource(R.string.detail_delete_habit),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                showDeleteConfirm = false
+                viewModel.deleteHabit()
             },
         )
     }
@@ -134,6 +133,7 @@ fun HabitDetailContent(
     onBack: () -> Unit,
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
+    inChallenge: Boolean = false,
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
@@ -152,7 +152,7 @@ fun HabitDetailContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal =20.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -192,6 +192,7 @@ fun HabitDetailContent(
                 iconKey = iconKey,
                 accent = accent,
                 reminder = reminder,
+                inChallenge = inChallenge,
             )
 
             DetailChartsCard(
@@ -216,6 +217,7 @@ private fun DetailOverviewCard(
     iconKey: String?,
     accent: Color,
     reminder: String,
+    inChallenge: Boolean,
 ) {
     val streak = if (habit == null) 0 else calculateStreak(habit, records)
     val description = habit?.description?.takeIf { it.isNotBlank() }
@@ -229,18 +231,28 @@ private fun DetailOverviewCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(accent.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                HabitLineIcon(
-                    iconKey = iconKey,
-                    tint = accent,
-                    size = 22.dp,
-                )
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    HabitLineIcon(
+                        iconKey = iconKey,
+                        tint = accent,
+                        size = 22.dp,
+                    )
+                }
+                if (inChallenge) {
+                    ChallengeHabitMark(
+                        background = accent,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .offset(x = (-4).dp, y = (-4).dp),
+                    )
+                }
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -520,7 +532,7 @@ private fun WeekdayCompletionsChart(
     ) {
         days.forEachIndexed { index, day ->
             val fraction = day.count.toFloat() / maxCount
-            val dayName = day.day.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+            val dayName = day.day.getDisplayName(TextStyle.FULL_STANDALONE, LocalLocale.current.platformLocale)
             val description = pluralStringResource(
                 R.plurals.detail_weekday_bar,
                 day.count,
@@ -604,13 +616,13 @@ private fun Modifier.detailCard(contentPadding: Dp = 20.dp): Modifier = this
     .border(1.dp, HabitOutline, DetailCardShape)
     .padding(contentPadding)
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun HabitDetailContentPreview() {
-    HabitDetailContent(
-        habit = null,
-        records = emptyList(),
-        completionRate = 75f,
-        onBack = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun HabitDetailContentPreview() {
+    // HabitDetailContent(
+        // habit = null,
+        // records = emptyList(),
+        // completionRate = 75f,
+        // onBack = {},
+    // )
+// }

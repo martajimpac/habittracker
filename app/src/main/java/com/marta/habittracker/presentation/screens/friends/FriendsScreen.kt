@@ -1,11 +1,13 @@
 package com.marta.habittracker.presentation.screens.friends
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,10 +23,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.People
 import androidx.compose.material.icons.rounded.Search
@@ -45,10 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -57,19 +66,31 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.ChallengeCard
+import com.marta.habittracker.domain.model.challengeLeaderLabel
 import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.FriendListItem
-import com.marta.habittracker.domain.model.Friendship
+import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitDialog
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
+import com.marta.habittracker.presentation.components.HabitIconKeys
+import com.marta.habittracker.presentation.components.HabitIconOptions
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.components.toComposeColor
+import kotlinx.datetime.DayOfWeek
+import com.marta.habittracker.presentation.theme.HabitField
+import com.marta.habittracker.presentation.theme.HabitOnSurface
+import com.marta.habittracker.presentation.theme.HabitOutline
+import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
+import com.marta.habittracker.presentation.utils.HabitColorOptions
+import com.marta.habittracker.presentation.utils.toHex
 
 
 @Composable
@@ -107,7 +128,7 @@ fun FriendsContent(
     onRespondToRequest: (String, Boolean) -> Unit = { _, _ -> },
     onViewFriend: (String) -> Unit = {},
     onCreateChallenge: (String) -> Unit = {},
-    onSendChallenge: (String, String, String, ChallengeCriteria, Int) -> Unit = { _, _, _, _, _ -> },
+    onSendChallenge: (String, ChallengeHabitDraft, ChallengeCriteria, Int) -> Unit = { _, _, _, _ -> },
 ) {
     Column(
         modifier = Modifier
@@ -143,19 +164,19 @@ fun FriendsContent(
                 onClose = onDismissSheet,
             )
         }
+
         is FriendsSheet.ViewFriend -> ModalBottomSheet(onDismissRequest = onDismissSheet) {
             FriendHabitsSheet(
                 friend = uiState.friends.firstOrNull { it.profile.id == sheet.friendId }?.profile,
                 habits = uiState.selectedFriendHabits,
             )
         }
+
         is FriendsSheet.CreateChallenge -> ModalBottomSheet(onDismissRequest = onDismissSheet) {
             ChallengeSheet(
                 friend = uiState.friends.firstOrNull { it.profile.id == sheet.friendId }?.profile,
-                friendHabits = uiState.selectedFriendHabits,
-                myHabits = uiState.myHabits,
-                onSendChallenge = { myHabit, friendHabit, criteria, duration ->
-                    onSendChallenge(sheet.friendId, myHabit.id, friendHabit.id, criteria, duration)
+                onSendChallenge = { draft, criteria, duration ->
+                    onSendChallenge(sheet.friendId, draft, criteria, duration)
                 },
             )
         }
@@ -193,16 +214,23 @@ private fun FriendsBody(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            FriendsSectionTitle(R.string.friends_active_challenges)
-            Spacer(Modifier.height(10.dp))
-            if (uiState.challenges.isEmpty()) {
-                FriendsInlineEmpty(R.string.friends_empty_challenges)
-            } else {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(horizontal = 20.dp)) {
+                FriendsSectionTitle(R.string.friends_active_challenges)
+                Spacer(Modifier.height(10.dp))
+                if (uiState.challenges.isEmpty()) {
+                    FriendsInlineEmpty(R.string.friends_empty_challenges)
+                }
+            }
+            if (uiState.challenges.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     items(uiState.challenges, key = { it.challenge.id }) { card ->
                         ChallengeCard(
                             card = card,
@@ -215,28 +243,32 @@ private fun FriendsBody(
 
         if (uiState.pendingRequests.isNotEmpty()) {
             item {
-                FriendsSectionTitle(R.string.friends_pending_requests)
-                Spacer(Modifier.height(10.dp))
-                uiState.pendingRequests.forEach { request ->
-                    PendingRequestRow(request = request, onRespondToRequest = onRespondToRequest)
-                    Spacer(Modifier.height(8.dp))
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    FriendsSectionTitle(R.string.friends_pending_requests)
+                    Spacer(Modifier.height(10.dp))
+                    uiState.pendingRequests.forEach { request ->
+                        PendingRequestRow(request = request, onRespondToRequest = onRespondToRequest)
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
             }
         }
 
         item {
-            FriendsSectionTitle(R.string.friends_list_title)
-            Spacer(Modifier.height(10.dp))
-            if (uiState.friends.isEmpty()) {
-                FriendsEmptyState()
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    uiState.friends.forEach { friend ->
-                        FriendRow(
-                            friend = friend,
-                            onViewFriend = { onViewFriend(friend.profile.id) },
-                            onCreateChallenge = { onCreateChallenge(friend.profile.id) },
-                        )
+            Column(Modifier.padding(horizontal = 20.dp)) {
+                FriendsSectionTitle(R.string.friends_list_title)
+                Spacer(Modifier.height(10.dp))
+                if (uiState.friends.isEmpty()) {
+                    FriendsEmptyState()
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        uiState.friends.forEach { friend ->
+                            FriendRow(
+                                friend = friend,
+                                onViewFriend = { onViewFriend(friend.profile.id) },
+                                onCreateChallenge = { onCreateChallenge(friend.profile.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -249,58 +281,102 @@ private fun ChallengeCard(
     card: ChallengeCard,
     onClick: () -> Unit = {},
 ) {
-    val cardColor = card.habitColorHex.toComposeColor()
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val accent = card.habitColorHex.toComposeColor()
     Column(
         modifier = Modifier
             .width(220.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(Brush.linearGradient(listOf(cardColor, HabitPrimaryLight)))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HabitLineIcon(card.habitIcon, tint = onPrimary, size = 20.dp)
-            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(accent.copy(alpha = 0.09f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                HabitLineIcon(card.habitIcon, tint = accent, size = 22.dp)
+            }
+            Spacer(Modifier.width(12.dp))
             Text(
                 text = card.habitName,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
-                color = onPrimary,
-                fontWeight = FontWeight.Black,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(Modifier.height(16.dp))
-        ChallengeProgress(stringResource(R.string.friends_me), card.myProgress)
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(R.drawable.ic_trophy),
+                contentDescription = stringResource(R.string.friends_challenge_leader),
+                modifier = Modifier.size(16.dp),
+                tint = accent,
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = challengeLeaderLabel(
+                    myProgress = card.myProgress,
+                    theirProgress = card.theirProgress,
+                    meLabel = stringResource(R.string.friends_me),
+                    opponentName = card.opponent.displayName,
+                    tieLabel = stringResource(R.string.friends_challenge_tie),
+                ),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelLarge,
+                color = accent,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        ChallengeProgress(stringResource(R.string.friends_me), card.myProgress, accent)
         Spacer(Modifier.height(8.dp))
-        ChallengeProgress(card.opponent.displayName, card.theirProgress)
-        Spacer(Modifier.height(14.dp))
+        ChallengeProgress(card.opponent.displayName, card.theirProgress, accent)
+        Spacer(Modifier.height(12.dp))
         Text(
             text = stringResource(R.string.friends_days_left, card.daysLeft),
-            style = MaterialTheme.typography.labelMedium,
-            color = onPrimary,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
 
 @Composable
-private fun ChallengeProgress(label: String, progress: Int) {
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
-    Text(label, style = MaterialTheme.typography.labelMedium, color = onPrimary)
+private fun ChallengeProgress(label: String, progress: Int, accent: Color) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
     LinearProgressIndicator(
         progress = { progress.coerceIn(0, 100) / 100f },
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        color = onPrimary,
-        trackColor = onPrimary.copy(alpha = 0.28f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp)
+            .clip(CircleShape),
+        color = accent,
+        trackColor = HabitOutline.copy(alpha = 0.35f),
+        drawStopIndicator = {},
     )
 }
 
 @Composable
 private fun PendingRequestRow(
-    request: Friendship,
+    request: PendingFriendRequest,
     onRespondToRequest: (String, Boolean) -> Unit,
 ) {
+    val profile = request.requester
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -309,33 +385,39 @@ private fun PendingRequestRow(
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier.size(40.dp).clip(CircleShape).background(HabitPrimaryLight),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.People, null, tint = MaterialTheme.colorScheme.onPrimary)
-        }
+        ProfileAvatar(
+            avatarUrl = profile.avatarUrl,
+            displayName = profile.displayName,
+            avatarColor = profile.avatarColor,
+            size = 48.dp,
+            contentDescription = stringResource(R.string.cd_profile_avatar),
+        )
         Text(
-            text = stringResource(R.string.friends_pending_request),
-            modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
+            text = profile.displayName,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Black,
             color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
-        HabitButton(
-            text = stringResource(R.string.friends_decline),
-            onClick = { onRespondToRequest(request.id, false) },
-            variant = HabitButtonVariant.Secondary,
-            fillMaxWidth = false,
-            compact = true,
-        )
-        Spacer(Modifier.width(8.dp))
-        HabitButton(
-            text = stringResource(R.string.friends_accept),
-            onClick = { onRespondToRequest(request.id, true) },
-            fillMaxWidth = false,
-            compact = true,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            HabitIconButton(
+                onClick = { onRespondToRequest(request.id, true) },
+                icon = Icons.Rounded.Check,
+                contentDescription = stringResource(R.string.friends_accept),
+            )
+            HabitIconButton(
+                onClick = { onRespondToRequest(request.id, false) },
+                icon = Icons.Rounded.Close,
+                contentDescription = stringResource(R.string.friends_decline),
+                backgroundColor = HabitField,
+                iconTint = HabitOnSurface,
+                borderColor = HabitOutline,
+            )
+        }
     }
 }
 
@@ -354,50 +436,54 @@ private fun FriendRow(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProfileAvatar(
-            avatarUrl = profile.avatarUrl,
-            displayName = profile.displayName,
-            avatarColor = profile.avatarColor,
-            size = 48.dp,
-            contentDescription = stringResource(R.string.cd_profile_avatar),
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onViewFriend),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ProfileAvatar(
+                avatarUrl = profile.avatarUrl,
+                displayName = profile.displayName,
+                avatarColor = profile.avatarColor,
+                size = 48.dp,
+                contentDescription = stringResource(R.string.cd_profile_avatar),
+            )
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(
+                    profile.displayName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(R.string.friends_username, profile.username),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = if (friend.publicHabitsCount > 0) {
+                        stringResource(R.string.friends_public_habits, friend.publicHabitsCount)
+                    } else {
+                        stringResource(R.string.friends_private_habits)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.friends_best_streak, friend.bestStreak),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+        HabitIconButton(
+            onClick = onCreateChallenge,
+            icon = ImageVector.vectorResource(R.drawable.ic_swords),
+            contentDescription = stringResource(R.string.friends_challenge),
         )
-        Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(profile.displayName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-            Text(
-                text = stringResource(R.string.friends_username, profile.username),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = if (friend.publicHabitsCount > 0) {
-                    stringResource(R.string.friends_public_habits, friend.publicHabitsCount)
-                } else {
-                    stringResource(R.string.friends_private_habits)
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.friends_best_streak, friend.bestStreak),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            HabitButton(
-                text = stringResource(R.string.friends_view),
-                onClick = onViewFriend,
-                variant = HabitButtonVariant.TextLink,
-                fillMaxWidth = false,
-            )
-            HabitButton(
-                text = stringResource(R.string.friends_challenge),
-                onClick = onCreateChallenge,
-                variant = HabitButtonVariant.TextLink,
-                fillMaxWidth = false,
-            )
-        }
     }
 }
 
@@ -428,10 +514,19 @@ private fun AddFriendSheet(
             singleLine = true,
         )
         if (uiState.requestSent) {
-            Text(stringResource(R.string.friends_request_sent), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.friends_request_sent),
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
         }
         uiState.searchResults.forEach { profile ->
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 ProfileAvatar(
                     avatarUrl = profile.avatarUrl,
                     displayName = profile.displayName,
@@ -439,9 +534,20 @@ private fun AddFriendSheet(
                     size = 48.dp,
                     contentDescription = stringResource(R.string.cd_profile_avatar),
                 )
-                Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                    Text(profile.displayName, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Text(stringResource(R.string.friends_username, profile.username), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Text(
+                        profile.displayName,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        stringResource(R.string.friends_username, profile.username),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 HabitButton(
                     text = stringResource(R.string.friends_send_request),
@@ -458,7 +564,12 @@ private fun AddFriendSheet(
 private fun FriendHabitsSheet(friend: Profile?, habits: List<Habit>) {
     SheetColumn(titleRes = R.string.friends_public_habits_title) {
         if (friend != null) {
-            Text(friend.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                friend.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
         if (habits.isEmpty()) {
             FriendsInlineEmpty(R.string.friends_no_public_habits)
@@ -471,74 +582,245 @@ private fun FriendHabitsSheet(friend: Profile?, habits: List<Habit>) {
 @Composable
 private fun ChallengeSheet(
     friend: Profile?,
-    friendHabits: List<Habit>,
-    myHabits: List<Habit>,
-    onSendChallenge: (Habit, Habit, ChallengeCriteria, Int) -> Unit,
+    onSendChallenge: (ChallengeHabitDraft, ChallengeCriteria, Int) -> Unit,
 ) {
-    var selectedFriendHabit by remember(friendHabits) { mutableStateOf(friendHabits.firstOrNull()) }
-    var selectedMyHabit by remember(myHabits, selectedFriendHabit) {
-        mutableStateOf(myHabits.firstOrNull { it.name.equals(selectedFriendHabit?.name, ignoreCase = true) } ?: myHabits.firstOrNull())
-    }
+    var name by remember { mutableStateOf("") }
+    var showMissing by remember { mutableStateOf(false) }
+    var icon by remember { mutableStateOf(HabitIconKeys.DEFAULT) }
+    var color by remember { mutableStateOf(HabitColorOptions.first()) }
+    var selectedDays by remember { mutableStateOf(DayOfWeek.entries.toSet()) }
     var duration by remember { mutableIntStateOf(7) }
     var criteria by remember { mutableStateOf(ChallengeCriteria.CompletionPct) }
+    var showCriteriaHelp by remember { mutableStateOf(false) }
 
     SheetColumn(titleRes = R.string.friends_create_challenge) {
-        if (friend != null) {
-            Text(stringResource(R.string.friends_challenge_with, friend.displayName), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Text(stringResource(R.string.friends_their_habit), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        HabitPicker(friendHabits, selectedFriendHabit, { selectedFriendHabit = it })
-        Text(stringResource(R.string.friends_my_habit), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        HabitPicker(myHabits, selectedMyHabit, { selectedMyHabit = it })
-        Text(stringResource(R.string.friends_duration), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        ChoiceRow(listOf(3, 7, 14, 30), duration, { duration = it }) {
-            stringResource(R.string.friends_duration_days, it)
-        }
-        Text(stringResource(R.string.friends_criteria), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        val criteriaOptions = listOf(ChallengeCriteria.Streak, ChallengeCriteria.AllDays, ChallengeCriteria.CompletionPct)
-        ChoiceRow(criteriaOptions, criteria, { criteria = it }) { criterion ->
-            stringResource(
-                when (criterion) {
-                    ChallengeCriteria.Streak -> R.string.friends_criteria_streak
-                    ChallengeCriteria.AllDays -> R.string.friends_criteria_all_days
-                    ChallengeCriteria.CompletionPct -> R.string.friends_criteria_completion
-                },
-            )
-        }
-        HabitButton(
-            text = stringResource(R.string.friends_send_challenge),
-            onClick = { onSendChallenge(selectedMyHabit!!, selectedFriendHabit!!, criteria, duration) },
-            enabled = selectedMyHabit != null && selectedFriendHabit != null,
-        )
-    }
-}
-
-@Composable
-private fun HabitPicker(habits: List<Habit>, selectedHabit: Habit?, onSelected: (Habit) -> Unit) {
-    if (habits.isEmpty()) {
-        FriendsInlineEmpty(R.string.friends_no_public_habits)
-    } else {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(habits, key = { it.id }) { habit ->
+        Column(
+            modifier = Modifier
+                .heightIn(max = 480.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (friend != null) {
                 Text(
-                    text = habit.name,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (habit == selectedHabit) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f))
-                        .clickable { onSelected(habit) }
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (habit == selectedHabit) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
+                    stringResource(R.string.friends_challenge_with, friend.displayName),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp)
                 )
             }
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                label = { Text(stringResource(R.string.add_habit_name_label)) },
+                singleLine = true,
+                isError = showMissing && name.isBlank(),
+                supportingText = if (showMissing && name.isBlank()) {
+                    { Text(stringResource(R.string.add_habit_error_name_required)) }
+                } else {
+                    null
+                },
+            )
+            Text(
+                stringResource(
+                    R.string.add_habit_choose_icon
+                ),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(HabitIconOptions, key = { it }) { option ->
+                    val selected = option == icon
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (selected) color else HabitField)
+                            .clickable { icon = option },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        HabitLineIcon(
+                            iconKey = option,
+                            tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            size = 22.dp,
+                        )
+                    }
+                }
+            }
+            Text(
+                stringResource(R.string.add_habit_choose_color),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(HabitColorOptions, key = { it.toHex() }) { option ->
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(option)
+                            .clickable { color = option },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (option == color) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            Text(
+                stringResource(R.string.add_habit_frequency),
+                fontWeight = FontWeight.Bold,
+                color = if (showMissing && selectedDays.isEmpty()) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DayOfWeek.entries.forEach { day ->
+                    val selected = day in selectedDays
+                    Text(
+                        text = stringResource(dayLabelRes(day)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(
+                                    alpha = 0.2f
+                                )
+                            )
+                            .clickable {
+                                selectedDays =
+                                    if (selected) selectedDays - day else selectedDays + day
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            if (showMissing && selectedDays.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.add_habit_error_days_required),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Text(
+                stringResource(R.string.friends_duration),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            ChoiceRow(listOf(3, 7, 14, 30), duration, { duration = it }) {
+                stringResource(R.string.friends_duration_days, it)
+            }
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    stringResource(R.string.friends_criteria),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .clickable { showCriteriaHelp = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
+                        contentDescription = stringResource(R.string.friends_criteria_help),
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            val criteriaOptions = listOf(
+                ChallengeCriteria.Streak, ChallengeCriteria.AllDays, ChallengeCriteria.CompletionPct
+            )
+            ChoiceRow(criteriaOptions, criteria, { criteria = it }) { criterion ->
+                stringResource(
+                    when (criterion) {
+                        ChallengeCriteria.Streak -> R.string.friends_criteria_streak
+                        ChallengeCriteria.AllDays -> R.string.friends_criteria_all_days
+                        ChallengeCriteria.CompletionPct -> R.string.friends_criteria_completion
+                    },
+                )
+            }
+            HabitButton(
+                text = stringResource(R.string.friends_send_challenge),
+                onClick = {
+                    if (name.isBlank() || selectedDays.isEmpty()) {
+                        showMissing = true
+                    } else {
+                        onSendChallenge(
+                            ChallengeHabitDraft(
+                                name = name,
+                                icon = icon,
+                                colorHex = color.toHex(),
+                                daysOfWeek = selectedDays,
+                            ),
+                            criteria,
+                            duration,
+                        )
+                    }
+                },
+                enabled = name.isNotBlank() && selectedDays.isNotEmpty(),
+                clickableWhenDisabled = true,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+        if (showCriteriaHelp) {
+            HabitDialog(
+                onDismissRequest = { showCriteriaHelp = false },
+                title = stringResource(R.string.friends_criteria),
+                message = stringResource(R.string.friends_criteria_help_message),
+                confirmText = stringResource(R.string.dialog_ok),
+                onConfirm = { showCriteriaHelp = false },
+            )
         }
     }
 }
 
+private fun dayLabelRes(day: DayOfWeek): Int = when (day) {
+    DayOfWeek.MONDAY -> R.string.activity_day_mon
+    DayOfWeek.TUESDAY -> R.string.activity_day_tue
+    DayOfWeek.WEDNESDAY -> R.string.activity_day_wed
+    DayOfWeek.THURSDAY -> R.string.activity_day_thu
+    DayOfWeek.FRIDAY -> R.string.activity_day_fri
+    DayOfWeek.SATURDAY -> R.string.activity_day_sat
+    DayOfWeek.SUNDAY -> R.string.activity_day_sun
+}
+
 @Composable
-private fun <T> ChoiceRow(options: List<T>, selected: T, onSelected: (T) -> Unit, label: @Composable (T) -> String) {
+private fun <T> ChoiceRow(
+    options: List<T>, selected: T, onSelected: (T) -> Unit, label: @Composable (T) -> String
+) {
     Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         options.forEach { option ->
@@ -546,7 +828,11 @@ private fun <T> ChoiceRow(options: List<T>, selected: T, onSelected: (T) -> Unit
                 text = label(option),
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (option == selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f))
+                    .background(
+                        if (option == selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(
+                            alpha = 0.2f
+                        )
+                    )
                     .clickable { onSelected(option) }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 color = if (option == selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
@@ -558,9 +844,19 @@ private fun <T> ChoiceRow(options: List<T>, selected: T, onSelected: (T) -> Unit
 
 @Composable
 private fun HabitSheetRow(habit: Habit) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         HabitLineIcon(habit, tint = habit.colorHex.toComposeColor())
-        Text(habit.name, modifier = Modifier.padding(start = 12.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            habit.name,
+            modifier = Modifier.padding(start = 12.dp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -572,7 +868,10 @@ private fun SheetColumn(
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(max = 620.dp).padding(horizontal = 24.dp, vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 620.dp)
+            .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         content = {
             Row(
@@ -582,7 +881,10 @@ private fun SheetColumn(
             ) {
                 Text(
                     text = stringResource(titleRes),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 20.dp),
+
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -596,7 +898,8 @@ private fun SheetColumn(
                 }
             }
             if (showDivider) {
-                HorizontalDivider()
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp)
+                )
             }
             content()
             Spacer(Modifier.height(16.dp))
@@ -607,12 +910,24 @@ private fun SheetColumn(
 @Composable
 private fun FriendsEmptyState() {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 36.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 36.dp, horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(Icons.Rounded.People, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+        Icon(
+            Icons.Rounded.People,
+            null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(40.dp)
+        )
         Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.friends_empty_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            stringResource(R.string.friends_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         Text(
             stringResource(R.string.friends_empty_message),
             style = MaterialTheme.typography.bodyMedium,
@@ -626,7 +941,11 @@ private fun FriendsEmptyState() {
 private fun FriendsInlineEmpty(messageRes: Int) {
     Text(
         text = stringResource(messageRes),
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f)).padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
+            .padding(16.dp),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -635,7 +954,12 @@ private fun FriendsInlineEmpty(messageRes: Int) {
 
 @Composable
 private fun FriendsSectionTitle(titleRes: Int) {
-    Text(stringResource(titleRes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+    Text(
+        stringResource(titleRes),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Black,
+        color = MaterialTheme.colorScheme.onSurface
+    )
 }
 
 @Composable
@@ -649,10 +973,11 @@ private fun FriendsAddButton(onClick: () -> Unit) {
     )
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun FriendsContentPreview() {
-    FriendsContent(
-        uiState = FriendsUiState(),
-    )
-}
+// @Preview(showBackground = true)
+// @Composable
+// private fun AddFriendSheetPreview() {
+    // ChallengeSheet(
+        // friend = null,
+        // onSendChallenge = { _, _, _ -> },
+    // )
+// }

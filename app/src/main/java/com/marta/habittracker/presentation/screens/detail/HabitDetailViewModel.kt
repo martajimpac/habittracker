@@ -8,6 +8,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,7 @@ private const val DefaultReminderTime = "08:00"
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     private val repository: HabitRepository,
+    private val friendsRepository: FriendsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -56,6 +58,9 @@ class HabitDetailViewModel @Inject constructor(
     private val _actionErrorRes = MutableStateFlow<Int?>(null)
     val actionErrorRes: StateFlow<Int?> = _actionErrorRes.asStateFlow()
 
+    private val _inChallenge = MutableStateFlow(false)
+    val inChallenge: StateFlow<Boolean> = _inChallenge.asStateFlow()
+
     private val _habitDeleted = Channel<Unit>(Channel.BUFFERED)
     val habitDeleted = _habitDeleted.receiveAsFlow()
 
@@ -63,14 +68,24 @@ class HabitDetailViewModel @Inject constructor(
     private var reminderDraftInitialized = false
 
     init {
+        refreshChallengeMembership()
         viewModelScope.launch {
             repository.getHabitById(habitId).collect { loaded ->
                 loadedHabit = loaded
                 if (loaded != null && !reminderDraftInitialized) {
                     reminderDraftInitialized = true
-                    _reminderEnabled.value = loaded.reminderTime != null
+                    _reminderEnabled.value = loaded.reminderEnabled
                     _reminderTime.value = loaded.reminderTime ?: DefaultReminderTime
                 }
+            }
+        }
+    }
+
+    fun refreshChallengeMembership() {
+        viewModelScope.launch {
+            when (val result = friendsRepository.challengeHabitIds()) {
+                is DataResult.Success -> _inChallenge.value = habitId in result.data
+                is DataResult.Error -> Unit
             }
         }
     }
@@ -99,8 +114,11 @@ class HabitDetailViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            val reminderTime = if (enabled) time.ifBlank { null } else null
-            val updated = current.copy(reminderTime = reminderTime)
+            val reminderTime = time.takeIf { ReminderTimePattern.matches(it) }
+            val updated = current.copy(
+                reminderTime = reminderTime,
+                reminderEnabled = enabled && reminderTime != null,
+            )
             when (val result = repository.updateHabit(updated)) {
                 is DataResult.Success -> {
                     loadedHabit = updated

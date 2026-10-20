@@ -187,19 +187,19 @@ private fun dayLabelRes(dayOfWeek: DayOfWeek): Int = when (dayOfWeek) {
     DayOfWeek.SUNDAY -> R.string.activity_day_sun
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun GoalsContentPreview() {
-    InstaDevTheme {
-        GoalsContent(
-            uiState = GoalsUiState(
-                completedDays = 2,
-                targetDays = 5,
-                days = DayOfWeek.entries.map { day ->
-                    WeeklyGoalDay(dayOfWeek = day, counts = day == DayOfWeek.MONDAY)
-                },
-            ),
-            onBack = {},
-        )
-    }
-}
+// @Preview(showBackground = true)
+// @Composable
+// private fun GoalsContentPreview() {
+    // InstaDevTheme {
+        // GoalsContent(
+            // uiState = GoalsUiState(
+                // completedDays = 2,
+                // targetDays = 5,
+                // days = DayOfWeek.entries.map { day ->
+                    // WeeklyGoalDay(dayOfWeek = day, counts = day == DayOfWeek.MONDAY)
+                // },
+            // ),
+            // onBack = {},
+        // )
+    // }
+// }

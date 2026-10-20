@@ -12,3 +12,8 @@ data class Friendship(
     val addresseeId: String,
     val status: FriendshipStatus,
 )
+
+data class PendingFriendRequest(
+    val id: String,
+    val requester: Profile,
+)

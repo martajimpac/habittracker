@@ -74,6 +74,7 @@ class HabitReminderHooksTest {
     private fun sampleHabit(
         id: String = "habit-1",
         reminderTime: String? = "08:00",
+        reminderEnabled: Boolean = !reminderTime.isNullOrBlank(),
     ) = Habit(
         id = id,
         name = "Read",
@@ -82,6 +83,7 @@ class HabitReminderHooksTest {
         icon = "book",
         colorHex = "#6750A4",
         reminderTime = reminderTime,
+        reminderEnabled = reminderEnabled,
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         records = emptyList(),
     )

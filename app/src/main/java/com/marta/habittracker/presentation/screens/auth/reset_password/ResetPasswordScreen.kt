@@ -176,13 +176,13 @@ fun ResetPasswordContent(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun ResetPasswordContentPreview() {
-    ResetPasswordContent(
-        uiState = ResetPasswordUiState(),
-        onNewPasswordChanged = {},
-        onConfirmPasswordChanged = {},
-        onSubmit = {},
-    )
-}
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun ResetPasswordContentPreview() {
+    // ResetPasswordContent(
+        // uiState = ResetPasswordUiState(),
+        // onNewPasswordChanged = {},
+        // onConfirmPasswordChanged = {},
+        // onSubmit = {},
+    // )
+// }

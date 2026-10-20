@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.profile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +24,6 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -38,7 +38,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,12 +54,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitDialog
+import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.presentation.theme.HabitCream
-import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.theme.habitDangerColors
+import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.toHex
 
@@ -94,30 +100,16 @@ fun ProfileScreen(
     )
 
     if (showSignOutConfirm) {
-        AlertDialog(
+        HabitDialog(
             onDismissRequest = { showSignOutConfirm = false },
-            title = { Text(stringResource(R.string.profile_sign_out_title)) },
-            text = { Text(stringResource(R.string.profile_sign_out_message)) },
-            confirmButton = {
-                HabitButton(
-                    text = stringResource(R.string.profile_sign_out),
-                    onClick = {
-                        showSignOutConfirm = false
-                        viewModel.onSignOutClicked()
-                    },
-                    variant = HabitButtonVariant.Destructive,
-                    fillMaxWidth = false,
-                    compact = true,
-                )
-            },
-            dismissButton = {
-                HabitButton(
-                    text = stringResource(R.string.add_habit_cancel),
-                    onClick = { showSignOutConfirm = false },
-                    variant = HabitButtonVariant.Secondary,
-                    fillMaxWidth = false,
-                    compact = true,
-                )
+            title = stringResource(R.string.profile_sign_out_title),
+            message = stringResource(R.string.profile_sign_out_message),
+            tone = HabitDialogTone.Negative,
+            confirmText = stringResource(R.string.profile_sign_out),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                showSignOutConfirm = false
+                viewModel.onSignOutClicked()
             },
         )
     }
@@ -146,7 +138,11 @@ fun ProfileContent(
         ThemeMode.System -> isSystemInDarkTheme()
     }
     val menuItems = listOf(
-        ProfileMenuItem(R.string.profile_preferences, Icons.Rounded.Settings, MaterialTheme.colorScheme.primary),
+        ProfileMenuItem(
+            R.string.profile_preferences,
+            Icons.Rounded.Settings,
+            MaterialTheme.colorScheme.primary
+        ),
     )
 
     Column(
@@ -195,74 +191,87 @@ private fun ProfileHeader(
     val displayName = uiState.displayName
     val email = uiState.email
     val onPrimary = MaterialTheme.colorScheme.onPrimary
-    Column(
+    val primary = MaterialTheme.colorScheme.primary
+    val stamp = MaterialTheme.colorScheme.primary.lighter(0.10f)
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                HabitPrimary,
-            )
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp)
-            .padding(top = 8.dp, bottom = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(primary),
     ) {
-        ProfileAvatar(
-            avatarUrl = uiState.avatarUrl,
-            displayName = displayName,
-            avatarColor = HabitPrimaryLight.toHex(),
-            size = 80.dp,
-            contentDescription = stringResource(R.string.cd_profile_avatar),
-            borderColor = HabitCream,
-            borderWidth = 3.dp,
+        Image(
+            painter = painterResource(R.drawable.flowers),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(stamp, BlendMode.SrcIn),
         )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 8.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ProfileAvatar(
+                avatarUrl = uiState.avatarUrl,
+                displayName = displayName,
+                avatarColor = HabitPrimaryLight.toHex(),
+                size = 80.dp,
+                contentDescription = stringResource(R.string.cd_profile_avatar),
+                borderColor = HabitCream,
+                borderWidth = 3.dp,
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = displayName.ifBlank { stringResource(R.string.user_fallback_name) },
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Black,
-            color = onPrimary,
-        )
-
-        if (uiState.username.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.profile_username, uiState.username),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                text = displayName.ifBlank { stringResource(R.string.user_fallback_name) },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
                 color = onPrimary,
             )
-        }
 
-        Text(
-            text = email,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = onPrimary.copy(alpha = 0.75f),
-        )
+            if (uiState.username.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.profile_username, uiState.username),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = onPrimary,
+                )
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = email,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = onPrimary.copy(alpha = 0.75f),
+            )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            ProfileStat(
-                modifier = Modifier.weight(1f),
-                value = uiState.dayStreak.toString(),
-                label = stringResource(R.string.profile_stat_day_streak),
-            )
-            ProfileStat(
-                modifier = Modifier.weight(1f),
-                value = uiState.completedCount.toString(),
-                label = stringResource(R.string.profile_stat_completed),
-            )
-            ProfileStat(
-                modifier = Modifier.weight(1f),
-                value = uiState.habitsCount.toString(),
-                label = stringResource(R.string.profile_stat_habits),
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                ProfileStat(
+                    modifier = Modifier.weight(1f),
+                    value = uiState.dayStreak.toString(),
+                    label = stringResource(R.string.profile_stat_day_streak),
+                )
+                ProfileStat(
+                    modifier = Modifier.weight(1f),
+                    value = uiState.completedCount.toString(),
+                    label = stringResource(R.string.profile_stat_completed),
+                )
+                ProfileStat(
+                    modifier = Modifier.weight(1f),
+                    value = uiState.habitsCount.toString(),
+                    label = stringResource(R.string.profile_stat_habits),
+                )
+            }
         }
     }
 }
@@ -432,6 +441,13 @@ private fun ProfileSignOutRow(
         )
     }
 }
+
+private fun Color.lighter(amount: Float): Color = Color(
+    red = red + (1f - red) * amount,
+    green = green + (1f - green) * amount,
+    blue = blue + (1f - blue) * amount,
+    alpha = alpha,
+)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

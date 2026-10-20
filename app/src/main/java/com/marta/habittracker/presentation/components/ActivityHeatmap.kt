@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +57,13 @@ fun ActivityHeatmap(
     } else {
         MaterialTheme.typography.labelSmall
     }
+    val todayMark = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
+    val mutedLabel = MaterialTheme.colorScheme.onSurfaceVariant
+    val todayWeekIndex = heatmapTodayWeekIndex(weeks, today)
     val dayLabels = listOf(
         stringResource(R.string.activity_day_mon),
         stringResource(R.string.activity_day_tue),
@@ -96,14 +104,15 @@ fun ActivityHeatmap(
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
             Spacer(modifier = Modifier.width(weekLabelWidth))
-            dayLabels.forEach { label ->
+            dayLabels.forEachIndexed { column, label ->
+                val isTodayColumn = heatmapColumnIsToday(column, today)
                 Text(
                     text = label,
                     modifier = if (compact) Modifier.width(cellSize) else Modifier.weight(1f),
                     style = labelStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isTodayColumn) todayMark else mutedLabel,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = if (isTodayColumn) FontWeight.Black else FontWeight.SemiBold,
                 )
             }
         }
@@ -116,16 +125,17 @@ fun ActivityHeatmap(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
+                val isTodayWeek = week.weekIndex == todayWeekIndex
                 Text(
                     text = stringResource(R.string.activity_week_label, week.weekIndex),
                     modifier = Modifier.width(weekLabelWidth),
                     style = labelStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
+                    color = if (isTodayWeek) todayMark else mutedLabel,
+                    fontWeight = if (isTodayWeek) FontWeight.Black else FontWeight.SemiBold,
                 )
                 week.cells.forEach { cell ->
-                    val cellColor = lerp(emptyColor, filledColor, cell.intensity)
                     val isToday = cell.date == today
+                    val cellColor = lerp(emptyColor, filledColor, cell.intensity)
                     Box(
                         modifier = Modifier
                             .then(
@@ -139,7 +149,7 @@ fun ActivityHeatmap(
                             .background(cellColor)
                             .then(
                                 if (isToday) {
-                                    Modifier.border(if (compact) 1.dp else 1.5.dp, HabitPrimary, cellShape)
+                                    Modifier.border(if (compact) 1.5.dp else 2.dp, todayMark, cellShape)
                                 } else {
                                     Modifier.border(1.dp, HabitOutline.copy(alpha = 0.6f), cellShape)
                                 },

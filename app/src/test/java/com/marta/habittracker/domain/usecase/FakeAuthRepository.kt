@@ -36,6 +36,8 @@ class FakeAuthRepository(
         private set
     var lastRegisterPassword: String? = null
         private set
+    var lastRegisterUsername: String? = null
+        private set
     var lastPasswordResetEmail: String? = null
         private set
     var lastUpdatedPassword: String? = null
@@ -54,10 +56,12 @@ class FakeAuthRepository(
     override suspend fun doRegister(
         email: String,
         password: String,
+        username: String,
     ): DataResult<User, AppError> {
         registerCalls++
         lastRegisterEmail = email
         lastRegisterPassword = password
+        lastRegisterUsername = username
         return registerResult
     }
 

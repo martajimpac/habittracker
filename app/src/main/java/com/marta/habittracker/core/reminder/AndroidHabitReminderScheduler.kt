@@ -27,7 +27,7 @@ class AndroidHabitReminderScheduler @Inject constructor(
                 reminderTime = habit.reminderTime,
                 daysOfWeek = habit.daysOfWeek,
             )
-            if (trigger == null) {
+            if (trigger == null || !habit.reminderEnabled) {
                 cancel(habit.id)
                 return
             }
@@ -79,7 +79,7 @@ class AndroidHabitReminderScheduler @Inject constructor(
             Log.d(TAG, "rescheduleAll start count=${habits.size}")
             habits.forEach { habit ->
                 cancel(habit.id)
-                if (!habit.reminderTime.isNullOrBlank()) {
+                if (habit.reminderEnabled && !habit.reminderTime.isNullOrBlank()) {
                     schedule(habit)
                 }
             }

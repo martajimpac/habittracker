@@ -2,6 +2,7 @@ package com.marta.habittracker.data.remote
 
 import android.util.Log
 import com.marta.habittracker.core.IdGenerator
+import com.marta.habittracker.data.remote.dto.ChallengeAcceptUpdateDto
 import com.marta.habittracker.data.remote.dto.ChallengeDto
 import com.marta.habittracker.data.remote.dto.ChallengeInsertDto
 import com.marta.habittracker.data.remote.dto.ChallengeStatusUpdateDto
@@ -372,11 +373,38 @@ class SocialRemoteDataSource @Inject constructor(
         }
     }
 
+    suspend fun acceptChallenge(
+        id: String,
+        challengedHabitId: String,
+    ): ChallengeDto {
+        return try {
+            Log.d(TAG, "acceptChallenge started id=$id")
+            val challenge = supabase.from(TABLE_CHALLENGES)
+                .update(
+                    ChallengeAcceptUpdateDto(
+                        status = "active",
+                        challengedHabitId = challengedHabitId,
+                    ),
+                ) {
+                    select()
+                    filter {
+                        eq("id", id)
+                    }
+                }
+                .decodeSingle<ChallengeDto>()
+            Log.d(TAG, "acceptChallenge finished id=$id")
+            challenge
+        } catch (e: Exception) {
+            Log.e(TAG, "acceptChallenge failed id=$id", e)
+            throw e
+        }
+    }
+
     suspend fun insertChallenge(
         challengerId: String,
         challengedId: String,
         challengerHabitId: String,
-        challengedHabitId: String,
+        challengedHabitId: String?,
         criteria: String,
         startsAt: Instant,
         endsAt: Instant,

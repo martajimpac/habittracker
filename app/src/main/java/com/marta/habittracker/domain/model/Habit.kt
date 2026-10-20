@@ -16,6 +16,7 @@ data class Habit(
     val records: List<HabitRecord>,
     val isCompleted: Boolean = false,
     val isPublic: Boolean = false,
+    val reminderEnabled: Boolean = false,
 )
 
 data class HabitRecord(

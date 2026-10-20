@@ -75,6 +75,22 @@ class ToggleHabitActionTest {
     }
 
     @Test
+    fun `toggles only the requested habit when several are scheduled`() = runTest {
+        val repository = FakeHabitRepository()
+        val habits = listOf(sampleHabit(id = "first"), sampleHabit(id = "second"))
+
+        val outcome = performHabitWidgetToggle(
+            configuredHabitId = "second",
+            habits = habits,
+            today = today,
+            toggle = repository::toggleHabitCompletion,
+        )
+
+        assertEquals(HabitWidgetToggleOutcome.ToggledAndShouldRefresh, outcome)
+        assertEquals("second", repository.toggledHabits.single().first.id)
+    }
+
+    @Test
     fun `network error outcome does not request refresh`() = runTest {
         val repository = FakeHabitRepository().apply {
             toggleResult = DataResult.Error(AppError.Common.Network)

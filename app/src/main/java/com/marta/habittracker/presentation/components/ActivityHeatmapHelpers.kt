@@ -49,6 +49,13 @@ fun toHeatmapWeeks(
 fun habitDayIntensity(habit: Habit, date: LocalDate): Float =
     if (isHabitCompletedOnDate(habit, date)) 1f else 0f
 
+fun heatmapTodayWeekIndex(weeks: List<ActivityHeatmapWeek>, today: LocalDate): Int? =
+    weeks.firstOrNull { week -> week.cells.any { it.date == today } }?.weekIndex
+
+/** Monday is column 0. */
+fun heatmapColumnIsToday(columnIndex: Int, today: LocalDate): Boolean =
+    columnIndex == today.dayOfWeek.value - 1
+
 fun globalDayIntensity(habits: List<Habit>, date: LocalDate): Float {
     val dayHabits = habitsForDate(habits, date)
     if (dayHabits.isEmpty()) return 0f

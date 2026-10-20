@@ -9,7 +9,7 @@ interface HabitReminderScheduler {
 }
 
 internal fun afterHabitPersisted(habit: Habit, scheduler: HabitReminderScheduler) {
-    if (habit.reminderTime.isNullOrBlank()) scheduler.cancel(habit.id)
+    if (!habit.reminderEnabled || habit.reminderTime.isNullOrBlank()) scheduler.cancel(habit.id)
     else scheduler.schedule(habit)
 }
 

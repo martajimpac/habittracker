@@ -27,10 +27,23 @@ val HabitIconOptions: List<String> = listOf(
     HabitIconKeys.HEART,
     HabitIconKeys.TARGET,
     HabitIconKeys.BOLT,
+    HabitIconKeys.FITNESS,
+    HabitIconKeys.NO_SMOKING,
+    HabitIconKeys.NO_PHONE,
+    HabitIconKeys.PHONE,
+    HabitIconKeys.MESSAGE,
+    HabitIconKeys.LAPTOP,
+    HabitIconKeys.STUDY,
+    HabitIconKeys.STEPS,
+    HabitIconKeys.MONEY,
+    HabitIconKeys.TREE,
+    HabitIconKeys.BRIEFCASE,
+    HabitIconKeys.SUN,
+    HabitIconKeys.APPLE,
+    HabitIconKeys.CLEANING,
+    HabitIconKeys.CART,
     HabitIconKeys.FLOWER_BLOOM,
-    HabitIconKeys.FLOWER_TULIP,
     HabitIconKeys.FLOWER_LOTUS,
-    HabitIconKeys.FLOWER_BLOSSOM,
 )
 
 object HabitIconKeys {
@@ -46,6 +59,21 @@ object HabitIconKeys {
     const val HEART = "favorite_border"
     const val TARGET = "track_changes"
     const val BOLT = "bolt"
+    const val FITNESS = "fitness_center"
+    const val NO_SMOKING = "smoke_free"
+    const val NO_PHONE = "mobile_off"
+    const val PHONE = "smartphone"
+    const val MESSAGE = "message"
+    const val LAPTOP = "laptop"
+    const val STUDY = "school"
+    const val STEPS = "directions_walk"
+    const val MONEY = "attach_money"
+    const val TREE = "park"
+    const val BRIEFCASE = "business_center"
+    const val SUN = "wb_sunny"
+    const val APPLE = "apple"
+    const val CLEANING = "cleaning_services"
+    const val CART = "shopping_cart"
     const val FLOWER_BLOOM = "flower_bloom"
     const val FLOWER_TULIP = "flower_tulip"
     const val FLOWER_LOTUS = "flower_lotus"
@@ -68,6 +96,21 @@ fun habitIconRes(iconKey: String?): Int = when (iconKey) {
     HabitIconKeys.HEART -> R.drawable.ic_habit_favorite_border
     HabitIconKeys.TARGET -> R.drawable.ic_habit_track_changes
     HabitIconKeys.BOLT -> R.drawable.ic_habit_bolt
+    HabitIconKeys.FITNESS -> R.drawable.ic_habit_fitness_center
+    HabitIconKeys.NO_SMOKING -> R.drawable.ic_habit_smoke_free
+    HabitIconKeys.NO_PHONE -> R.drawable.ic_habit_mobile_off
+    HabitIconKeys.PHONE -> R.drawable.ic_habit_smartphone
+    HabitIconKeys.MESSAGE -> R.drawable.ic_habit_message
+    HabitIconKeys.LAPTOP -> R.drawable.ic_habit_laptop
+    HabitIconKeys.STUDY -> R.drawable.ic_habit_school
+    HabitIconKeys.STEPS -> R.drawable.ic_habit_directions_walk
+    HabitIconKeys.MONEY -> R.drawable.ic_habit_attach_money
+    HabitIconKeys.TREE -> R.drawable.ic_habit_park
+    HabitIconKeys.BRIEFCASE -> R.drawable.ic_habit_business_center
+    HabitIconKeys.SUN -> R.drawable.ic_habit_wb_sunny
+    HabitIconKeys.APPLE -> R.drawable.ic_habit_apple
+    HabitIconKeys.CLEANING -> R.drawable.ic_habit_cleaning_services
+    HabitIconKeys.CART -> R.drawable.ic_habit_shopping_cart
     HabitIconKeys.FLOWER_BLOOM -> R.drawable.ic_flower_bloom
     HabitIconKeys.FLOWER_TULIP -> R.drawable.ic_flower_tulip
     HabitIconKeys.FLOWER_LOTUS -> R.drawable.ic_flower_lotus

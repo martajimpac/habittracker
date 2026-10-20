@@ -6,6 +6,37 @@ Habits are online-first. A write needs a network connection and lands in Supabas
 
 The functional source of truth is [`spec.md`](spec.md).
 
+## Screenshots
+
+Sign in and create account.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172424_Bloom.jpg" width="200" alt="Sign in">
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172430_Bloom.jpg" width="200" alt="Create account">
+</p>
+
+Home, a habit's detail and stats.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170010_Bloom.jpg" width="200" alt="Home">
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172538_Bloom.jpg" width="200" alt="Habit detail">
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170020_Bloom.jpg" width="200" alt="Stats">
+</p>
+
+Creating a habit: icon, color, reminder and weekdays.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170147_Bloom.jpg" width="200" alt="New habit name and icon">
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170155_Bloom.jpg" width="200" alt="New habit color, reminder and days">
+</p>
+
+Friends, active challenges and the sheet to create one.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172323_Bloom.jpg" width="200" alt="Friends and active challenges">
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172327_Bloom.jpg" width="200" alt="Create a challenge">
+</p>
+
 ## Features
 
 ### Authentication
@@ -88,7 +119,7 @@ app/src/main/java/com/marta/habittracker/
    ```
 
 2. Place the Firebase Android config at `app/google-services.json` so Messaging and Crashlytics can start. Crash reports must not include passwords or tokens.
-3. In the Supabase dashboard, allow the redirect URL `habittracker://auth/reset`.
+3. In the Supabase dashboard, set Site URL and Redirect URLs to include `habittracker://auth/reset` and `habittracker://auth/confirm`. Leave Site URL off `http://localhost:3000`, or the confirmation email opens a blank page.
 4. Build and install a debug APK:
 
    ```bash
