@@ -17,7 +17,9 @@ import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -101,17 +103,18 @@ class FriendsViewModelTest {
     }
 
     @Test
-    fun `send friend request calls repository and marks request sent`() = runTest {
+    fun `send friend request calls repository and emits request sent`() = runTest {
         val repository = FakeFriendsRepository()
         val viewModel = FriendsViewModel(repository, FakeHabitRepository())
         advanceUntilIdle()
 
+        val event = async { viewModel.events.first() }
         viewModel.sendFriendRequest("profile-id")
         advanceUntilIdle()
 
         assertEquals(1, repository.sendFriendRequestCalls)
         assertEquals("profile-id", repository.lastAddresseeId)
-        assertTrue(viewModel.uiState.value.requestSent)
+        assertEquals(FriendsEvent.RequestSent, event.await())
     }
 
     @Test

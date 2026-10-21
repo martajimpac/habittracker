@@ -154,6 +154,12 @@
     <string name="challenge_day_done">Cumplido</string>
     <string name="challenge_accept">Aceptar</string>
     <string name="challenge_decline">Rechazar</string>
+    <string name="challenge_edit_name">Editar nombre</string>
+    <string name="challenge_name_label">Nombre del reto</string>
+    <string name="challenge_name_required">Escribe un nombre.</string>
+    <string name="challenge_delete">Eliminar reto</string>
+    <string name="challenge_delete_title">¿Eliminar este reto?</string>
+    <string name="challenge_delete_message">Se cancelará el reto. Tus hábitos se quedan.</string>
     <string name="challenge_status_pending">Pendiente</string>
     <string name="challenge_status_active">En curso</string>
     <string name="challenge_status_completed">Completado</string>

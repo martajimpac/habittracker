@@ -16,7 +16,6 @@ La app se llama Bloom. Sirve para crear, consultar y completar habitos personale
 - Pantalla Login: fondo verde bosque (`colorScheme.primary`). El wordmark `logo` es transparente y va al inicio de la card. En modo claro las letras son verde oscuro, para que se lean sobre la card clara. En modo oscuro se usa `logo_dark`: el mismo wordmark en blanco, también transparente. El mismo wordmark, según el tema, va arriba del formulario de crear cuenta. Debajo sigue el formulario (email, password, acciones existentes).
 - Fuera de alcance en Login: Remember me, Google/Facebook u otros social logins.
 - Password reset (aprobado 2026-08-08): ver § Password reset (deep link).
-- El icono de la app (launcher) es una flor de loto: cada pétalo usa un color de la paleta de hábitos y el trazo es gris claro. La marca del login es el wordmark Bloom en `res/drawable-nodpi/logo.png`, y en modo oscuro `res/drawable-nodpi/logo_dark.png`.
 - Bottom navigation: ver § Material 3 chrome (NavigationBar + theme). No hay FAB de alta.
 - Tab Friends (Figma Make — social):
   - UI Android implementada y conectada al flujo real, alineada con Figma: header "Friends" + botón "Add", sección retos activos (la tarjeta usa el mismo fondo que un hábito de Inicio; el color del hábito queda en el icono, la copa y las barras. Muestra quién va ganando junto a una copa; si van iguales, empate), lista de amigos (el nombre y los datos abren sus hábitos; desafiar es un botón de solo icono), solicitudes pendientes (foto y nombre de quien la envía; aceptar y rechazar son dos botones de solo icono, uno encima del otro) y bottom sheets (añadir / ver hábitos / crear reto). La hoja de añadir amigo no lleva asa ni divisor bajo el título, y cierra con un botón de solo icono.
@@ -180,7 +179,7 @@ Aprobado 2026-10-09.
 
 Aprobado 2026-07-31. Schema en `public` con RLS; GRANT a `authenticated`; tablas nuevas expuestas al Data API.
 
-**Amistad:** solicitud → aceptar/rechazar (no follow unidireccional ni add instantáneo).
+**Amistad:** solicitud → aceptar/rechazar (no follow unidireccional ni add instantáneo). Si el envío sale bien, «Solicitud de amistad enviada» aparece en un diálogo. No queda como texto dentro de la hoja. Cerrar el diálogo no lo vuelve a mostrar.
 
 **Hábitos visibles a amigos:** privacidad **por hábito** (`habits.is_public`). Amigos `accepted` pueden `SELECT` hábitos públicos (y no soft-deleted) del otro.
 
@@ -232,7 +231,9 @@ Aprobado 2026-10-10.
 - El detalle es online-first y usa las mismas tarjetas con borde que el detalle de un hábito. Arriba van el hábito y el criterio con la forma «Criterio: nombre», el estado y los días restantes. La única gráfica es una matriz de semanas, desde el lunes de la semana de inicio hasta el domingo de la semana de fin. Cada persona tiene una fila; un día cumplido va relleno. Los días fuera del reto quedan vacíos. El primer día lleva un borde y el último una marca abajo.
 - Crear un reto no reutiliza hábitos ya existentes. Quien reta define uno nuevo (nombre, icono, color y días). Si pulsa enviar con el botón deshabilitado, el nombre vacío y los días sin elegir se marcan. Junto a Criterio hay un icono de interrogación que explica los tres criterios. Ese hábito, público y con el mismo horario, se crea en su cuenta al enviar. La otra persona recibe el suyo solo al aceptar; si rechaza, no se le crea y el de quien retó se queda. Un reto ya creado con dos hábitos sigue igual.
 - Quien fue retado, con el reto en `pending`: **Aceptar** crea su copia del hábito, pasa a `active` y se queda en la pantalla, ya sin botones; **Rechazar** pasa a `declined` y vuelve a Amigos. La lista recarga en `ON_RESUME` y deja de mostrar `declined`.
-- Quien retó, o un reto que no está `pending`: solo lectura. No se puede cancelar el reto.
+- Cualquier participante, con el reto en `pending` o `active`, puede eliminarlo desde el detalle. Eliminar pide confirmación, pasa el estado a `cancelled` y vuelve a Amigos. Los hábitos de ambos se quedan. Un reto `completed`, `declined` o `cancelled` no se vuelve a eliminar.
+- Quien tiene su propio hábito en el reto puede cambiar el nombre desde el detalle. Ese nombre es el de su hábito; el de la otra persona no cambia. Si quien fue retado aún no ha aceptado, no tiene hábito y no puede renombrar. Un nombre vacío no se guarda.
+- Quien retó, si no está editando el nombre ni eliminando, ve el resto del detalle en solo lectura. Aceptar y rechazar siguen siendo solo de quien fue retado y solo en `pending`.
 - Sin red, reto inexistente o si quien abre no es participante: error en UI y el estado no cambia. Un rechazo que falla no navega atrás.
 - Sin sesión al abrir la notificación: se muestra Login y el `challengeId` no se reabre después de entrar.
 - Quien retó no recibe un push cuando el otro acepta o rechaza.
@@ -251,14 +252,14 @@ Aprobado 2026-10-10.
 - RLS de `challenges` sigue permitiendo que cualquier participante actualice la fila. Qué botones se muestran lo decide la app.
 
 **Tests**
-- ViewModel del detalle: retado + `pending` puede aceptar y rechazar; aceptar deja `active` y no navega; rechazar con éxito emite volver atrás; aceptar o rechazar con error (incluida la red) no navega y muestra el error; el retador no tiene acciones.
+- ViewModel del detalle: retado + `pending` puede aceptar y rechazar; aceptar deja `active` y no navega; rechazar con éxito emite volver atrás; aceptar o rechazar con error (incluida la red) no navega y muestra el error; el retador no tiene acciones de aceptar o rechazar. Quien tiene hábito propio puede renombrar; el nombre vacío no llama al repositorio. Quien fue retado sin hábito no puede renombrar. `pending` y `active` se pueden eliminar y, si sale bien, se vuelve atrás; `completed` no se elimina; un fallo de red al eliminar no navega.
 - Repositorio: sin red, `getChallenge` y `respondToChallenge` devuelven `AppError.Common.Network` y no escriben en remoto.
 - El id de notificación de un reto no es 0 y se calcula con el prefijo `challenge:`, distinto del id de recordatorio de un hábito.
 - No se exigen tests instrumentados del webhook ni de que FCM entregue el mensaje.
 
 **Fuera de alcance**
 - Push al retador cuando aceptan o rechazan.
-- Cancelar un reto.
+- Borrar los hábitos al cancelar el reto.
 - Endurecer la RLS para impedir transiciones de estado que la app no ofrece.
 - Realtime, chat, cache Room de amigos.
 - Pantalla global de notificaciones en Profile.

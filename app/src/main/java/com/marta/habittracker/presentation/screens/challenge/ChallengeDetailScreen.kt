@@ -21,11 +21,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,12 +58,15 @@ import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.model.challengeWeekRows
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
+import com.marta.habittracker.presentation.components.HabitDialog
+import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.toComposeColor
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOutline
+import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.datetime.LocalDate
 import java.time.Instant
@@ -73,6 +81,9 @@ fun ChallengeDetailScreen(
     viewModel: ChallengeDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showRename by remember { mutableStateOf(false) }
+    var renameText by remember { mutableStateOf("") }
 
     ObserveAsEvents(flow = viewModel.events) { event ->
         when (event) {
@@ -85,7 +96,48 @@ fun ChallengeDetailScreen(
         onBack = onBack,
         onAccept = viewModel::onAccept,
         onDecline = viewModel::onDecline,
+        onDelete = { showDeleteConfirm = true },
+        onEditName = {
+            renameText = uiState.card?.habitName.orEmpty()
+            showRename = true
+        },
     )
+
+    if (showDeleteConfirm) {
+        HabitDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = stringResource(R.string.challenge_delete_title),
+            message = stringResource(R.string.challenge_delete_message),
+            tone = HabitDialogTone.Negative,
+            confirmText = stringResource(R.string.challenge_delete),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                showDeleteConfirm = false
+                viewModel.onDelete()
+            },
+        )
+    }
+
+    if (showRename) {
+        HabitDialog(
+            onDismissRequest = { showRename = false },
+            title = stringResource(R.string.challenge_edit_name),
+            confirmText = stringResource(R.string.add_habit_save),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                showRename = false
+                viewModel.onRename(renameText)
+            },
+        ) {
+            OutlinedTextField(
+                value = renameText,
+                onValueChange = { renameText = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.challenge_name_label)) },
+                singleLine = true,
+            )
+        }
+    }
 }
 
 @Composable
@@ -94,6 +146,8 @@ fun ChallengeDetailContent(
     onBack: () -> Unit,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
+    onDelete: () -> Unit = {},
+    onEditName: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -106,6 +160,7 @@ fun ChallengeDetailContent(
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             HabitIconButton(
                 onClick = onBack,
@@ -113,6 +168,27 @@ fun ChallengeDetailContent(
                 contentDescription = stringResource(R.string.detail_back),
                 enabled = !state.isSubmitting,
             )
+            Spacer(modifier = Modifier.weight(1f))
+            if (state.canEditName) {
+                HabitIconButton(
+                    onClick = onEditName,
+                    icon = Icons.Rounded.Edit,
+                    contentDescription = stringResource(R.string.challenge_edit_name),
+                    enabled = !state.isSubmitting,
+                )
+            }
+            if (state.canDelete) {
+                val danger = habitDangerColors()
+                HabitIconButton(
+                    onClick = onDelete,
+                    icon = Icons.Rounded.Delete,
+                    contentDescription = stringResource(R.string.challenge_delete),
+                    enabled = !state.isSubmitting,
+                    backgroundColor = danger.container,
+                    iconTint = danger.icon,
+                    borderColor = danger.border,
+                )
+            }
         }
 
         when {

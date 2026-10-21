@@ -28,6 +28,9 @@ class FakeFriendsRepository(
     private val respondToFriendRequestResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val publicHabitsResult: DataResult<List<Habit>, AppError> = DataResult.Success(emptyList()),
     private val createChallengeResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
+    private val cancelChallengeResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
+    private val renameChallengeResult: DataResult<ChallengeCard, AppError> =
+        DataResult.Error(AppError.Common.Unknown),
 ) : FriendsRepository {
 
     var getAcceptedFriendsCalls: Int = 0
@@ -48,6 +51,10 @@ class FakeFriendsRepository(
         private set
     var createChallengeCalls: Int = 0
         private set
+    var cancelChallengeCalls: Int = 0
+        private set
+    var renameChallengeCalls: Int = 0
+        private set
 
     var lastSearchQuery: String? = null
         private set
@@ -66,6 +73,10 @@ class FakeFriendsRepository(
     var lastChallengeCriteria: ChallengeCriteria? = null
         private set
     var lastDurationDays: Int? = null
+        private set
+    var lastCancelChallengeId: String? = null
+        private set
+    var lastChallengeName: String? = null
         private set
 
     override suspend fun getAcceptedFriends(): DataResult<List<FriendListItem>, AppError> {
@@ -137,6 +148,21 @@ class FakeFriendsRepository(
         lastChallengeCriteria = criteria
         lastDurationDays = durationDays
         return createChallengeResult
+    }
+
+    override suspend fun cancelChallenge(challengeId: String): DataResult<Unit, AppError> {
+        cancelChallengeCalls++
+        lastCancelChallengeId = challengeId
+        return cancelChallengeResult
+    }
+
+    override suspend fun renameChallenge(
+        challengeId: String,
+        name: String,
+    ): DataResult<ChallengeCard, AppError> {
+        renameChallengeCalls++
+        lastChallengeName = name
+        return renameChallengeResult
     }
 
     var challengeHabitIdsResult: DataResult<Set<String>, AppError> = DataResult.Success(emptySet())

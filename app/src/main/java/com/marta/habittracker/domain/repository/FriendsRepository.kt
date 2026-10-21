@@ -43,4 +43,11 @@ interface FriendsRepository {
         criteria: ChallengeCriteria,
         durationDays: Int,
     ): DataResult<Unit, AppError>
+
+    suspend fun cancelChallenge(challengeId: String): DataResult<Unit, AppError>
+
+    suspend fun renameChallenge(
+        challengeId: String,
+        name: String,
+    ): DataResult<ChallengeCard, AppError>
 }

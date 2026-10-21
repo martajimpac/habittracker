@@ -176,6 +176,128 @@ class ChallengeDetailViewModelTest {
         assertEquals(0, friendsRepository.respondCalls)
     }
 
+    @Test
+    fun `viewer who owns the habit can rename it`() = runTest {
+        val card = pendingChallengeCard()
+        val renamed = card.copy(habitName = "Write")
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(card),
+            renameChallengeResult = DataResult.Success(renamed),
+        )
+        val viewModel = createViewModel(
+            friendsRepository = friendsRepository,
+            authRepository = FixedUserIdAuthRepository("me"),
+        )
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canEditName)
+        viewModel.onRename("  Write  ")
+        advanceUntilIdle()
+
+        assertEquals("Write", friendsRepository.lastChallengeName)
+        assertEquals("Write", viewModel.uiState.value.card?.habitName)
+        assertEquals(null, viewModel.uiState.value.errorRes)
+    }
+
+    @Test
+    fun `blank rename sets name required and does not call repository`() = runTest {
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(pendingChallengeCard()),
+        )
+        val viewModel = createViewModel(
+            friendsRepository = friendsRepository,
+            authRepository = FixedUserIdAuthRepository("me"),
+        )
+        advanceUntilIdle()
+
+        viewModel.onRename("   ")
+        advanceUntilIdle()
+
+        assertEquals(0, friendsRepository.renameChallengeCalls)
+        assertEquals(R.string.challenge_name_required, viewModel.uiState.value.errorRes)
+        assertEquals("Read", viewModel.uiState.value.card?.habitName)
+    }
+
+    @Test
+    fun `challenged user without a habit cannot rename`() = runTest {
+        val card = pendingChallengeCard().let { current ->
+            current.copy(challenge = current.challenge.copy(challengedHabitId = null))
+        }
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(card),
+        )
+        val viewModel = createViewModel(
+            friendsRepository = friendsRepository,
+            authRepository = FixedUserIdAuthRepository("me"),
+        )
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.canEditName)
+        viewModel.onRename("Write")
+        advanceUntilIdle()
+
+        assertEquals(0, friendsRepository.renameChallengeCalls)
+    }
+
+    @Test
+    fun `delete on pending challenge cancels it and navigates back`() = runTest {
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(pendingChallengeCard()),
+            cancelChallengeResult = DataResult.Success(Unit),
+        )
+        val viewModel = createViewModel(
+            friendsRepository = friendsRepository,
+            authRepository = FixedUserIdAuthRepository("them"),
+        )
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canDelete)
+        val event = async { viewModel.events.first() }
+        viewModel.onDelete()
+        advanceUntilIdle()
+
+        assertEquals(1, friendsRepository.cancelChallengeCalls)
+        assertEquals(CHALLENGE_ID, friendsRepository.lastCancelChallengeId)
+        assertEquals(ChallengeDetailEvent.NavigateBack, event.await())
+    }
+
+    @Test
+    fun `completed challenge cannot be deleted`() = runTest {
+        val card = pendingChallengeCard().let { current ->
+            current.copy(challenge = current.challenge.copy(status = ChallengeStatus.Completed))
+        }
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(card),
+        )
+        val viewModel = createViewModel(friendsRepository = friendsRepository)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.canDelete)
+        viewModel.onDelete()
+        advanceUntilIdle()
+
+        assertEquals(0, friendsRepository.cancelChallengeCalls)
+    }
+
+    @Test
+    fun `delete network error stays on the screen`() = runTest {
+        val friendsRepository = FakeFriendsRepository(
+            getChallengeResult = DataResult.Success(pendingChallengeCard()),
+            cancelChallengeResult = DataResult.Error(AppError.Common.Network),
+        )
+        val viewModel = createViewModel(friendsRepository = friendsRepository)
+        advanceUntilIdle()
+
+        val events = mutableListOf<ChallengeDetailEvent>()
+        val collectJob = backgroundScope.launch { viewModel.events.collect { events.add(it) } }
+        viewModel.onDelete()
+        advanceUntilIdle()
+
+        assertEquals(R.string.error_no_internet, viewModel.uiState.value.errorRes)
+        assertTrue(events.isEmpty())
+        collectJob.cancel()
+    }
+
     private fun createViewModel(
         friendsRepository: FakeFriendsRepository = FakeFriendsRepository(),
         authRepository: AuthRepository = FixedUserIdAuthRepository("me"),

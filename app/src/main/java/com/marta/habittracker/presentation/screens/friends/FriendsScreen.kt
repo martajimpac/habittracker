@@ -76,6 +76,7 @@ import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitDialog
+import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.HabitIconKeys
@@ -90,6 +91,7 @@ import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.utils.HabitColorOptions
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.toHex
 
 
@@ -99,8 +101,14 @@ fun FriendsScreen(
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showRequestSent by remember { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refresh()
+    }
+    ObserveAsEvents(flow = viewModel.events) { event ->
+        when (event) {
+            FriendsEvent.RequestSent -> showRequestSent = true
+        }
     }
     FriendsContent(
         uiState = uiState,
@@ -114,6 +122,15 @@ fun FriendsScreen(
         onCreateChallenge = viewModel::onCreateChallengeClicked,
         onSendChallenge = viewModel::createChallenge,
     )
+    if (showRequestSent) {
+        HabitDialog(
+            onDismissRequest = { showRequestSent = false },
+            title = stringResource(R.string.friends_request_sent),
+            confirmText = stringResource(R.string.dialog_ok),
+            tone = HabitDialogTone.Positive,
+            onConfirm = { showRequestSent = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -513,13 +530,6 @@ private fun AddFriendSheet(
             },
             singleLine = true,
         )
-        if (uiState.requestSent) {
-            Text(
-                stringResource(R.string.friends_request_sent),
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
         uiState.searchResults.forEach { profile ->
             Row(
                 modifier = Modifier

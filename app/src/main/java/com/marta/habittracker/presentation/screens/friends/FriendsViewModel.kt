@@ -16,9 +16,11 @@ import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,8 +36,11 @@ data class FriendsUiState(
     val selectedFriendHabits: List<Habit> = emptyList(),
     val myHabits: List<Habit> = emptyList(),
     @StringRes val errorRes: Int? = null,
-    val requestSent: Boolean = false,
 )
+
+sealed interface FriendsEvent {
+    data object RequestSent : FriendsEvent
+}
 
 sealed interface FriendsSheet {
     data object None : FriendsSheet
@@ -52,6 +57,9 @@ class FriendsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<FriendsEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -74,7 +82,6 @@ class FriendsViewModel @Inject constructor(
                 sheet = FriendsSheet.AddFriend,
                 searchQuery = "",
                 searchResults = emptyList(),
-                requestSent = false,
                 errorRes = null,
             )
         }
@@ -100,7 +107,6 @@ class FriendsViewModel @Inject constructor(
                 searchQuery = "",
                 searchResults = emptyList(),
                 selectedFriendHabits = emptyList(),
-                requestSent = false,
                 errorRes = null,
             )
         }
@@ -111,7 +117,6 @@ class FriendsViewModel @Inject constructor(
             it.copy(
                 searchQuery = query,
                 searchResults = if (query.isBlank()) emptyList() else it.searchResults,
-                requestSent = false,
                 errorRes = null,
             )
         }
@@ -132,8 +137,9 @@ class FriendsViewModel @Inject constructor(
     fun sendFriendRequest(addresseeId: String) {
         viewModelScope.launch {
             when (val result = friendsRepository.sendFriendRequest(addresseeId)) {
-                is DataResult.Success -> _uiState.update {
-                    it.copy(requestSent = true, errorRes = null)
+                is DataResult.Success -> {
+                    _uiState.update { it.copy(errorRes = null) }
+                    _events.send(FriendsEvent.RequestSent)
                 }
                 is DataResult.Error -> setError(result.error)
             }
@@ -174,10 +180,6 @@ class FriendsViewModel @Inject constructor(
                 is DataResult.Error -> setError(result.error)
             }
         }
-    }
-
-    fun clearRequestSent() {
-        _uiState.update { it.copy(requestSent = false) }
     }
 
     private suspend fun loadContent() {

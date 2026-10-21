@@ -196,6 +196,76 @@ class FriendsRepositoryImpl @Inject constructor(
             is DataResult.Error -> result
         }
 
+    override suspend fun cancelChallenge(challengeId: String): DataResult<Unit, AppError> =
+        when (val result = runOnline(OP_CANCEL_CHALLENGE) {
+            val userId = socialRemote.requireUserId()
+            val existing = socialRemote.fetchChallengeById(challengeId)
+            val allowed = existing != null &&
+                (existing.challengerId == userId || existing.challengedId == userId) &&
+                (existing.status == STATUS_PENDING || existing.status == STATUS_ACTIVE)
+            if (!allowed) {
+                false
+            } else {
+                socialRemote.updateChallengeStatus(challengeId, STATUS_CANCELLED)
+                true
+            }
+        }) {
+            is DataResult.Success -> if (result.data) {
+                DataResult.Success(Unit)
+            } else {
+                Log.w(TAG, "cancelChallenge not allowed id=$challengeId")
+                DataResult.Error(AppError.Common.Unknown)
+            }
+            is DataResult.Error -> result
+        }
+
+    override suspend fun renameChallenge(
+        challengeId: String,
+        name: String,
+    ): DataResult<ChallengeCard, AppError> {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) {
+            Log.w(TAG, "renameChallenge rejected: blank name id=$challengeId")
+            return DataResult.Error(AppError.Common.Unknown)
+        }
+        return when (val result = runOnline(OP_RENAME_CHALLENGE) {
+            val userId = socialRemote.requireUserId()
+            val existing = socialRemote.fetchChallengeById(challengeId)
+                ?: return@runOnline RenameChallengeOutcome.NotAllowed
+            val habitId = ownChallengeHabitId(
+                userId = userId,
+                challengerId = existing.challengerId,
+                challengedId = existing.challengedId,
+                challengerHabitId = existing.challengerHabitId,
+                challengedHabitId = existing.challengedHabitId,
+            ) ?: return@runOnline RenameChallengeOutcome.NotAllowed
+            val habitDto = socialRemote.fetchHabitsByIds(listOf(habitId)).firstOrNull()
+                ?: return@runOnline RenameChallengeOutcome.NotAllowed
+            val habit = mapHabits(listOf(habitDto), emptyList()).first().copy(name = trimmed)
+            when (val updated = habitRepository.updateHabit(habit)) {
+                is DataResult.Error -> return@runOnline RenameChallengeOutcome.Failed(updated.error)
+                is DataResult.Success -> Unit
+            }
+            val card = buildChallengeCard(with(socialMapper) { existing.toDomain() }, userId)
+                ?.copy(habitName = trimmed)
+            if (card == null) {
+                RenameChallengeOutcome.NotAllowed
+            } else {
+                RenameChallengeOutcome.Success(card)
+            }
+        }) {
+            is DataResult.Success -> when (val outcome = result.data) {
+                is RenameChallengeOutcome.Success -> DataResult.Success(outcome.card)
+                RenameChallengeOutcome.NotAllowed -> {
+                    Log.w(TAG, "renameChallenge not allowed id=$challengeId")
+                    DataResult.Error(AppError.Common.Unknown)
+                }
+                is RenameChallengeOutcome.Failed -> DataResult.Error(outcome.error)
+            }
+            is DataResult.Error -> result
+        }
+    }
+
     override suspend fun getPendingFriendRequests(): DataResult<List<PendingFriendRequest>, AppError> =
         runOnline(OP_PENDING_REQUESTS) {
             val userId = socialRemote.requireUserId()
@@ -446,6 +516,12 @@ class FriendsRepositoryImpl @Inject constructor(
         data object Incomplete : RespondChallengeOutcome
     }
 
+    private sealed interface RenameChallengeOutcome {
+        data class Success(val card: ChallengeCard) : RenameChallengeOutcome
+        data object NotAllowed : RenameChallengeOutcome
+        data class Failed(val error: AppError) : RenameChallengeOutcome
+    }
+
     companion object {
         private const val TAG = "FriendsRepository"
         private const val STATUS_PENDING = "pending"
@@ -453,11 +529,14 @@ class FriendsRepositoryImpl @Inject constructor(
         private const val STATUS_REJECTED = "rejected"
         private const val STATUS_ACTIVE = "active"
         private const val STATUS_DECLINED = "declined"
+        private const val STATUS_CANCELLED = "cancelled"
         private const val OP_ACCEPTED_FRIENDS = "getAcceptedFriends"
         private const val OP_ACTIVE_CHALLENGES = "getActiveChallenges"
         private const val OP_CHALLENGE_HABIT_IDS = "challengeHabitIds"
         private const val OP_GET_CHALLENGE = "getChallenge"
         private const val OP_RESPOND_CHALLENGE = "respondToChallenge"
+        private const val OP_CANCEL_CHALLENGE = "cancelChallenge"
+        private const val OP_RENAME_CHALLENGE = "renameChallenge"
         private const val OP_PENDING_REQUESTS = "getPendingFriendRequests"
         private const val OP_SEARCH_PROFILES = "searchProfiles"
         private const val OP_SEND_REQUEST = "sendFriendRequest"
