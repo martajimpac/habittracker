@@ -23,6 +23,12 @@ Home, a habit's detail and stats.
   <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170020_Bloom.jpg" width="200" alt="Stats">
 </p>
 
+Home in dark mode.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261020_170200_Bloom.jpg" width="200" alt="Home in dark mode">
+</p>
+
 Creating a habit: icon, color, reminder and weekdays.
 
 <p>
@@ -71,6 +77,12 @@ Four Glance widgets:
 - One challenge, read-only, from the last snapshot
 - Weekly summary of scheduled habits
 - Today's habits (up to five rows)
+
+Today's habits on the home screen.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261021_120847_Bloom.jpg" width="200" alt="Today's habits widget">
+</p>
 
 ## Architecture
 
