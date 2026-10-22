@@ -17,6 +17,14 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private val MIGRATION_20261019_20261022 = object : Migration(20261019, 20261022) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE habits ADD COLUMN daysPerWeek INTEGER NOT NULL DEFAULT 7",
+            )
+        }
+    }
+
     private val MIGRATION_20260731_20261019 = object : Migration(20260731, 20261019) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -38,7 +46,7 @@ object DatabaseModule {
             HabitDatabase::class.java,
             "habit_db",
         )
-            .addMigrations(MIGRATION_20260731_20261019)
+            .addMigrations(MIGRATION_20260731_20261019, MIGRATION_20261019_20261022)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

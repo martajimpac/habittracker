@@ -8,6 +8,7 @@ import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.repository.ThemeRepository
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +33,7 @@ data class ProfileUiState(
     val avatarUrl: String? = null,
     val avatarColor: String = "",
     val dayStreak: Int = 0,
+    val streakInWeeks: Boolean = false,
     val completedCount: Int = 0,
     val habitsCount: Int = 0,
     val isReady: Boolean = false,
@@ -107,7 +109,17 @@ class ProfileViewModel @Inject constructor(
             email = identity.email,
             avatarUrl = identity.avatarUrl,
             avatarColor = identity.avatarColor,
-            dayStreak = habits.maxOfOrNull { calculateStreak(it, today = today) } ?: 0,
+            dayStreak = run {
+                val daily = habits.filter { it.weeklyTarget() >= 7 }
+                    .maxOfOrNull { calculateStreak(it, today = today) } ?: 0
+                if (daily > 0) {
+                    daily
+                } else {
+                    habits.maxOfOrNull { calculateStreak(it, today = today) } ?: 0
+                }
+            },
+            streakInWeeks = habits.none { it.weeklyTarget() >= 7 && calculateStreak(it, today = today) > 0 } &&
+                habits.any { it.weeklyTarget() < 7 && calculateStreak(it, today = today) > 0 },
             completedCount = habits.sumOf { habit -> habit.records.count { it.isCompleted } },
             habitsCount = habits.size,
             isReady = true,

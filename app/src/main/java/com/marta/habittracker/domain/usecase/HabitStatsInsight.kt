@@ -1,6 +1,7 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.core.toJava
+import com.marta.habittracker.core.toKotlin
 import com.marta.habittracker.domain.model.Habit
 import java.time.LocalDate
 import java.time.ZoneId
@@ -32,9 +33,8 @@ private const val STREAK_LOOKBACK_DAYS = 730
 fun statsStreakHighlight(habits: List<Habit>, today: LocalDate): StatsStreakHighlight? {
     val kotlinToday = KotlinLocalDate.parse(today.toString())
     val longest = habits.mapNotNull { habit ->
-        val streak = calculateScheduledStreak(
-            daysOfWeek = habit.daysOfWeek,
-            records = habit.records,
+        val streak = streakForHabit(
+            habit = habit,
             today = kotlinToday,
             createdOn = KotlinLocalDate.parse(
                 habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate().toString(),
@@ -74,7 +74,7 @@ private fun perfectStreakEnding(habits: List<Habit>, today: LocalDate): Int {
     var streak = 0
     var date = today
     repeat(STREAK_LOOKBACK_DAYS) {
-        when (scheduledDay(habits, date)) {
+        when (scheduledDay(habits, date, today)) {
             ScheduledDay.Perfect -> streak++
             ScheduledDay.Miss -> return streak
             ScheduledDay.Rest -> Unit
@@ -89,7 +89,7 @@ private fun bestPerfectStreak(habits: List<Habit>, today: LocalDate): Int {
     var run = 0
     var date = today.minusDays((STREAK_LOOKBACK_DAYS - 1).toLong())
     repeat(STREAK_LOOKBACK_DAYS) {
-        when (scheduledDay(habits, date)) {
+        when (scheduledDay(habits, date, today)) {
             ScheduledDay.Perfect -> {
                 run++
                 best = maxOf(best, run)
@@ -102,8 +102,8 @@ private fun bestPerfectStreak(habits: List<Habit>, today: LocalDate): Int {
     return best
 }
 
-private fun scheduledDay(habits: List<Habit>, date: LocalDate): ScheduledDay {
-    val due = habits.filter { isScheduled(it, date) }
+private fun scheduledDay(habits: List<Habit>, date: LocalDate, today: LocalDate): ScheduledDay {
+    val due = habits.filter { isScheduled(it, date, today) }
     if (due.isEmpty()) return ScheduledDay.Rest
     val allDone = due.all { habit ->
         habit.records.any { record -> record.isCompleted && record.date.toJava() == date }
@@ -111,8 +111,8 @@ private fun scheduledDay(habits: List<Habit>, date: LocalDate): ScheduledDay {
     return if (allDone) ScheduledDay.Perfect else ScheduledDay.Miss
 }
 
-private fun isScheduled(habit: Habit, date: LocalDate): Boolean {
+private fun isScheduled(habit: Habit, date: LocalDate, today: LocalDate): Boolean {
     val created = habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate()
     if (date.isBefore(created)) return false
-    return habit.daysOfWeek.any { it.name == date.dayOfWeek.name }
+    return habit.scheduledForStats(date.toKotlin(), today.toKotlin())
 }

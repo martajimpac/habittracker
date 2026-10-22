@@ -28,7 +28,8 @@ import com.marta.habittracker.domain.model.newChallengeHabit
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.usecase.ComputeChallengeProgress
-import com.marta.habittracker.domain.usecase.calculateScheduledStreak
+import com.marta.habittracker.domain.usecase.streakForHabit
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -70,9 +71,8 @@ class FriendsRepositoryImpl @Inject constructor(
                 FriendListItem(
                     profile = profile,
                     bestStreak = habits.maxOfOrNull { habit ->
-                        calculateScheduledStreak(
-                            daysOfWeek = habit.daysOfWeek,
-                            records = habit.records,
+                        streakForHabit(
+                            habit = habit,
                             today = today,
                             createdOn = LocalDate.parse(
                                 habit.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString(),
@@ -321,7 +321,7 @@ class FriendsRepositoryImpl @Inject constructor(
         criteria: ChallengeCriteria,
         durationDays: Int,
     ): DataResult<Unit, AppError> {
-        if (durationDays <= 0 || draft.name.isBlank() || draft.daysOfWeek.isEmpty()) {
+        if (durationDays <= 0 || draft.name.isBlank() || draft.daysPerWeek !in 1..7) {
             Log.w(TAG, "createChallenge rejected: invalid draft")
             return DataResult.Error(AppError.Common.Unknown)
         }
@@ -428,6 +428,7 @@ class FriendsRepositoryImpl @Inject constructor(
                 challenge.endsAt,
                 myHabit?.records.orEmpty(),
                 today,
+                daysPerWeek = myHabit?.weeklyTarget() ?: definedHabit.weeklyTarget(),
             ),
             theirProgress = computeChallengeProgress(
                 challenge.criteria,
@@ -435,6 +436,7 @@ class FriendsRepositoryImpl @Inject constructor(
                 challenge.endsAt,
                 theirHabit?.records.orEmpty(),
                 today,
+                daysPerWeek = theirHabit?.weeklyTarget() ?: definedHabit.weeklyTarget(),
             ),
             daysLeft = computeChallengeProgress.daysLeft(
                 challenge.startsAt,

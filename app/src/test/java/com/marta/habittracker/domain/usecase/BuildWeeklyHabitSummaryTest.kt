@@ -39,27 +39,25 @@ class BuildWeeklyHabitSummaryTest {
     }
 
     @Test
-    fun `scheduled counts habits for matching weekday only`() {
+    fun `a habit drops off once the weekly count is reached`() {
         val habits = listOf(
             sampleHabit(
-                id = "weekday",
-                days = setOf(KotlinDayOfWeek.MONDAY, KotlinDayOfWeek.WEDNESDAY, KotlinDayOfWeek.FRIDAY),
-            ),
-            sampleHabit(
-                id = "weekend",
-                days = setOf(KotlinDayOfWeek.SATURDAY),
+                id = "once",
+                days = KotlinDayOfWeek.entries.toSet(),
+                daysPerWeek = 1,
+                records = listOf(
+                    HabitRecord("1", "once", KotlinLocalDate(2026, 8, 3), true),
+                ),
             ),
         )
-        val anchor = LocalDate.of(2026, 8, 7) // Friday in week Aug 3–9
+        val anchor = LocalDate.of(2026, 8, 7)
 
         val summary = buildWeeklyHabitSummary(habits, anchor)
 
-        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 3) }.scheduled) // Mon
-        assertEquals(0, summary.single { it.date == LocalDate.of(2026, 8, 4) }.scheduled) // Tue
-        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 5) }.scheduled) // Wed
-        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 7) }.scheduled) // Fri
-        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 8) }.scheduled) // Sat
-        assertEquals(0, summary.single { it.date == LocalDate.of(2026, 8, 9) }.scheduled) // Sun
+        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 3) }.scheduled)
+        assertEquals(1, summary.single { it.date == LocalDate.of(2026, 8, 3) }.completed)
+        assertEquals(0, summary.single { it.date == LocalDate.of(2026, 8, 4) }.scheduled)
+        assertEquals(0, summary.single { it.date == LocalDate.of(2026, 8, 9) }.scheduled)
     }
 
     @Test
@@ -92,9 +90,9 @@ class BuildWeeklyHabitSummaryTest {
         val friday = buildWeeklyHabitSummary(habits, anchor)
             .single { it.date == LocalDate.of(2026, 8, 7) }
 
-        assertEquals(3, friday.scheduled)
+        assertEquals(2, friday.scheduled)
         assertEquals(1, friday.completed)
-        assertEquals(33, friday.percent)
+        assertEquals(50, friday.percent)
     }
 
     @Test
@@ -127,6 +125,7 @@ class BuildWeeklyHabitSummaryTest {
         id: String = "h1",
         days: Set<KotlinDayOfWeek> = setOf(KotlinDayOfWeek.MONDAY),
         records: List<HabitRecord> = emptyList(),
+        daysPerWeek: Int = 7,
     ) = Habit(
         id = id,
         name = "Test",
@@ -137,5 +136,6 @@ class BuildWeeklyHabitSummaryTest {
         reminderTime = null,
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         records = records,
+        daysPerWeek = daysPerWeek,
     )
 }

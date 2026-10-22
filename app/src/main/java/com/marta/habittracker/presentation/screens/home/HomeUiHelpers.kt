@@ -6,7 +6,8 @@ import com.marta.habittracker.R
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
-import com.marta.habittracker.domain.usecase.calculateScheduledStreak
+import com.marta.habittracker.domain.usecase.shownOn
+import com.marta.habittracker.domain.usecase.streakForHabit
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.datetime.LocalDate as KotlinLocalDate
@@ -25,8 +26,8 @@ fun calculateStreak(
     val createdOn = KotlinLocalDate.parse(
         habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate().toString(),
     )
-    return calculateScheduledStreak(
-        daysOfWeek = habit.daysOfWeek,
+    return streakForHabit(
+        habit = habit,
         records = records,
         today = KotlinLocalDate.parse(today.toString()),
         createdOn = createdOn,
@@ -36,14 +37,8 @@ fun calculateStreak(
 fun isHabitCompletedOnDate(habit: Habit, date: LocalDate): Boolean =
     habit.records.any { it.isCompleted && it.date.toJava() == date }
 
-fun habitsForDate(habits: List<Habit>, date: LocalDate): List<Habit> {
-    val dayOfWeek = date.dayOfWeek
-    return habits.filter { habit ->
-        habit.daysOfWeek.any { kotlinDay ->
-            kotlinDay.name == dayOfWeek.name
-        }
-    }
-}
+fun habitsForDate(habits: List<Habit>, date: LocalDate): List<Habit> =
+    habits.filter { it.shownOn(KotlinLocalDate.parse(date.toString())) }
 
 fun completionStats(habits: List<Habit>, date: LocalDate): Pair<Int, Int> {
     val dayHabits = habitsForDate(habits, date)

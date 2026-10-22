@@ -23,7 +23,8 @@ class ChallengeHabitDraftTest {
         )
 
         assertEquals("Leer", habit.name)
-        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY), habit.daysOfWeek)
+        assertEquals(DayOfWeek.entries.toSet(), habit.daysOfWeek)
+        assertEquals(2, habit.daysPerWeek)
         assertEquals("menu_book", habit.icon)
         assertEquals("#3A98EA", habit.colorHex)
         assertTrue(habit.isPublic)
@@ -48,6 +49,7 @@ class ChallengeHabitDraftTest {
 
         assertEquals("theirs", copy.id)
         assertEquals(source.daysOfWeek, copy.daysOfWeek)
+        assertEquals(source.daysPerWeek, copy.daysPerWeek)
         assertEquals(source.name, copy.name)
         assertEquals(source.icon, copy.icon)
         assertEquals(source.colorHex, copy.colorHex)

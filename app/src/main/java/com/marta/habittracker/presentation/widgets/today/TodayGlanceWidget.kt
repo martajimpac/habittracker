@@ -65,10 +65,13 @@ class TodayGlanceWidget : GlanceAppWidget() {
                         countText = countText,
                         rows = snapshot.items,
                         emptyText = context.getString(R.string.today_widget_empty),
-                        openAppAction = actionStartActivity(
-                            WidgetLaunchExtras.openHomeIntent(context, snapshot.firstPendingId),
-                        ),
+                        openAppAction = {} as Action,
                     )
+                    /*
+                    actionStartActivity(
+                            WidgetLaunchExtras.openHomeIntent(context, snapshot.firstPendingId),
+                        )
+                     */
                 }
             }
         }

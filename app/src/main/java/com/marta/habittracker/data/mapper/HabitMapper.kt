@@ -28,6 +28,7 @@ class HabitMapper @Inject constructor() {
         isPublic = isPublic,
         createdAt = createdAt.toInstant(),
         records = emptyList(),
+        daysPerWeek = daysPerWeek,
     )
 
     fun Habit.toEntity(
@@ -46,6 +47,7 @@ class HabitMapper @Inject constructor() {
         createdAt = createdAt.toEpochMillis(),
         updatedAt = updatedAt,
         deletedAt = deletedAt,
+        daysPerWeek = daysPerWeek,
     )
 
     fun HabitWithRecordsEntity.toDomain(): Habit = Habit(
@@ -60,6 +62,7 @@ class HabitMapper @Inject constructor() {
         isPublic = habit.isPublic,
         createdAt = habit.createdAt.toInstant(),
         records = records.filter { it.deletedAt == null }.map { it.toDomain() },
+        daysPerWeek = habit.daysPerWeek,
     )
 
     fun map(habitWithRecordsEntity: HabitWithRecordsEntity): Habit = habitWithRecordsEntity.toDomain()

@@ -27,6 +27,7 @@ class TodayWidgetSnapshotTest {
                 id = "later",
                 name = "Later",
                 days = setOf(KotlinDayOfWeek.THURSDAY),
+                records = listOf(HabitRecord("3", "later", KotlinLocalDate(2026, 8, 3), true)),
             ),
             sampleHabit(
                 id = "pending",

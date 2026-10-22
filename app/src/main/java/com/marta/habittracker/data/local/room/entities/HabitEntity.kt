@@ -18,4 +18,5 @@ data class HabitEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val deletedAt: Long? = null,
+    val daysPerWeek: Int = 7,
 )

@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -598,7 +599,7 @@ private fun ChallengeSheet(
     var showMissing by remember { mutableStateOf(false) }
     var icon by remember { mutableStateOf(HabitIconKeys.DEFAULT) }
     var color by remember { mutableStateOf(HabitColorOptions.first()) }
-    var selectedDays by remember { mutableStateOf(DayOfWeek.entries.toSet()) }
+    var daysPerWeek by remember { mutableIntStateOf(7) }
     var duration by remember { mutableIntStateOf(7) }
     var criteria by remember { mutableStateOf(ChallengeCriteria.CompletionPct) }
     var showCriteriaHelp by remember { mutableStateOf(false) }
@@ -695,21 +696,17 @@ private fun ChallengeSheet(
             Text(
                 stringResource(R.string.add_habit_frequency),
                 fontWeight = FontWeight.Bold,
-                color = if (showMissing && selectedDays.isEmpty()) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                DayOfWeek.entries.forEach { day ->
-                    val selected = day in selectedDays
+                (1..7).forEach { count ->
+                    val selected = count == daysPerWeek
                     Text(
-                        text = stringResource(dayLabelRes(day)),
+                        text = pluralStringResource(R.plurals.frequency_days_per_week, count, count),
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(
@@ -717,22 +714,12 @@ private fun ChallengeSheet(
                                     alpha = 0.2f
                                 )
                             )
-                            .clickable {
-                                selectedDays =
-                                    if (selected) selectedDays - day else selectedDays + day
-                            }
+                            .clickable { daysPerWeek = count }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                     )
                 }
-            }
-            if (showMissing && selectedDays.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.add_habit_error_days_required),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
             Text(
                 stringResource(R.string.friends_duration),
@@ -783,7 +770,7 @@ private fun ChallengeSheet(
             HabitButton(
                 text = stringResource(R.string.friends_send_challenge),
                 onClick = {
-                    if (name.isBlank() || selectedDays.isEmpty()) {
+                    if (name.isBlank()) {
                         showMissing = true
                     } else {
                         onSendChallenge(
@@ -791,14 +778,15 @@ private fun ChallengeSheet(
                                 name = name,
                                 icon = icon,
                                 colorHex = color.toHex(),
-                                daysOfWeek = selectedDays,
+                                daysOfWeek = DayOfWeek.entries.toSet(),
+                                daysPerWeek = daysPerWeek,
                             ),
                             criteria,
                             duration,
                         )
                     }
                 },
-                enabled = name.isNotBlank() && selectedDays.isNotEmpty(),
+                enabled = name.isNotBlank(),
                 clickableWhenDisabled = true,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -813,16 +801,6 @@ private fun ChallengeSheet(
             )
         }
     }
-}
-
-private fun dayLabelRes(day: DayOfWeek): Int = when (day) {
-    DayOfWeek.MONDAY -> R.string.activity_day_mon
-    DayOfWeek.TUESDAY -> R.string.activity_day_tue
-    DayOfWeek.WEDNESDAY -> R.string.activity_day_wed
-    DayOfWeek.THURSDAY -> R.string.activity_day_thu
-    DayOfWeek.FRIDAY -> R.string.activity_day_fri
-    DayOfWeek.SATURDAY -> R.string.activity_day_sat
-    DayOfWeek.SUNDAY -> R.string.activity_day_sun
 }
 
 @Composable

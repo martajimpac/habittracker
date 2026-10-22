@@ -191,6 +191,7 @@
     <string name="home_time_separator">· %1$s</string>
     <string name="home_keep_it_up">¡Sigue así!</string>
     <string name="home_overall_streak">Estás en una racha de %1$d días en total</string>
+    <string name="home_overall_streak_weeks">Estás en una racha de %1$d semanas en total</string>
     <string name="home_past_record">Registro pasado</string>
     <string name="home_past_message">%1$d de %2$d hábitos completados · %3$d%%</string>
     <string name="home_all_day">Todo el día</string>
@@ -214,6 +215,14 @@
     <string name="add_habit_time">Hora</string>
     <string name="add_habit_no_time">Sin hora</string>
     <string name="add_habit_frequency">Frecuencia</string>
+    <plurals name="frequency_days_per_week">
+        <item quantity="one">1 día a la semana</item>
+        <item quantity="other">%d días a la semana</item>
+    </plurals>
+    <plurals name="streak_weeks">
+        <item quantity="one">racha de %d semana</item>
+        <item quantity="other">racha de %d semanas</item>
+    </plurals>
     <string name="habit_is_public">Hábito público</string>
     <string name="add_habit_create">Crear hábito</string>
     <string name="add_habit_error_name_required">El nombre del hábito es obligatorio.</string>
@@ -331,6 +340,7 @@
     <string name="profile_username">\@%1$s</string>
     <string name="profile_username_hint">Tus amigos te buscan con este nombre</string>
     <string name="profile_stat_day_streak">Racha de días</string>
+    <string name="profile_stat_week_streak">Racha de semanas</string>
     <string name="profile_stat_completed">Completados</string>
     <string name="profile_stat_habits">Hábitos</string>
 
@@ -357,6 +367,7 @@
     <string name="habit_widget_completed">Completado hoy</string>
     <string name="habit_widget_not_completed">No completado hoy</string>
     <string name="habit_widget_streak">racha de %1$d días</string>
+    <string name="habit_widget_streak_weeks">racha de %1$d semanas</string>
 
     <!-- Challenge widget -->
     <string name="challenge_widget_label">Vistazo de desafío</string>

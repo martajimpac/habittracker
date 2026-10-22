@@ -259,7 +259,13 @@ private fun ProfileHeader(
                 ProfileStat(
                     modifier = Modifier.weight(1f),
                     value = uiState.dayStreak.toString(),
-                    label = stringResource(R.string.profile_stat_day_streak),
+                    label = stringResource(
+                        if (uiState.streakInWeeks) {
+                            R.string.profile_stat_week_streak
+                        } else {
+                            R.string.profile_stat_day_streak
+                        },
+                    ),
                 )
                 ProfileStat(
                     modifier = Modifier.weight(1f),

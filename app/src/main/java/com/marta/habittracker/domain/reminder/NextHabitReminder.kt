@@ -2,6 +2,8 @@ package com.marta.habittracker.domain.reminder
 
 import com.marta.habittracker.core.toKotlinSet
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.usecase.completedInWeek
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -29,8 +31,8 @@ object NextHabitReminder {
 
     fun shouldNotify(habit: Habit, today: KotlinLocalDate): Boolean {
         if (habit.reminderTime.isNullOrBlank()) return false
-        if (today.dayOfWeek !in habit.daysOfWeek) return false
-        return habit.records.none { it.date == today && it.isCompleted }
+        if (habit.records.any { it.date == today && it.isCompleted }) return false
+        return habit.completedInWeek(today).size < habit.weeklyTarget()
     }
 
     private fun parse(value: String?): LocalTime? {

@@ -68,7 +68,7 @@ class HabitDetailStatsTest {
         )
 
         val current = weeks.last()
-        assertEquals(1, current.completed)
+        assertEquals(2, current.completed)
         assertEquals(2, current.scheduled)
     }
 

@@ -56,6 +56,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,9 +76,6 @@ import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
-import java.time.DayOfWeek
-import java.time.format.TextStyle
-import androidx.compose.ui.platform.LocalLocale
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.utils.HabitColorOptions
 import kotlinx.coroutines.flow.Flow
@@ -135,7 +133,7 @@ fun AddContentScreen(
             }
         },
         onReminderTimeChanged = viewModel::onReminderTimeChanged,
-        onDayToggled = viewModel::onDayToggled,
+        onDaysPerWeekSelected = viewModel::onDaysPerWeekSelected,
         onPublicChanged = viewModel::onPublicChanged,
         onSaveClicked = viewModel::onSaveClicked,
         focusField = viewModel.focusField,
@@ -153,15 +151,14 @@ fun AddContentContent(
     onColorSelected: (Color) -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChanged: (String) -> Unit,
-    onDayToggled: (DayOfWeek) -> Unit,
+    onDaysPerWeekSelected: (Int) -> Unit,
     onPublicChanged: (Boolean) -> Unit,
     onSaveClicked: () -> Unit,
     focusField: Flow<AddContentField> = emptyFlow(),
 ) {
     val selectedColor = uiState.color
-    val canSave = uiState.name.isNotBlank() && uiState.selectedDays.isNotEmpty() && !uiState.isSaving
+    val canSave = uiState.name.isNotBlank() && !uiState.isSaving
     val nameMissing = uiState.errorMessageRes == R.string.add_habit_error_name_required
-    val daysMissing = uiState.errorMessageRes == R.string.add_habit_error_days_required
     val reminderInvalid = uiState.errorMessageRes == R.string.add_habit_error_reminder_format
     val nameFocus = remember { FocusRequester() }
     val daysFocus = remember { FocusRequester() }
@@ -431,61 +428,37 @@ fun AddContentContent(
                 modifier = Modifier
                     .focusRequester(daysFocus)
                     .focusable()
-                    .bringIntoViewRequester(daysBringIntoView)
-                    .then(
-                        if (daysMissing) {
-                            Modifier.border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.error,
-                                shape = RoundedCornerShape(16.dp),
-                            )
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .padding(if (daysMissing) 8.dp else 0.dp),
+                    .bringIntoViewRequester(daysBringIntoView),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
                     text = stringResource(R.string.add_habit_frequency),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = if (daysMissing) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
-                    DayOfWeek.entries.forEach { day ->
-                        val selected = uiState.selectedDays.contains(day)
-                        val label = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale)
+                    (1..7).forEach { count ->
+                        val selected = uiState.daysPerWeek == count
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (selected) MaterialTheme.colorScheme.primary else HabitField)
-                                .clickable { onDayToggled(day) }
+                                .clickable { onDaysPerWeekSelected(count) }
                                 .padding(horizontal = 9.dp, vertical = 9.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = label,
+                                text = pluralStringResource(R.plurals.frequency_days_per_week, count, count),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (selected) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
                             )
                         }
                     }
-                }
-                if (daysMissing) {
-                    Text(
-                        text = stringResource(R.string.add_habit_error_days_required),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
                 }
             }
 
@@ -550,7 +523,7 @@ fun AddContentContent(
         // onColorSelected = {},
         // onReminderEnabledChange = {},
         // onReminderTimeChanged = {},
-        // onDayToggled = {},
+        // onDaysPerWeekSelected = {},
         // onPublicChanged = {},
         // onSaveClicked = {},
     // )

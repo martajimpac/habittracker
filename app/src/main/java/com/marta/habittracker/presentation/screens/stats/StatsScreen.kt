@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.components.ActivityHeatmap
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
@@ -365,7 +366,11 @@ private fun StatsHabitSummary(
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
-                        text = pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak),
+                        text = if (habit.weeklyTarget() >= 7) {
+                            pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak)
+                        } else {
+                            pluralStringResource(R.plurals.streak_weeks, streak, streak)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = accent,

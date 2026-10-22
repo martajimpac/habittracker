@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -64,13 +63,13 @@ import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.MonthCalendar
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.parseHabitColor
-import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -283,7 +282,11 @@ private fun DetailOverviewCard(
                             modifier = Modifier.size(14.dp),
                         )
                         Text(
-                            text = pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak),
+                            text = if ((habit?.weeklyTarget() ?: 7) >= 7) {
+                                pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak)
+                            } else {
+                                pluralStringResource(R.plurals.streak_weeks, streak, streak)
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = accent,
@@ -302,55 +305,21 @@ private fun DetailOverviewCard(
         }
         if (habit != null) {
             Text(
-                text = stringResource(R.string.detail_scheduled_days),
+                text = stringResource(R.string.add_habit_frequency),
                 modifier = Modifier.padding(top = 10.dp, bottom = 6.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            ScheduledDays(days = habit.daysOfWeek, accent = accent)
-        }
-    }
-}
-
-@Composable
-private fun ScheduledDays(
-    days: Set<DayOfWeek>,
-    accent: Color,
-) {
-    val labels = listOf(
-        DayOfWeek.MONDAY to stringResource(R.string.activity_day_mon),
-        DayOfWeek.TUESDAY to stringResource(R.string.activity_day_tue),
-        DayOfWeek.WEDNESDAY to stringResource(R.string.activity_day_wed),
-        DayOfWeek.THURSDAY to stringResource(R.string.activity_day_thu),
-        DayOfWeek.FRIDAY to stringResource(R.string.activity_day_fri),
-        DayOfWeek.SATURDAY to stringResource(R.string.activity_day_sat),
-        DayOfWeek.SUNDAY to stringResource(R.string.activity_day_sun),
-    )
-    val onAccent = if (accent.luminance() > 0.6f) HabitOnSurface else Color.White
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        labels.forEach { (day, label) ->
-            val selected = day in days
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(26.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        if (selected) accent else MaterialTheme.colorScheme.surfaceContainerHighest,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (selected) onAccent else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = pluralStringResource(
+                    R.plurals.frequency_days_per_week,
+                    habit.weeklyTarget(),
+                    habit.weeklyTarget(),
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -422,12 +391,13 @@ private fun LastFourWeeksChart(
     accent: Color,
 ) {
     val today = remember { LocalDate.now() }
-    val weeks = remember(habit.daysOfWeek, habit.createdAt, records, today) {
+    val weeks = remember(habit.daysOfWeek, habit.daysPerWeek, habit.createdAt, records, today) {
         recentWeekCompletions(
             daysOfWeek = habit.daysOfWeek,
             records = records,
             createdOn = habit.createdAt.atZone(ZoneId.systemDefault()).toLocalDate(),
             today = today,
+            daysPerWeek = habit.weeklyTarget(),
         )
     }
     val formatter = remember {

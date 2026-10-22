@@ -190,6 +190,7 @@
     <string name="home_time_separator">· %1$s</string>
     <string name="home_keep_it_up">Keep it up!</string>
     <string name="home_overall_streak">You\'re on a %1$d-day streak overall</string>
+    <string name="home_overall_streak_weeks">You\'re on a %1$d-week streak overall</string>
     <string name="home_past_record">Past record</string>
     <string name="home_past_message">%1$d of %2$d habits completed · %3$d%%</string>
     <string name="home_all_day">All day</string>
@@ -213,6 +214,14 @@
     <string name="add_habit_time">Time</string>
     <string name="add_habit_no_time">No time</string>
     <string name="add_habit_frequency">Frequency</string>
+    <plurals name="frequency_days_per_week">
+        <item quantity="one">1 day a week</item>
+        <item quantity="other">%d days a week</item>
+    </plurals>
+    <plurals name="streak_weeks">
+        <item quantity="one">%d week streak</item>
+        <item quantity="other">%d-week streak</item>
+    </plurals>
     <string name="habit_is_public">Public habit</string>
     <string name="add_habit_create">Create habit</string>
     <string name="add_habit_error_name_required">Habit name is required.</string>
@@ -330,6 +339,7 @@
     <string name="profile_username">\@%1$s</string>
     <string name="profile_username_hint">Friends search for you with this name</string>
     <string name="profile_stat_day_streak">Day streak</string>
+    <string name="profile_stat_week_streak">Week streak</string>
     <string name="profile_stat_completed">Completed</string>
     <string name="profile_stat_habits">Habits</string>
 
@@ -356,6 +366,7 @@
     <string name="habit_widget_completed">Completed today</string>
     <string name="habit_widget_not_completed">Not completed today</string>
     <string name="habit_widget_streak">%1$d day streak</string>
+    <string name="habit_widget_streak_weeks">%1$d week streak</string>
 
     <!-- Challenge widget -->
     <string name="challenge_widget_label">Challenge glance</string>

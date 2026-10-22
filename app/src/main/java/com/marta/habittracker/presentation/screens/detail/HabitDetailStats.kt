@@ -53,22 +53,27 @@ fun recentWeekCompletions(
     createdOn: LocalDate,
     today: LocalDate,
     weekCount: Int = 4,
+    daysPerWeek: Int = daysOfWeek.size.coerceIn(1, 7),
 ): List<WeekCompletion> {
-    val scheduledDays = daysOfWeek.map { JavaDayOfWeek.valueOf(it.name) }.toSet()
     val completedDates = records.filter { it.isCompleted }.map { it.date.toJava() }.toSet()
+    val target = daysPerWeek.coerceIn(1, 7)
     val thisMonday = today.with(TemporalAdjusters.previousOrSame(JavaDayOfWeek.MONDAY))
     val firstMonday = thisMonday.minusWeeks((weekCount - 1).toLong())
     return List(weekCount) { index ->
         val monday = firstMonday.plusWeeks(index.toLong())
-        var scheduled = 0
-        var completed = 0
+        var available = 0
+        var done = 0
         for (offset in 0..6) {
             val date = monday.plusDays(offset.toLong())
             if (date.isAfter(today) || date.isBefore(createdOn)) continue
-            if (date.dayOfWeek !in scheduledDays) continue
-            scheduled++
-            if (date in completedDates) completed++
+            available++
+            if (date in completedDates) done++
         }
-        WeekCompletion(weekStart = monday, completed = completed, scheduled = scheduled)
+        val scheduled = minOf(target, available)
+        WeekCompletion(
+            weekStart = monday,
+            completed = minOf(done, scheduled),
+            scheduled = scheduled,
+        )
     }
 }

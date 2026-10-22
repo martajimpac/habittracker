@@ -23,7 +23,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.DayOfWeek
 import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -45,7 +44,6 @@ class AddContentViewModelTest {
     fun `save with blank name sets validation error`() = runTest {
         val viewModel = createViewModel()
 
-        viewModel.onDayToggled(DayOfWeek.MONDAY)
         var focused: AddContentField? = null
         val collectJob = launch { viewModel.focusField.collect { focused = it } }
         viewModel.onSaveClicked()
@@ -58,18 +56,18 @@ class AddContentViewModelTest {
     }
 
     @Test
-    fun `save without days sets validation error`() = runTest {
-        val viewModel = createViewModel()
+    fun `save stores the chosen days per week on every weekday`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
-        var focused: AddContentField? = null
-        val collectJob = launch { viewModel.focusField.collect { focused = it } }
+        viewModel.onDaysPerWeekSelected(2)
         viewModel.onSaveClicked()
         advanceUntilIdle()
 
-        assertEquals(R.string.add_habit_error_days_required, viewModel.uiState.value.errorMessageRes)
-        assertEquals(AddContentField.Days, focused)
-        collectJob.cancel()
+        val inserted = repository.insertedHabits.single()
+        assertEquals(2, inserted.daysPerWeek)
+        assertEquals(KotlinDayOfWeek.entries.toSet(), inserted.daysOfWeek)
     }
 
     @Test
@@ -85,8 +83,7 @@ class AddContentViewModelTest {
         viewModel.onDescriptionChanged("Park loop")
         viewModel.onIconSelected("directions_run")
         viewModel.onColorSelected(HabitColor1)
-        viewModel.onDayToggled(DayOfWeek.MONDAY)
-        viewModel.onDayToggled(DayOfWeek.WEDNESDAY)
+        viewModel.onDaysPerWeekSelected(2)
         viewModel.onSaveClicked()
         advanceUntilIdle()
 
@@ -108,7 +105,7 @@ class AddContentViewModelTest {
         val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
-        viewModel.onDayToggled(DayOfWeek.MONDAY)
+        viewModel.onDaysPerWeekSelected(3)
         viewModel.onReminderTimeChanged("08:00")
         viewModel.onSaveClicked()
         advanceUntilIdle()
@@ -124,7 +121,7 @@ class AddContentViewModelTest {
         val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
-        viewModel.onDayToggled(DayOfWeek.MONDAY)
+        viewModel.onDaysPerWeekSelected(3)
         viewModel.onReminderEnabled(true)
         viewModel.onReminderTimeChanged("08:00")
         viewModel.onSaveClicked()
@@ -140,7 +137,7 @@ class AddContentViewModelTest {
         val disabledRepository = FakeHabitRepository()
         val disabledViewModel = createViewModel(disabledRepository)
         disabledViewModel.onNameChanged("Morning Run")
-        disabledViewModel.onDayToggled(DayOfWeek.MONDAY)
+        disabledViewModel.onDaysPerWeekSelected(3)
         disabledViewModel.onReminderTimeChanged("25:99")
         disabledViewModel.onSaveClicked()
         advanceUntilIdle()
@@ -151,7 +148,7 @@ class AddContentViewModelTest {
         val enabledRepository = FakeHabitRepository()
         val enabledViewModel = createViewModel(enabledRepository)
         enabledViewModel.onNameChanged("Morning Run")
-        enabledViewModel.onDayToggled(DayOfWeek.MONDAY)
+        enabledViewModel.onDaysPerWeekSelected(3)
         enabledViewModel.onReminderEnabled(true)
         enabledViewModel.onReminderTimeChanged("25:99")
         enabledViewModel.onSaveClicked()
@@ -217,7 +214,7 @@ class AddContentViewModelTest {
         assertTrue(viewModel.uiState.value.isEditing)
         assertEquals("Read", viewModel.uiState.value.name)
         assertEquals("A chapter", viewModel.uiState.value.description)
-        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), viewModel.uiState.value.selectedDays)
+        assertEquals(2, viewModel.uiState.value.daysPerWeek)
         assertEquals("book", viewModel.uiState.value.icon)
         assertTrue(viewModel.uiState.value.reminderEnabled)
         assertEquals("07:30", viewModel.uiState.value.reminderTime)

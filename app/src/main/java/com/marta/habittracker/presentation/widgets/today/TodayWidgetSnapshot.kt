@@ -2,7 +2,9 @@ package com.marta.habittracker.presentation.widgets.today
 
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.usecase.shownOn
 import java.time.LocalDate
+import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 data class TodayWidgetItem(
     val id: String,
@@ -18,9 +20,8 @@ data class TodayWidgetSnapshot(
 )
 
 fun todayWidgetSnapshot(habits: List<Habit>, today: LocalDate): TodayWidgetSnapshot {
-    val weekday = today.dayOfWeek.name
     val items = habits
-        .filter { habit -> habit.daysOfWeek.any { it.name == weekday } }
+        .filter { it.shownOn(KotlinLocalDate.parse(today.toString())) }
         .map { habit ->
             TodayWidgetItem(
                 id = habit.id,

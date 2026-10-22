@@ -20,7 +20,8 @@ import javax.inject.Inject
  * - [today] is clamped to the challenge window when evaluating in-progress challenges.
  *
  * ## CompletionPct
- * `completedDaysInEvaluationRange / totalChallengeDays * 100`
+ * `completedDaysInEvaluationRange / totalChallengeDays * 100`.
+ * Each Monday–Sunday slice counts at most [daysPerWeek] days. `7` keeps every calendar day.
  * - Evaluation range: `[startDate, min(today, lastChallengeDay)]` (both inclusive).
  * - Only records with `isCompleted = true` inside the challenge window count.
  * - Denominator is the full challenge length in calendar days, not just elapsed days.
@@ -46,6 +47,7 @@ fun computeChallengeProgress(
     endsAt: Instant,
     records: List<HabitRecord>,
     today: LocalDate,
+    daysPerWeek: Int = 7,
 ): Int {
     val startDate = startsAt.toUtcLocalDate()
     val lastChallengeDay = endsAt.toUtcLocalDate().minus(DatePeriod(days = 1))
@@ -61,20 +63,22 @@ fun computeChallengeProgress(
         .map { it.date }
         .toSet()
 
+    val target = daysPerWeek.coerceIn(1, 7)
     return when (criteria) {
         ChallengeCriteria.CompletionPct -> {
-            val completedInRange = countDaysInRange(startDate, evaluationEnd) { completedDates.contains(it) }
-            percent(completedInRange, totalChallengeDays)
+            val (completedInRange, _) = quotaTotals(startDate, evaluationEnd, completedDates, target)
+            val (_, expected) = quotaTotals(startDate, lastChallengeDay, completedDates, target)
+            percent(completedInRange, expected)
         }
 
         ChallengeCriteria.AllDays -> {
-            val requiredDays = countDaysInRange(startDate, evaluationEnd) { true }
-            if (requiredDays == 0) {
-                0
-            } else {
-                val completedRequired = countDaysInRange(startDate, evaluationEnd) { completedDates.contains(it) }
-                percent(completedRequired, requiredDays)
-            }
+            val (completedRequired, requiredDays) = quotaTotals(
+                startDate,
+                evaluationEnd,
+                completedDates,
+                target,
+            )
+            if (requiredDays == 0) 0 else percent(completedRequired, requiredDays)
         }
 
         ChallengeCriteria.Streak -> {
@@ -115,7 +119,8 @@ class ComputeChallengeProgress @Inject constructor() {
         endsAt: Instant,
         records: List<HabitRecord>,
         today: LocalDate,
-    ): Int = computeChallengeProgress(criteria, startsAt, endsAt, records, today)
+        daysPerWeek: Int = 7,
+    ): Int = computeChallengeProgress(criteria, startsAt, endsAt, records, today, daysPerWeek)
 
     fun daysLeft(startsAt: Instant, endsAt: Instant, today: LocalDate): Int =
         challengeDaysLeft(startsAt, endsAt, today)
@@ -175,6 +180,29 @@ private fun currentStreakWithinWindow(
         date = date.minus(DatePeriod(days = 1))
     }
     return streak
+}
+
+private fun quotaTotals(
+    start: LocalDate,
+    end: LocalDate,
+    completedDates: Set<LocalDate>,
+    daysPerWeek: Int,
+): Pair<Int, Int> {
+    if (end < start) return 0 to 0
+    var expected = 0
+    var completed = 0
+    var cursor = start
+    while (cursor <= end) {
+        val weekEnd = cursor.plus(DatePeriod(days = 6 - cursor.dayOfWeek.ordinal))
+        val sliceEnd = minOf(weekEnd, end)
+        val days = inclusiveDaysBetween(cursor, sliceEnd)
+        val cap = minOf(daysPerWeek, days)
+        expected += cap
+        val done = countDaysInRange(cursor, sliceEnd) { it in completedDates }
+        completed += minOf(done, cap)
+        cursor = sliceEnd.plus(DatePeriod(days = 1))
+    }
+    return completed to expected
 }
 
 private fun percent(numerator: Int, denominator: Int): Int {

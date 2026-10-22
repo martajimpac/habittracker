@@ -6,12 +6,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.R
-import com.marta.habittracker.core.toJavaList
-import com.marta.habittracker.core.toKotlinSet
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.usecase.SaveHabit
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,8 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
 import com.marta.habittracker.presentation.components.HabitIconKeys
+import kotlinx.datetime.DayOfWeek
 import com.marta.habittracker.presentation.utils.HabitColorOptions
 import com.marta.habittracker.presentation.utils.toHex
 import javax.inject.Inject
@@ -45,7 +44,7 @@ data class AddContentUiState(
     val color: Color = HabitColorOptions.first(),
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "",
-    val selectedDays: Set<DayOfWeek> = emptySet(),
+    val daysPerWeek: Int = 7,
     val isPublic: Boolean = false,
     val isSaving: Boolean = false,
     val isEditing: Boolean = false,
@@ -86,7 +85,7 @@ class AddContentViewModel @Inject constructor(
                             color = parseHabitColor(habit.colorHex),
                             reminderEnabled = habit.reminderEnabled,
                             reminderTime = habit.reminderTime.orEmpty(),
-                            selectedDays = habit.daysOfWeek.toJavaList().toSet(),
+                            daysPerWeek = habit.weeklyTarget(),
                             isPublic = habit.isPublic,
                             isEditing = true,
                         )
@@ -130,15 +129,8 @@ class AddContentViewModel @Inject constructor(
         _uiState.update { it.copy(reminderEnabled = false, errorMessageRes = messageRes) }
     }
 
-    fun onDayToggled(day: DayOfWeek) {
-        _uiState.update { current ->
-            val updatedDays = if (current.selectedDays.contains(day)) {
-                current.selectedDays - day
-            } else {
-                current.selectedDays + day
-            }
-            current.copy(selectedDays = updatedDays, errorMessageRes = null)
-        }
+    fun onDaysPerWeekSelected(daysPerWeek: Int) {
+        _uiState.update { it.copy(daysPerWeek = daysPerWeek.coerceIn(1, 7), errorMessageRes = null) }
     }
 
     fun onPublicChanged(isPublic: Boolean) {
@@ -169,7 +161,7 @@ class AddContentViewModel @Inject constructor(
                 saveHabit(
                     name = currentState.name.trim(),
                     description = currentState.description.trim().ifBlank { null },
-                    daysOfWeek = currentState.selectedDays,
+                    daysPerWeek = currentState.daysPerWeek,
                     icon = currentState.icon,
                     colorHex = currentState.color.toHex(),
                     reminderTime = reminderTime,
@@ -192,7 +184,8 @@ class AddContentViewModel @Inject constructor(
                         current.copy(
                             name = currentState.name.trim(),
                             description = currentState.description.trim().ifBlank { null },
-                            daysOfWeek = currentState.selectedDays.toList().toKotlinSet(),
+                            daysOfWeek = DayOfWeek.entries.toSet(),
+                            daysPerWeek = currentState.daysPerWeek.coerceIn(1, 7),
                             icon = currentState.icon,
                             colorHex = currentState.color.toHex(),
                             reminderTime = reminderTime,
@@ -226,7 +219,6 @@ class AddContentViewModel @Inject constructor(
     private fun validate(state: AddContentUiState): Int? {
         return when {
             state.name.isBlank() -> R.string.add_habit_error_name_required
-            state.selectedDays.isEmpty() -> R.string.add_habit_error_days_required
             state.reminderEnabled &&
                 state.reminderTime.isNotBlank() &&
                 !ReminderTimePattern.matches(state.reminderTime.trim()) ->

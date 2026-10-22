@@ -9,6 +9,7 @@ import android.util.Log
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.reminder.NextHabitReminder
+import kotlinx.datetime.DayOfWeek
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.ZonedDateTime
@@ -25,7 +26,7 @@ class AndroidHabitReminderScheduler @Inject constructor(
             val trigger = NextHabitReminder.nextTrigger(
                 now = ZonedDateTime.now(),
                 reminderTime = habit.reminderTime,
-                daysOfWeek = habit.daysOfWeek,
+                daysOfWeek = DayOfWeek.entries.toSet(),
             )
             if (trigger == null || !habit.reminderEnabled) {
                 cancel(habit.id)

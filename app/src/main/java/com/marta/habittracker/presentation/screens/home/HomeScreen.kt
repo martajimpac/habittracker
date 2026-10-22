@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +61,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
@@ -175,7 +177,12 @@ fun HomeContent(
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
     val overallStreak = remember(allHabits) {
-        allHabits.maxOfOrNull { calculateStreak(it) } ?: 0
+        val daily = allHabits.filter { it.weeklyTarget() >= 7 }.maxOfOrNull { calculateStreak(it) } ?: 0
+        if (daily > 0) {
+            daily to false
+        } else {
+            (allHabits.maxOfOrNull { calculateStreak(it) } ?: 0) to true
+        }
     }
 
     Scaffold(
@@ -294,8 +301,11 @@ fun HomeContent(
                 }
 
                 when {
-                    isToday && overallStreak > 2 -> item {
-                        HomeMotivationCard(overallStreak = overallStreak)
+                    isToday && overallStreak.first > 2 -> item {
+                        HomeMotivationCard(
+                            overallStreak = overallStreak.first,
+                            inWeeks = overallStreak.second,
+                        )
                     }
                     isPast && pct < 100 -> item {
                         HomeDayInfoCard(
@@ -593,7 +603,11 @@ private fun HomeHabitCard(
                     modifier = Modifier.size(12.dp),
                 )
                 Text(
-                    text = stringResource(R.string.home_streak_days, streak),
+                    text = if (habit.weeklyTarget() >= 7) {
+                        stringResource(R.string.home_streak_days, streak)
+                    } else {
+                        pluralStringResource(R.plurals.streak_weeks, streak, streak)
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = accentColor,
@@ -631,7 +645,7 @@ private fun HomeHabitCard(
 }
 
 @Composable
-private fun HomeMotivationCard(overallStreak: Int) {
+private fun HomeMotivationCard(overallStreak: Int, inWeeks: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -663,7 +677,10 @@ private fun HomeMotivationCard(overallStreak: Int) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = stringResource(R.string.home_overall_streak, overallStreak),
+                text = stringResource(
+                    if (inWeeks) R.string.home_overall_streak_weeks else R.string.home_overall_streak,
+                    overallStreak,
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

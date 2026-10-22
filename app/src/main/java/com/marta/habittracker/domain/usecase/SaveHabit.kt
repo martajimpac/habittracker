@@ -1,14 +1,13 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.core.IdGenerator
-import com.marta.habittracker.core.toKotlinSet
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.HabitRepository
-import java.time.DayOfWeek
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.datetime.DayOfWeek
 
 class SaveHabit @Inject constructor(
     private val habitRepository: HabitRepository,
@@ -16,7 +15,7 @@ class SaveHabit @Inject constructor(
     suspend operator fun invoke(
         name: String,
         description: String?,
-        daysOfWeek: Set<DayOfWeek>,
+        daysPerWeek: Int,
         icon: String,
         colorHex: String,
         reminderTime: String?,
@@ -30,7 +29,7 @@ class SaveHabit @Inject constructor(
                 id = habitId,
                 name = name,
                 description = description,
-                daysOfWeek = daysOfWeek.toList().toKotlinSet(),
+                daysOfWeek = DayOfWeek.entries.toSet(),
                 icon = icon,
                 colorHex = colorHex,
                 reminderTime = reminderTime,
@@ -38,6 +37,7 @@ class SaveHabit @Inject constructor(
                 isPublic = isPublic,
                 createdAt = Instant.now(),
                 records = emptyList(),
+                daysPerWeek = daysPerWeek.coerceIn(1, 7),
             ),
         )
         return when (result) {

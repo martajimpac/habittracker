@@ -15,7 +15,9 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.core.toKotlin
 import com.marta.habittracker.domain.model.sortedForSchedule
+import com.marta.habittracker.domain.usecase.shownOn
 import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.reminder.afterHabitDeleted
 import com.marta.habittracker.domain.reminder.afterHabitPersisted
@@ -43,11 +45,9 @@ class HabitRepositoryImpl @Inject constructor(
 ) : DomainHabitRepository {
 
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> {
-        val dayOfWeek = date.dayOfWeek
         return habitDao.getHabitsWithRecords()
             .map { habitsList ->
                 habitsList
-                    .filter { it.habit.daysOfWeek.contains(dayOfWeek) }
                     .map { habitWithRecords ->
                         val habit = habitMapper.map(habitWithRecords)
                         val isCompleted = habitWithRecords.records.any {
@@ -55,6 +55,7 @@ class HabitRepositoryImpl @Inject constructor(
                         }
                         habit.copy(isCompleted = isCompleted)
                     }
+                    .filter { it.shownOn(date.toKotlin()) }
                     .sortedForSchedule()
             }
     }

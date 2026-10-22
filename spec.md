@@ -129,7 +129,8 @@ Aprobado 2026-08-08.
 ### Sync de habitos (Supabase)
 
 - Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS (dueño + excepciones sociales abajo).
-- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
+- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `days_per_week` (smallint 1..7, not null default 7), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
+- **Frecuencia:** al crear o editar un hábito, y al crear un reto, se elige cuántos días a la semana (1–7). Cualquier día cuenta; no se eligen lunes/miércoles/viernes. Un hábito nuevo guarda `days_per_week` y `days_of_week` con los 7 días. Los hábitos ya guardados con menos de 7 días usan ese tamaño como cuota. En Inicio y en el widget de hoy el hábito sigue visible cualquier día de la semana hasta completar la cuota, y el día en que se completó sigue viéndose. La racha de un hábito de menos de 7 días cuenta semanas seguidas que llegaron a la cuota; un hábito de 7 días sigue contando días seguidos. El recordatorio puede sonar cualquier día mientras la cuota de esa semana no esté hecha.
 - `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
 - Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
 - Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
@@ -141,7 +142,7 @@ Aprobado 2026-08-08.
 Aprobado 2026-10-09.
 
 **Producto**
-- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, solo en los `days_of_week` del hábito, y solo si `reminder_enabled` es true.
+- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, cualquier día, mientras esa semana no haya llegado a `days_per_week`, y solo si `reminder_enabled` es true. Si el hábito ya está completado hoy, no se muestra.
 - Fuente de verdad: `habits.reminder_time` (`HH:mm` o null) y `habits.reminder_enabled`. La hora se guarda aunque el interruptor esté apagado. La alarma solo existe si el interruptor está encendido y hay una hora válida. `reminder_time` null significa que el hábito no tiene hora.
 - Los hábitos ya guardados con `reminder_time` no vacío quedan con `reminder_enabled = true`.
 - **Crear hábito:** interruptor Recordatorio **apagado por defecto** y sin hora. La fila de hora se ve siempre. Elegir una hora la guarda aunque el recordatorio siga apagado. Al encender el recordatorio sin hora, la hora inicial es `08:00`.
