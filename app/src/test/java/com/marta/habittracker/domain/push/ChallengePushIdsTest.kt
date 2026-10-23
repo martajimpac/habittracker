@@ -18,4 +18,13 @@ class ChallengePushIdsTest {
         val habitStyle = ("abc".hashCode() and 0x7fffffff).let { if (it == 0) 1 else it }
         assertNotEquals(habitStyle, id)
     }
+
+    @Test
+    fun `declined notification id is stable and distinct from the created challenge`() {
+        val created = ChallengePushIds.notificationIdFor("abc")
+        val declined = ChallengePushIds.declinedNotificationIdFor("abc")
+        assertNotEquals(0, declined)
+        assertEquals(declined, ChallengePushIds.declinedNotificationIdFor("abc"))
+        assertNotEquals(created, declined)
+    }
 }

@@ -19,6 +19,7 @@ data class HabitDto(
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("deleted_at") val deletedAt: String? = null,
     @SerialName("days_per_week") val daysPerWeek: Int = 7,
+    @SerialName("schedule_mode") val scheduleMode: String = "",
 )
 
 @Serializable

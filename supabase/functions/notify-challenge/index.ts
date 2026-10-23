@@ -10,13 +10,17 @@ type FirebaseServiceAccount = {
   private_key: string;
 };
 
+type ChallengeRecord = {
+  id?: string;
+  challenged_id?: string;
+  challenger_id?: string;
+  status?: string;
+};
+
 type ChallengeWebhookBody = {
   type?: string;
-  record?: {
-    id?: string;
-    challenged_id?: string;
-    challenger_id?: string;
-  };
+  record?: ChallengeRecord;
+  old_record?: ChallengeRecord | null;
 };
 
 function json(body: unknown, status: number): Response {
@@ -133,7 +137,7 @@ async function sendFcmDataMessage(
   accessToken: string,
   deviceToken: string,
   challengeId: string,
-  challengerName: string,
+  data: Record<string, string>,
 ): Promise<boolean> {
   const url =
     `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -146,11 +150,7 @@ async function sendFcmDataMessage(
     body: JSON.stringify({
       message: {
         token: deviceToken,
-        data: {
-          type: "challenge_created",
-          challengeId,
-          challengerName,
-        },
+        data,
         android: { priority: "HIGH" },
       },
     }),
@@ -188,22 +188,28 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Bad request" }, 400);
   }
 
-  if (payload.type !== "INSERT") {
-    return json({ skipped: true }, 200);
-  }
-
   const record = payload.record;
   const challengeId = record?.id;
   const challengedId = record?.challenged_id;
   const challengerId = record?.challenger_id;
+  const declined = payload.type === "UPDATE" &&
+    payload.old_record?.status === "pending" &&
+    record?.status === "declined";
+
+  if (payload.type !== "INSERT" && !declined) {
+    return json({ skipped: true }, 200);
+  }
 
   if (!challengeId || !challengedId || !challengerId) {
     console.error(
-      "notify-challenge: INSERT missing challenge fields",
+      "notify-challenge: missing challenge fields",
       challengeId ?? "unknown",
     );
     return json({ skipped: true }, 200);
   }
+
+  const recipientId = declined ? challengerId : challengedId;
+  const nameOwnerId = declined ? challengedId : challengerId;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -217,7 +223,7 @@ Deno.serve(async (req: Request) => {
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("display_name")
-    .eq("id", challengerId)
+    .eq("id", nameOwnerId)
     .maybeSingle();
 
   if (profileError) {
@@ -229,15 +235,26 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const challengerName =
+  const personName =
     typeof profile?.display_name === "string" && profile.display_name.length > 0
       ? profile.display_name
       : "Challenges";
+  const messageData = declined
+    ? {
+      type: "challenge_declined",
+      challengeId,
+      declinerName: personName,
+    }
+    : {
+      type: "challenge_created",
+      challengeId,
+      challengerName: personName,
+    };
 
   const { data: tokenRows, error: tokensError } = await admin
     .from("device_tokens")
     .select("token")
-    .eq("user_id", challengedId);
+    .eq("user_id", recipientId);
 
   if (tokensError) {
     console.error(
@@ -290,7 +307,7 @@ Deno.serve(async (req: Request) => {
       accessToken,
       deviceToken,
       challengeId,
-      challengerName,
+      messageData,
     );
   }
 

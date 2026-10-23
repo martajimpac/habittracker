@@ -167,6 +167,8 @@
     <string name="challenge_status_cancelled">Cancelado</string>
     <string name="challenge_push_title">Nuevo reto</string>
     <string name="challenge_push_body">%1$s te ha retado</string>
+    <string name="challenge_declined_push_title">Reto rechazado</string>
+    <string name="challenge_declined_push_body">%1$s ha rechazado el reto</string>
     <string name="friend_request_push_title">Solicitud de amistad</string>
     <string name="friend_request_push_body">%1$s te ha enviado una solicitud de amistad</string>
     <string name="friend_request_push_sender_fallback">Alguien</string>
@@ -215,10 +217,29 @@
     <string name="add_habit_time">Hora</string>
     <string name="add_habit_no_time">Sin hora</string>
     <string name="add_habit_frequency">Frecuencia</string>
+    <string name="frequency_daily">Todos los días</string>
+    <string name="frequency_weekdays">Días concretos</string>
+    <string name="frequency_weekly_count">Veces por semana</string>
+    <string name="streak_protection_count">%1$d/%2$d</string>
+    <string name="cd_streak_protection">Protecciones de racha</string>
+    <string name="freeze_progress">%1$d/%2$d para la siguiente protección</string>
+    <string name="freeze_progress_help">Qué significa este avance</string>
+    <string name="freeze_progress_help_title">Siguiente protección</string>
+    <string name="freeze_progress_help_message">Cuenta las veces cumplidas hasta la siguiente protección de racha. Un hábito de cada día, o de días concretos, consigue una cada 7 veces seguidas. Uno de veces por semana, cada 4 semanas seguidas en las que cumples el objetivo. Las protecciones las comparten todos los hábitos, hasta 3. Si fallas un día que ya ha cerrado y tienes una, se gasta y la racha se mantiene.</string>
+    <string name="freeze_used">Una protección ha mantenido esta racha</string>
+    <string name="streak_broken">Racha rota</string>
+    <string name="freeze_earned_title">Protección conseguida</string>
+    <string name="freeze_earned_message">Has conseguido una protección de racha. Puedes guardar hasta 3.</string>
     <plurals name="frequency_days_per_week">
         <item quantity="one">1 día a la semana</item>
         <item quantity="other">%d días a la semana</item>
     </plurals>
+    <plurals name="frequency_days_per_week_label">
+        <item quantity="one">día por semana</item>
+        <item quantity="other">días por semana</item>
+    </plurals>
+    <string name="cd_days_per_week_increase">Aumentar días por semana</string>
+    <string name="cd_days_per_week_decrease">Reducir días por semana</string>
     <plurals name="streak_weeks">
         <item quantity="one">racha de %d semana</item>
         <item quantity="other">racha de %d semanas</item>
@@ -352,7 +373,12 @@
     <string name="notification_channel_name">Notificaciones de Bloom</string>
     <string name="notification_default_title">Bloom</string>
     <string name="habit_reminder_channel_name">Recordatorios de hábitos</string>
+    <string name="profile_daily_check_in">Avísame para registrar mis hábitos</string>
+    <string name="profile_daily_check_in_enabled">Listo, el aviso ya está activado</string>
+    <string name="daily_check_in_title">Tus hábitos</string>
+    <string name="daily_check_in_body">Es hora de registrar los hábitos de hoy</string>
     <string name="habit_reminder_body">Es hora de registrar el hábito</string>
+    <string name="habit_reminder_complete">Completar</string>
     <string name="habit_reminder_toggle">Recordatorio</string>
     <string name="habit_reminder_permission_denied">Se necesita permiso de notificaciones para activar los recordatorios.</string>
     <string name="habit_reminder_exact_alarm_denied">Se necesitan alarmas exactas para los recordatorios. Actívalas en los ajustes del sistema.</string>

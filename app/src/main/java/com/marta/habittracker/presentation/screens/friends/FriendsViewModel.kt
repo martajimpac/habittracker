@@ -13,6 +13,8 @@ import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
+import com.marta.habittracker.domain.push.SilentChallengeDeclineNotifier
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -53,6 +55,7 @@ sealed interface FriendsSheet {
 class FriendsViewModel @Inject constructor(
     private val friendsRepository: FriendsRepository,
     habitRepository: HabitRepository,
+    private val challengeDeclineNotifier: ChallengeDeclineNotifier = SilentChallengeDeclineNotifier,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FriendsUiState())
@@ -68,6 +71,16 @@ class FriendsViewModel @Inject constructor(
             }
         }
         refresh()
+        viewModelScope.launch {
+            challengeDeclineNotifier.declinedIds.collect { challengeId ->
+                _uiState.update { state ->
+                    state.copy(
+                        challenges = state.challenges.filter { it.challenge.id != challengeId },
+                    )
+                }
+                loadContent()
+            }
+        }
     }
 
     fun refresh() {

@@ -7,5 +7,14 @@ object HabitReminderIds {
      * Distinct habit ids may collide on [String.hashCode]; that is accepted.
      */
     fun notificationIdFor(habitId: String): Int =
-        (habitId.hashCode() and 0x7fffffff).let { if (it == 0) 1 else it }
+        stableId(habitId)
+
+    /**
+     * Request code for the notification "complete" action.
+     * Must stay distinct from [notificationIdFor] so the action does not replace the alarm.
+     */
+    fun completeActionIdFor(habitId: String): Int = stableId("complete:$habitId")
+
+    private fun stableId(key: String): Int =
+        (key.hashCode() and 0x7fffffff).let { if (it == 0) 1 else it }
 }

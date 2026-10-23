@@ -34,6 +34,7 @@ class HabitReminderBootReceiver : BroadcastReceiver() {
                 )
                 val habits = entryPoint.habitRepository().getAllHabitsWithRecords().first()
                 entryPoint.habitReminderScheduler().rescheduleAll(habits)
+                entryPoint.dailyCheckInRepository().reschedule()
                 Log.d(TAG, "reschedule finished action=$action count=${habits.size}")
             } catch (e: CancellationException) {
                 throw e

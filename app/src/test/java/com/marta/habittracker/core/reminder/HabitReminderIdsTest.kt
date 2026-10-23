@@ -31,4 +31,13 @@ class HabitReminderIdsTest {
         assertTrue(HabitReminderIds.notificationIdFor(habitId) > 0)
         assertEquals(1, HabitReminderIds.notificationIdFor(""))
     }
+
+    @Test
+    fun `complete action id is stable and distinct from the alarm id`() {
+        val habitId = "habit-1"
+        val actionId = HabitReminderIds.completeActionIdFor(habitId)
+        assertNotEquals(0, actionId)
+        assertEquals(actionId, HabitReminderIds.completeActionIdFor(habitId))
+        assertNotEquals(HabitReminderIds.notificationIdFor(habitId), actionId)
+    }
 }

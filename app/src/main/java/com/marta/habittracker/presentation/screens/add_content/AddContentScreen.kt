@@ -56,7 +56,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,7 +64,9 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
+import com.marta.habittracker.domain.model.HabitSchedule
 import com.marta.habittracker.presentation.components.CustomTextField
+import com.marta.habittracker.presentation.components.DaysPerWeekStepper
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitDialog
@@ -134,6 +135,8 @@ fun AddContentScreen(
         },
         onReminderTimeChanged = viewModel::onReminderTimeChanged,
         onDaysPerWeekSelected = viewModel::onDaysPerWeekSelected,
+        onScheduleSelected = viewModel::onScheduleSelected,
+        onWeekdayToggled = viewModel::onWeekdayToggled,
         onPublicChanged = viewModel::onPublicChanged,
         onSaveClicked = viewModel::onSaveClicked,
         focusField = viewModel.focusField,
@@ -152,6 +155,8 @@ fun AddContentContent(
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChanged: (String) -> Unit,
     onDaysPerWeekSelected: (Int) -> Unit,
+    onScheduleSelected: (HabitSchedule) -> Unit,
+    onWeekdayToggled: (kotlinx.datetime.DayOfWeek) -> Unit,
     onPublicChanged: (Boolean) -> Unit,
     onSaveClicked: () -> Unit,
     focusField: Flow<AddContentField> = emptyFlow(),
@@ -441,24 +446,59 @@ fun AddContentContent(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
-                    (1..7).forEach { count ->
-                        val selected = uiState.daysPerWeek == count
+                    listOf(
+                        HabitSchedule.DAILY to R.string.frequency_daily,
+                        HabitSchedule.WEEKDAYS to R.string.frequency_weekdays,
+                        HabitSchedule.WEEKLY_COUNT to R.string.frequency_weekly_count,
+                    ).forEach { (mode, label) ->
+                        val selected = uiState.schedule == mode
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (selected) MaterialTheme.colorScheme.primary else HabitField)
-                                .clickable { onDaysPerWeekSelected(count) }
+                                .clickable { onScheduleSelected(mode) }
                                 .padding(horizontal = 9.dp, vertical = 9.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = pluralStringResource(R.plurals.frequency_days_per_week, count, count),
+                                text = stringResource(label),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (selected) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
                             )
                         }
                     }
+                }
+                if (uiState.schedule == HabitSchedule.WEEKDAYS) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        kotlinx.datetime.DayOfWeek.entries.forEach { day ->
+                            val selected = day in uiState.selectedDays
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else HabitField)
+                                    .clickable { onWeekdayToggled(day) }
+                                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(weekdayLabel(day)),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else HabitOnSurface,
+                                )
+                            }
+                        }
+                    }
+                }
+                if (uiState.schedule == HabitSchedule.WEEKLY_COUNT) {
+                    DaysPerWeekStepper(
+                        days = uiState.daysPerWeek,
+                        onDaysChange = onDaysPerWeekSelected,
+                    )
                 }
             }
 
@@ -509,6 +549,16 @@ fun AddContentContent(
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
+}
+
+private fun weekdayLabel(day: kotlinx.datetime.DayOfWeek): Int = when (day) {
+    kotlinx.datetime.DayOfWeek.MONDAY -> R.string.activity_day_mon
+    kotlinx.datetime.DayOfWeek.TUESDAY -> R.string.activity_day_tue
+    kotlinx.datetime.DayOfWeek.WEDNESDAY -> R.string.activity_day_wed
+    kotlinx.datetime.DayOfWeek.THURSDAY -> R.string.activity_day_thu
+    kotlinx.datetime.DayOfWeek.FRIDAY -> R.string.activity_day_fri
+    kotlinx.datetime.DayOfWeek.SATURDAY -> R.string.activity_day_sat
+    kotlinx.datetime.DayOfWeek.SUNDAY -> R.string.activity_day_sun
 }
 
 // @Preview(showBackground = true, showSystemUi = true)

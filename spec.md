@@ -114,7 +114,7 @@ Aprobado 2026-08-08.
 - En Stats, pulsar un hábito abre su detalle (`TabDetail`).
 - En el detalle no hay pestañas. La ficha del hábito (icono, nombre, descripción, días programados, recordatorio y racha viva) va en una tarjeta. Debajo, otra tarjeta agrupa los gráficos: el anillo de «Desempeño general», las barras de las últimas 4 semanas y las barras por día de la semana. En las últimas 4 semanas, cada barra es el porcentaje de días programados completados esa semana; no entran los días futuros ni los anteriores a la creación del hábito. Las barras por día de la semana cuentan cuántas veces se completó el hábito cada día, de lunes a domingo; no cuentan los días futuros. El calendario mensual sigue en su propia tarjeta, con el mismo borde. Editar, eliminar y atrás son `HabitIconButton`: cuadrados de 40 dp. Por defecto usa el mismo color primario, el texto `onPrimary` y las esquinas de 16 dp que `HabitButton`. Eliminar usa la paleta `HabitDanger`: fondo del contenedor, icono y borde de 1 dp, los mismos que cerrar sesión y borrar cuenta. El nombre y el icono del hábito van dentro de la ficha. Editar abre el formulario de crear hábito ya relleno (`TabEditHabit`) y guarda con `updateHabit`. Eliminar pide confirmación, llama a `deleteHabit` y vuelve atrás.
 - El usuario puede eliminar habitos y sus registros asociados.
-- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders. El selector de icono incluye dos flores sólidas, de un solo color y tintables: bloom y loto (`flower_bloom`, `flower_lotus`). Tulipán y la flor de cinco pétalos siguen pintándose si un hábito ya las tenía. También hay pesa, no fumar, no móvil, teléfono, mensaje, portátil, estudio, pasos, dólar, árbol, maletín, sol, manzana, limpieza y carrito. Se pintan con `HabitLineIcon` y la clave guardada, igual que el resto de iconos.
+- El usuario puede crear un habito con nombre, descripcion opcional, icono, color (12 opciones en 2 filas de 6), recordatorio local opcional (apagado por defecto) y dias de la semana. Ver § Habit reminders. El selector de icono incluye dos flores sólidas, de un solo color y tintables: bloom y loto (`flower_bloom`, `flower_lotus`). Tulipán y la flor de cinco pétalos siguen pintándose si un hábito ya las tenía. También hay pesa, no fumar, no móvil, teléfono, mensaje, portátil, estudio, pasos, dólar, árbol, maletín, sol, manzana, limpieza, carrito, cámara (`photo_camera`) y cara feliz (`sentiment_satisfied`). Se pintan con `HabitLineIcon` y la clave guardada, igual que el resto de iconos.
 - Si faltan el nombre, los días o el formato del recordatorio, el botón de crear sigue pulsable con aspecto deshabilitado. Al pulsarlo, el foco va al primer campo incompleto y ese campo muestra el error.
 - Home, Stats y Detail muestran el icono y color persistidos del habito.
 - Lectura: los habitos se muestran desde Room (cache); sin red el usuario puede ver datos ya sincronizados.
@@ -129,8 +129,10 @@ Aprobado 2026-08-08.
 ### Sync de habitos (Supabase)
 
 - Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS (dueño + excepciones sociales abajo).
-- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `days_per_week` (smallint 1..7, not null default 7), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
-- **Frecuencia:** al crear o editar un hábito, y al crear un reto, se elige cuántos días a la semana (1–7). Cualquier día cuenta; no se eligen lunes/miércoles/viernes. Un hábito nuevo guarda `days_per_week` y `days_of_week` con los 7 días. Los hábitos ya guardados con menos de 7 días usan ese tamaño como cuota. En Inicio y en el widget de hoy el hábito sigue visible cualquier día de la semana hasta completar la cuota, y el día en que se completó sigue viéndose. La racha de un hábito de menos de 7 días cuenta semanas seguidas que llegaron a la cuota; un hábito de 7 días sigue contando días seguidos. El recordatorio puede sonar cualquier día mientras la cuota de esa semana no esté hecha.
+- `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `days_per_week` (smallint 1..7, not null default 7), `schedule_mode` (`daily`, `weekdays` o `weekly_count`; vacío en filas antiguas y se infiere), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
+- `streak_protection_events`: `id`, `user_id`, `habit_id`, `occasion_key`, `event_type` (`GRANT` o `CONSUME`). Único por usuario, hábito, ocasión y tipo. Solo el dueño lee e inserta. Un trigger rechaza un `GRANT` que dejaría el inventario por encima de 3 y un `CONSUME` que lo dejaría por debajo de 0.
+- **Frecuencia:** cada hábito y cada reto elige una modalidad. Diaria: todos los días. Días concretos: solo esos días de la semana. Objetivo semanal: un número de veces entre 1 y 7, cualquier día. Ese número se elige con flechas arriba y abajo, y al lado dice «día por semana» o «días por semana». Si `schedule_mode` está vacío, un subconjunto de días se trata como días concretos y un `days_per_week` de 1 a 6 con la semana completa se trata como objetivo semanal. En Inicio y en el widget, un hábito diario aparece cada día, uno de días concretos solo en esos días, y uno semanal cualquier día hasta completar la cuota. La semana empieza el lunes. El recordatorio de un hábito diario o semanal puede sonar cualquier día (el semanal deja de sonar al llegar a la cuota); el de días concretos solo suena en los días elegidos.
+- **Protecciones de racha:** el inventario es del usuario y lo comparten todos sus hábitos, con un máximo de 3. El avance hacia la siguiente protección se muestra solo en el detalle del hábito, con una interrogación que lo explica. No aparece en las filas de Inicio ni de Estadísticas. Cada hábito tiene su racha y su progreso. Un hábito diario o de días concretos consigue una protección cada 7 ocasiones seguidas; uno semanal, cada 4 semanas seguidas en las que cumple el objetivo. Los días no programados no suman ni rompen. Una ocasión de hoy, o una semana que aún no ha terminado, no se considera incumplida. Si una ocasión ya cerrada se incumple y hay protección, se consume una y la racha se mantiene, pero esa ocasión no cuenta para la siguiente protección. Sin protecciones, la racha y el progreso de ese hábito vuelven a cero. Una protección que no cabe en el inventario se pierde. Volver a procesar la misma ocasión no duplica concesiones ni consumos. El primer arranque toma la racha ya existente como base y solo evalúa ocasiones desde ese día, para no gastar protecciones con fallos antiguos. Cambiar la frecuencia guarda la racha actual como nueva base y no reinterpreta el historial. Eliminar un hábito deja de generar eventos; los ya guardados siguen contando en el inventario.
 - `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
 - Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
 - Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
@@ -142,15 +144,15 @@ Aprobado 2026-08-08.
 Aprobado 2026-10-09.
 
 **Producto**
-- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, cualquier día, mientras esa semana no haya llegado a `days_per_week`, y solo si `reminder_enabled` es true. Si el hábito ya está completado hoy, no se muestra.
+- Recordatorio **local** (no FCM) a la `reminder_time` del hábito, solo si `reminder_enabled` es true. Un hábito diario suena cada día pendiente. Uno de días concretos suena solo en esos días. Uno semanal suena cualquier día mientras esa semana no haya llegado a `days_per_week`. Si el hábito ya está completado hoy, no se muestra.
 - Fuente de verdad: `habits.reminder_time` (`HH:mm` o null) y `habits.reminder_enabled`. La hora se guarda aunque el interruptor esté apagado. La alarma solo existe si el interruptor está encendido y hay una hora válida. `reminder_time` null significa que el hábito no tiene hora.
 - Los hábitos ya guardados con `reminder_time` no vacío quedan con `reminder_enabled = true`.
 - **Crear hábito:** interruptor Recordatorio **apagado por defecto** y sin hora. La fila de hora se ve siempre. Elegir una hora la guarda aunque el recordatorio siga apagado. Al encender el recordatorio sin hora, la hora inicial es `08:00`.
 - **Editar hábito:** el mismo interruptor + hora. Apagar el recordatorio no borra la hora. Al **borrar** el hábito se cancelan sus alarmas.
 - Home y Estadísticas ordenan primero los hábitos con recordatorio, por hora. Los que no tienen recordatorio van al final; entre ellos también por hora, y sin hora los últimos. El widget de hoy usa ese mismo orden. Si un hábito es el del usuario en un reto pendiente o activo, Inicio, Estadísticas y el detalle lo marcan con una insignia de espadas blancas sobre el color del hábito, en la esquina superior izquierda del icono.
-- Al pulsar la notificación: abre el **detalle** de ese hábito. Sin acción “Completar” en la notificación.
+- Al pulsar la notificación se abre ese hábito. La notificación tiene la acción **Completar**: marca el hábito como hecho hoy, cierra la notificación y actualiza los widgets. Si ya estaba hecho, solo cierra la notificación. Si no hay red, el hábito no cambia y la notificación se queda para reintentar. El aviso general del perfil no tiene esa acción.
 - Si ese día el hábito **ya está completado** (record en Room): no se muestra la notificación; sí se programa la siguiente ocurrencia.
-- La fila Notifications del perfil está oculta de momento. Preferencias no gestiona recordatorios de hábitos.
+- La fila Notifications del perfil está oculta de momento. En el perfil hay un aviso general, guardado solo en el dispositivo: interruptor y hora (`HH:mm`, por defecto 20:00). Si está encendido, suena cada día a esa hora para registrar los hábitos. No suena si no queda ningún hábito pendiente ese día. Al pulsarlo se abre Inicio. Al activarlo, un toast confirma que ya está hecho. Preferencias no gestiona recordatorios de hábitos.
 
 **Técnico**
 - Dominio libre de APIs Android. Puerto `HabitReminderScheduler`: `schedule(habit)`, `cancel(habitId)`, `rescheduleAll()`. Implementación con `AlarmManager.setExactAndAllowWhileIdle`.
@@ -158,13 +160,14 @@ Aprobado 2026-10-09.
 - Programar/cancelar solo **después** de un save/delete OK (online-first: si falla la red, no queda alarma de un hábito no persistido).
 - `BOOT_COMPLETED` y cambio de zona horaria / hora del sistema → `rescheduleAll()` desde Room (hábitos no soft-deleted con recordatorio encendido y `reminder_time` no vacío).
 - Permisos: `POST_NOTIFICATIONS` (API 33+) y `SCHEDULE_EXACT_ALARM` (API 31+). Si el usuario deniega, error en UI (`strings.xml`), interruptor off, no se persiste hora. Sin crash si más tarde quita el permiso en Ajustes.
-- Canal de notificación **distinto** del de FCM. `notificationId` estable por `habitId` (varios hábitos a la misma hora no se pisan; no usar `notify(0)` compartido).
+- Canal de notificación **distinto** del de FCM. `notificationId` estable por `habitId` (varios hábitos a la misma hora no se pisan; no usar `notify(0)` compartido). La acción Completar usa otro `requestCode`, con el prefijo `complete:`, para no sustituir la alarma.
 - Título = nombre del hábito; cuerpo desde `strings.xml` (EN + ES).
 - Logs: `Log.d`/`Log.e` en scheduler/receiver; no PII innecesaria.
 
 **Tests**
 - Cálculo de próxima ocurrencia (hora ya pasada hoy → siguiente día de la frecuencia).
 - Skip notify si ya completado hoy.
+- La acción Completar del recordatorio solo marca el día si todavía no está hecho.
 - ViewModel: recordatorio apagado conserva la hora; encendido persiste `HH:mm` y `reminder_enabled`; permiso denegado → error e interruptor off.
 - Scheduler con fake del puerto: schedule / cancel / rescheduleAll.
 - No se exigen tests instrumentados de que el OS dispare la alarma.
@@ -172,7 +175,6 @@ Aprobado 2026-10-09.
 **Fuera de alcance**
 - FCM / push de servidor para recordatorios de hábitos. `MyFirebaseMessagingService` queda para el push de retos (§ Challenge push + detail), no para estos recordatorios locales.
 - WorkManager periódico como reloj de hábitos.
-- Completar el hábito desde la notificación.
 - Pantalla global de notificaciones en Profile.
 - iOS.
 
@@ -237,7 +239,7 @@ Aprobado 2026-10-10.
 - Quien retó, si no está editando el nombre ni eliminando, ve el resto del detalle en solo lectura. Aceptar y rechazar siguen siendo solo de quien fue retado y solo en `pending`.
 - Sin red, reto inexistente o si quien abre no es participante: error en UI y el estado no cambia. Un rechazo que falla no navega atrás.
 - Sin sesión al abrir la notificación: se muestra Login y el `challengeId` no se reabre después de entrar.
-- Quien retó no recibe un push cuando el otro acepta o rechaza.
+- Quien retó no recibe un push cuando el otro acepta. Si rechaza, el reto pasa a `declined` y desaparece de la lista de quien retó (solo se listan `pending` y `active`). Esa persona recibe una notificación de que el reto ha sido rechazado, aunque la app esté cerrada. Pulsar la notificación abre Amigos. Si Amigos o el detalle de ese reto están abiertos, el reto se quita al llegar el aviso.
 - La barra inferior se oculta en esta pantalla, igual que en el detalle de hábito.
 - No hay un permiso de notificaciones nuevo. Si `POST_NOTIFICATIONS` está denegado, el reto se crea igual y no hay aviso en la bandeja.
 
@@ -246,7 +248,7 @@ Aprobado 2026-10-10.
 - El guardado lo hace la Edge Function `register-device-token`, con el JWT del usuario y escritura con service role. Así un token que quedó de otra sesión en el mismo dispositivo se reasigna: un `UPDATE` con RLS no podría tocar la fila del usuario anterior.
 - Al cerrar sesión se borra antes el token de esta instalación, con la sesión todavía válida. Si el borrado falla, se registra el error y el sign-out sigue; el próximo `register-device-token` reasigna el token.
 - Se registra el token al haber sesión (arranque autenticado, login y registro) y cuando Firebase lo renueva. El token no se escribe en logs.
-- Un webhook de `INSERT` en `public.challenges` llama a la Edge Function `notify-challenge`. El gateway no exige un JWT de usuario en esa función (`verify_jwt = false` en `supabase/config.toml`); `register-device-token` sí lo exige. La función exige el header `x-webhook-secret` igual al secreto `CHALLENGE_WEBHOOK_SECRET`. Con service role lee los tokens del `challenged_id` y el `display_name` del retador, y envía un data message FCM HTTP v1 de prioridad alta: `type=challenge_created`, `challengeId`, `challengerName`. La cuenta de servicio de Firebase es el secreto `FIREBASE_SERVICE_ACCOUNT`. Si no hay tokens, el reto queda creado y no hay push. Un fallo de Firebase no deshace el insert.
+- Un webhook de `INSERT` en `public.challenges` llama a la Edge Function `notify-challenge`. El gateway no exige un JWT de usuario en esa función (`verify_jwt = false` en `supabase/config.toml`); `register-device-token` sí lo exige. La función exige el header `x-webhook-secret` igual al secreto `CHALLENGE_WEBHOOK_SECRET`. Con service role lee los tokens del `challenged_id` y el `display_name` del retador, y envía un data message FCM HTTP v1 de prioridad alta: `type=challenge_created`, `challengeId`, `challengerName`. Un `UPDATE` de `pending` a `declined` llama a la misma función y avisa a quien retó: `type=challenge_declined`, `challengeId`, `declinerName` (el `display_name` de quien rechaza). La cuenta de servicio de Firebase es el secreto `FIREBASE_SERVICE_ACCOUNT`. Si no hay tokens, el reto queda creado o rechazado y no hay push. Un fallo de Firebase no deshace el cambio.
 - `MyFirebaseMessagingService` pinta la notificación en el canal existente `habit_tracker_notifications`. El `notificationId` es el hash de `"challenge:" + challengeId` y nunca es 0. El `PendingIntent` abre `MainActivity` con el extra de `challengeId`, en el mismo estilo que `WidgetLaunchExtras` para hábitos.
 - Ruta `TabChallengeDetail(challengeId)`. `FriendsRepository.getChallenge(id)` y `respondToChallenge(id, accept)`.
 - El dominio no depende de Android ni de textos de UI. Los errores visibles usan `@StringRes`.
@@ -259,7 +261,7 @@ Aprobado 2026-10-10.
 - No se exigen tests instrumentados del webhook ni de que FCM entregue el mensaje.
 
 **Fuera de alcance**
-- Push al retador cuando aceptan o rechazan.
+- Push al retador cuando aceptan.
 - Borrar los hábitos al cancelar el reto.
 - Endurecer la RLS para impedir transiciones de estado que la app no ofrece.
 - Realtime, chat, cache Room de amigos.
@@ -321,7 +323,7 @@ Aprobado 2026-10-08.
 - **Avatar:** Photo Picker de Android (solo galeria, sin camara). Cambiar foto es una insignia redonda con icono de editar, encima de la foto, en la esquina superior derecha. Subir a Supabase Storage bucket `avatars` path `{userId}/avatar`; persistir URL/path en `profiles.avatar_url`. Quitar foto sigue siendo un enlace de texto: pone `avatar_url` null y borra el objeto. Preview circular sin editor de recorte. Online-first.
 - **Delete account:** boton separado. Navega a pantalla de confirmacion: el usuario debe escribir exactamente `DELETE` (token fijo, no se traduce); el boton de borrar se habilita solo entonces. Edge Function (service role) elimina `auth.users` (CASCADE a `profiles` y FKs) y el objeto de Storage. Exito: Login con back stack vacio. Online-first.
 - Eventos one-shot: `Channel` + `ObserveAsEvents`.
-- Fuera de alcance: editar username, camara, notificaciones globales de Profile, cambio de password, widgets, enviar el Name del registro a Auth metadata. Recordatorios por hábito: § Habit reminders.
+- Fuera de alcance: editar username, camara, cambio de password, widgets, enviar el Name del registro a Auth metadata. Recordatorios por hábito y el aviso general del perfil: § Habit reminders.
 
 ### Activity heatmap
 

@@ -2,6 +2,8 @@ package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.resolvedSchedule
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -25,10 +27,13 @@ fun Habit.completedInWeek(date: LocalDate): Set<LocalDate> {
 }
 
 /** The habit can still be done on [date], or it was already completed that day. */
-fun Habit.shownOn(date: LocalDate): Boolean {
-    val done = completedInWeek(date)
-    if (date in done) return true
-    return done.size < weeklyTarget()
+fun Habit.shownOn(date: LocalDate): Boolean = when (resolvedSchedule()) {
+    HabitSchedule.DAILY -> true
+    HabitSchedule.WEEKDAYS -> date.dayOfWeek in daysOfWeek
+    HabitSchedule.WEEKLY_COUNT -> {
+        val done = completedInWeek(date)
+        date in done || done.size < daysPerWeek.coerceIn(1, 7)
+    }
 }
 
 /**
@@ -36,13 +41,15 @@ fun Habit.shownOn(date: LocalDate): Boolean {
  * A smaller quota counts a past day only when it was completed.
  * Today and later count while the week still has room before that day.
  */
-fun Habit.scheduledForStats(date: LocalDate, today: LocalDate): Boolean {
-    val target = weeklyTarget()
-    if (target >= 7) return date.dayOfWeek in daysOfWeek
-    val done = completedInWeek(date)
-    if (date in done) return true
-    if (date < today) return false
-    return done.count { it < date } < target
+fun Habit.scheduledForStats(date: LocalDate, today: LocalDate): Boolean = when (resolvedSchedule()) {
+    HabitSchedule.DAILY -> true
+    HabitSchedule.WEEKDAYS -> date.dayOfWeek in daysOfWeek
+    HabitSchedule.WEEKLY_COUNT -> {
+        val done = completedInWeek(date)
+        if (date in done) true
+        else if (date < today) false
+        else done.count { it < date } < daysPerWeek.coerceIn(1, 7)
+    }
 }
 
 fun streakForHabit(
@@ -51,17 +58,21 @@ fun streakForHabit(
     today: LocalDate,
     createdOn: LocalDate,
 ): Int {
-    val target = habit.weeklyTarget()
-    return if (target >= 7) {
-        calculateScheduledStreak(
-            daysOfWeek = habit.daysOfWeek,
+    return when (habit.resolvedSchedule()) {
+        HabitSchedule.WEEKLY_COUNT -> calculateWeeklyQuotaStreak(
+            target = habit.daysPerWeek.coerceIn(1, 7),
             records = records,
             today = today,
             createdOn = createdOn,
         )
-    } else {
-        calculateWeeklyQuotaStreak(
-            target = target,
+        HabitSchedule.DAILY -> calculateScheduledStreak(
+            daysOfWeek = kotlinx.datetime.DayOfWeek.entries.toSet(),
+            records = records,
+            today = today,
+            createdOn = createdOn,
+        )
+        HabitSchedule.WEEKDAYS -> calculateScheduledStreak(
+            daysOfWeek = habit.daysOfWeek,
             records = records,
             today = today,
             createdOn = createdOn,

@@ -4,11 +4,14 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.model.DailyCheckInSettings
 import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.repository.DailyCheckInRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.repository.ThemeRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
@@ -204,6 +207,34 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun `enabling daily check-in confirms the reminder is on`() = runTest {
+        val dailyCheckInRepository = FakeDailyCheckInRepository()
+        val viewModel = createViewModel(dailyCheckInRepository = dailyCheckInRepository)
+
+        val confirmation = async { viewModel.dailyCheckInActivated.first() }
+        viewModel.onDailyCheckInEnabled(true)
+        advanceUntilIdle()
+
+        confirmation.await()
+        assertEquals(true, dailyCheckInRepository.settings().first().enabled)
+    }
+
+    @Test
+    fun `disabling daily check-in does not confirm the reminder`() = runTest {
+        val viewModel = createViewModel()
+        var confirmed = false
+        val collectJob = backgroundScope.launch {
+            viewModel.dailyCheckInActivated.collect { confirmed = true }
+        }
+
+        viewModel.onDailyCheckInEnabled(false)
+        advanceUntilIdle()
+
+        assertEquals(false, confirmed)
+        collectJob.cancel()
+    }
+
+    @Test
     fun `dark mode switch stores light or dark`() = runTest {
         val themeRepository = FakeThemeRepository()
         val viewModel = createViewModel(themeRepository = themeRepository)
@@ -222,11 +253,13 @@ class ProfileViewModelTest {
         habitRepository: HabitRepository = FakeHabitRepository(),
         profileRepository: ProfileRepository = FakeProfileRepository(),
         themeRepository: ThemeRepository = FakeThemeRepository(),
+        dailyCheckInRepository: DailyCheckInRepository = FakeDailyCheckInRepository(),
     ) = ProfileViewModel(
         authRepository = authRepository,
         habitRepository = habitRepository,
         profileRepository = profileRepository,
         themeRepository = themeRepository,
+        dailyCheckInRepository = dailyCheckInRepository,
     )
 
     private fun toKotlinDate(date: LocalDate): KotlinLocalDate =
@@ -243,4 +276,20 @@ private class FakeThemeRepository : ThemeRepository {
         saved += mode
         this.mode.value = mode
     }
+}
+
+private class FakeDailyCheckInRepository : DailyCheckInRepository {
+    private val settings = MutableStateFlow(DailyCheckInSettings())
+
+    override fun settings(): Flow<DailyCheckInSettings> = settings
+
+    override suspend fun setEnabled(enabled: Boolean) {
+        settings.value = settings.value.copy(enabled = enabled)
+    }
+
+    override suspend fun setTime(time: String) {
+        settings.value = settings.value.copy(time = time)
+    }
+
+    override suspend fun reschedule() = Unit
 }

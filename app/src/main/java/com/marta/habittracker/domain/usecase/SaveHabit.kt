@@ -16,6 +16,8 @@ class SaveHabit @Inject constructor(
         name: String,
         description: String?,
         daysPerWeek: Int,
+        scheduleMode: String = "daily",
+        daysOfWeek: Set<DayOfWeek> = DayOfWeek.entries.toSet(),
         icon: String,
         colorHex: String,
         reminderTime: String?,
@@ -29,7 +31,7 @@ class SaveHabit @Inject constructor(
                 id = habitId,
                 name = name,
                 description = description,
-                daysOfWeek = DayOfWeek.entries.toSet(),
+                daysOfWeek = if (scheduleMode == "weekdays") daysOfWeek else DayOfWeek.entries.toSet(),
                 icon = icon,
                 colorHex = colorHex,
                 reminderTime = reminderTime,
@@ -38,6 +40,7 @@ class SaveHabit @Inject constructor(
                 createdAt = Instant.now(),
                 records = emptyList(),
                 daysPerWeek = daysPerWeek.coerceIn(1, 7),
+                scheduleMode = scheduleMode,
             ),
         )
         return when (result) {

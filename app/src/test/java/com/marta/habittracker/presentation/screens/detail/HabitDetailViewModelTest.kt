@@ -5,8 +5,13 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.repository.StreakProtectionRepository
 import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
+import com.marta.habittracker.domain.usecase.HabitProtectionStatus
+import com.marta.habittracker.domain.usecase.ProtectionReconcileResult
+import com.marta.habittracker.domain.usecase.StreakOutcome
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -40,6 +45,34 @@ class HabitDetailViewModelTest {
     }
 
     @Test
+    fun `detail exposes progress toward the next protection`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val viewModel = createViewModel(
+            habit = habit,
+            streakProtectionRepository = FakeStreakProtectionRepository(
+                ProtectionReconcileResult(
+                    balance = 0,
+                    habits = listOf(
+                        HabitProtectionStatus(
+                            habitId = habit.id,
+                            streak = 2,
+                            bestStreak = 2,
+                            progress = 2,
+                            milestone = 4,
+                            outcome = StreakOutcome.ONGOING,
+                        ),
+                    ),
+                    newEvents = emptyList(),
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(2, viewModel.protectionProgress.value?.progress)
+        assertEquals(4, viewModel.protectionProgress.value?.milestone)
+    }
+
+    @Test
     fun `load with reminder enabled shows the saved time`() = runTest {
         val viewModel = createViewModel(sampleHabit(reminderTime = "08:00", reminderEnabled = true))
         advanceUntilIdle()
@@ -65,6 +98,7 @@ class HabitDetailViewModelTest {
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         advanceUntilIdle()
 
@@ -85,6 +119,7 @@ class HabitDetailViewModelTest {
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         advanceUntilIdle()
 
@@ -105,6 +140,7 @@ class HabitDetailViewModelTest {
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         advanceUntilIdle()
         var deleted = false
@@ -153,12 +189,14 @@ class HabitDetailViewModelTest {
     private fun createViewModel(
         habit: Habit,
         friendsRepository: FakeFriendsRepository = FakeFriendsRepository(),
+        streakProtectionRepository: StreakProtectionRepository = FakeStreakProtectionRepository(),
     ): HabitDetailViewModel {
         val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
         return HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
             friendsRepository = friendsRepository,
+            streakProtectionRepository = streakProtectionRepository,
         )
     }
 
@@ -177,4 +215,10 @@ class HabitDetailViewModelTest {
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         records = emptyList(),
     )
+}
+
+private class FakeStreakProtectionRepository(
+    private val result: ProtectionReconcileResult = ProtectionReconcileResult(0, emptyList(), emptyList()),
+) : StreakProtectionRepository {
+    override suspend fun reconcile(habits: List<Habit>, today: LocalDate) = result
 }

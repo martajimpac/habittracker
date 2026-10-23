@@ -69,6 +69,15 @@ class NextHabitReminderTest {
         assertTrue(NextHabitReminder.shouldNotify(habit.copy(records = emptyList()), today))
     }
 
+    @Test
+    fun `reminder action completes only when today is still open`() {
+        val today = KotlinLocalDate(2026, 10, 9)
+        val open = sampleHabit()
+        val done = open.copy(records = listOf(HabitRecord("r", "h", today, true)))
+        assertTrue(NextHabitReminder.shouldCompleteFromReminder(open, today))
+        assertFalse(NextHabitReminder.shouldCompleteFromReminder(done, today))
+    }
+
     companion object {
         private fun sampleHabit(
             days: Set<KotlinDayOfWeek> = setOf(KotlinDayOfWeek.FRIDAY),

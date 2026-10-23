@@ -9,11 +9,14 @@ import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -105,6 +108,24 @@ class ChallengeDetailViewModelTest {
         assertFalse(viewModel.uiState.value.canRespond)
         assertTrue(events.isEmpty())
         collectJob.cancel()
+    }
+
+    @Test
+    fun `declined push for this challenge navigates back`() = runTest {
+        val declines = FakeChallengeDeclineNotifier()
+        val viewModel = createViewModel(
+            friendsRepository = FakeFriendsRepository(
+                getChallengeResult = DataResult.Success(pendingChallengeCard()),
+            ),
+            challengeDeclineNotifier = declines,
+        )
+        advanceUntilIdle()
+
+        val event = async { viewModel.events.first() }
+        declines.publish(CHALLENGE_ID)
+        advanceUntilIdle()
+
+        assertEquals(ChallengeDetailEvent.NavigateBack, event.await())
     }
 
     @Test
@@ -302,10 +323,12 @@ class ChallengeDetailViewModelTest {
         friendsRepository: FakeFriendsRepository = FakeFriendsRepository(),
         authRepository: AuthRepository = FixedUserIdAuthRepository("me"),
         challengeId: String = CHALLENGE_ID,
+        challengeDeclineNotifier: ChallengeDeclineNotifier = FakeChallengeDeclineNotifier(),
     ): ChallengeDetailViewModel = ChallengeDetailViewModel(
         savedStateHandle = SavedStateHandle(mapOf("challengeId" to challengeId)),
         friendsRepository = friendsRepository,
         authRepository = authRepository,
+        challengeDeclineNotifier = challengeDeclineNotifier,
     )
 
     private fun pendingChallengeCard(): ChallengeCard {
@@ -369,5 +392,14 @@ class ChallengeDetailViewModelTest {
 
     private companion object {
         const val CHALLENGE_ID = "challenge-id"
+    }
+}
+
+private class FakeChallengeDeclineNotifier : ChallengeDeclineNotifier {
+    private val declined = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    override val declinedIds: Flow<String> = declined
+
+    override fun publish(challengeId: String) {
+        declined.tryEmit(challengeId)
     }
 }

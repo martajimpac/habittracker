@@ -9,6 +9,7 @@ data class ChallengeHabitDraft(
     val colorHex: String,
     val daysOfWeek: Set<DayOfWeek>,
     val daysPerWeek: Int = 7,
+    val scheduleMode: String = "",
 )
 
 fun newChallengeHabit(
@@ -16,19 +17,24 @@ fun newChallengeHabit(
     draft: ChallengeHabitDraft,
     createdAt: Instant,
 ): Habit {
-    val explicit = draft.daysPerWeek.coerceIn(1, 7)
-    val target = if (explicit < 7) {
-        explicit
-    } else if (draft.daysOfWeek.size in 1..6) {
-        draft.daysOfWeek.size
-    } else {
-        7
+    val schedule = draft.scheduleMode.ifBlank {
+        when {
+            draft.daysOfWeek.size in 1..6 -> "weekdays"
+            draft.daysPerWeek in 1..6 -> "weekly_count"
+            else -> "daily"
+        }
     }
+    val days = if (schedule == "weekdays" && draft.daysOfWeek.isNotEmpty()) {
+        draft.daysOfWeek
+    } else {
+        DayOfWeek.entries.toSet()
+    }
+    val perWeek = if (schedule == "weekly_count") draft.daysPerWeek.coerceIn(1, 7) else 7
     return Habit(
         id = id,
         name = draft.name.trim(),
         description = null,
-        daysOfWeek = DayOfWeek.entries.toSet(),
+        daysOfWeek = days,
         icon = draft.icon,
         colorHex = draft.colorHex,
         reminderTime = null,
@@ -36,7 +42,8 @@ fun newChallengeHabit(
         records = emptyList(),
         isPublic = true,
         reminderEnabled = false,
-        daysPerWeek = target,
+        daysPerWeek = perWeek,
+        scheduleMode = schedule,
     )
 }
 
@@ -52,6 +59,7 @@ fun copyChallengeHabit(
         colorHex = source.colorHex,
         daysOfWeek = source.daysOfWeek,
         daysPerWeek = source.daysPerWeek,
+        scheduleMode = source.scheduleMode,
     ),
     createdAt = createdAt,
 )

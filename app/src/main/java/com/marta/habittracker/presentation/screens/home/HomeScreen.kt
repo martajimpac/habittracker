@@ -33,7 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -61,7 +63,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.domain.usecase.weeklyTarget
+import com.marta.habittracker.domain.model.countsInWeeks
+import com.marta.habittracker.domain.usecase.HabitProtectionStatus
+import com.marta.habittracker.domain.usecase.StreakOutcome
+import com.marta.habittracker.presentation.components.HabitDialog
+import com.marta.habittracker.presentation.components.HabitDialogTone
+import com.marta.habittracker.presentation.components.StreakProtectionBadge
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.ProfileAvatar
@@ -99,7 +107,13 @@ fun HomeScreen(
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
     val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
     val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
+    val protection by viewModel.protection.collectAsStateWithLifecycle()
+    var showProtectionEarned by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    ObserveAsEvents(viewModel.events) { event ->
+        if (event is HomeEvent.ProtectionEarned) showProtectionEarned = true
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -137,7 +151,19 @@ fun HomeScreen(
         onToggleHabit = viewModel::toggleComplete,
         onClearActionError = viewModel::clearActionError,
         challengeHabitIds = challengeHabitIds,
+        protectionBalance = protection.balance,
+        protectionByHabit = protection.habits.associateBy { it.habitId },
     )
+    if (showProtectionEarned) {
+        HabitDialog(
+            onDismissRequest = { showProtectionEarned = false },
+            title = stringResource(R.string.freeze_earned_title),
+            message = stringResource(R.string.freeze_earned_message),
+            confirmText = stringResource(R.string.dialog_ok),
+            onConfirm = { showProtectionEarned = false },
+            tone = HabitDialogTone.Positive,
+        )
+    }
 }
 
 @Composable
@@ -154,6 +180,8 @@ fun HomeContent(
     onToggleHabit: (Habit) -> Unit,
     onClearActionError: () -> Unit,
     challengeHabitIds: Set<String> = emptySet(),
+    protectionBalance: Int = 0,
+    protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
 ) {
     val isToday = selectedDate == today
     val isPast = selectedDate.isBefore(today)
@@ -176,12 +204,15 @@ fun HomeContent(
         selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
-    val overallStreak = remember(allHabits) {
-        val daily = allHabits.filter { it.weeklyTarget() >= 7 }.maxOfOrNull { calculateStreak(it) } ?: 0
+    val overallStreak = remember(allHabits, protectionByHabit) {
+        val daily = allHabits.filter { !it.countsInWeeks() }
+            .maxOfOrNull { protectionByHabit[it.id]?.streak ?: calculateStreak(it) } ?: 0
         if (daily > 0) {
             daily to false
         } else {
-            (allHabits.maxOfOrNull { calculateStreak(it) } ?: 0) to true
+            val weekly = allHabits.filter { it.countsInWeeks() }
+                .maxOfOrNull { protectionByHabit[it.id]?.streak ?: calculateStreak(it) } ?: 0
+            weekly to true
         }
     }
 
@@ -295,6 +326,7 @@ fun HomeContent(
                             isDone = habit.isCompleted,
                             isToday = isToday,
                             inChallenge = habit.id in challengeHabitIds,
+                            protection = protectionByHabit[habit.id],
                             onToggle = { onToggleHabit(habit) },
                         )
                     }
@@ -536,10 +568,12 @@ private fun HomeHabitCard(
     isDone: Boolean,
     isToday: Boolean,
     inChallenge: Boolean,
+    protection: HabitProtectionStatus?,
     onToggle: () -> Unit,
 ) {
     val accentColor = habitAccentColor(habit)
-    val streak = calculateStreak(habit)
+    val streak = protection?.streak ?: calculateStreak(habit)
+    val inWeeks = habit.countsInWeeks()
 
     Row(
         modifier = Modifier
@@ -603,10 +637,10 @@ private fun HomeHabitCard(
                     modifier = Modifier.size(12.dp),
                 )
                 Text(
-                    text = if (habit.weeklyTarget() >= 7) {
-                        stringResource(R.string.home_streak_days, streak)
-                    } else {
+                    text = if (inWeeks) {
                         pluralStringResource(R.plurals.streak_weeks, streak, streak)
+                    } else {
+                        stringResource(R.string.home_streak_days, streak)
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -614,6 +648,21 @@ private fun HomeHabitCard(
                 )
                 Text(
                     text = stringResource(R.string.home_time_separator, habitTimeLabel(habit)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val protectionOutcome = protection?.outcome
+            if (
+                protectionOutcome == StreakOutcome.PROTECTED ||
+                protectionOutcome == StreakOutcome.BROKEN
+            ) {
+                Text(
+                    text = if (protectionOutcome == StreakOutcome.PROTECTED) {
+                        stringResource(R.string.freeze_used)
+                    } else {
+                        stringResource(R.string.streak_broken)
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

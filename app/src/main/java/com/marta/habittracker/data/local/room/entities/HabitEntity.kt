@@ -19,4 +19,5 @@ data class HabitEntity(
     val updatedAt: Long = System.currentTimeMillis(),
     val deletedAt: Long? = null,
     val daysPerWeek: Int = 7,
+    val scheduleMode: String = "",
 )

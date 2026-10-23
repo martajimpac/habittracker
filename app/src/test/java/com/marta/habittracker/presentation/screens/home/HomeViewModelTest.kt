@@ -5,7 +5,10 @@ import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
+import com.marta.habittracker.domain.repository.StreakProtectionRepository
 import com.marta.habittracker.domain.usecase.FakeProfileRepository
+import com.marta.habittracker.domain.usecase.ProtectionReconcileResult
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -51,6 +54,7 @@ class HomeViewModelTest {
                 ),
             ),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
 
         advanceUntilIdle()
@@ -72,6 +76,7 @@ class HomeViewModelTest {
                 myProfileResult = DataResult.Error(AppError.Common.Network),
             ),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
 
         advanceUntilIdle()
@@ -90,6 +95,7 @@ class HomeViewModelTest {
             authRepository = FakeAuthRepository(),
             profileRepository = FakeProfileRepository(),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         viewModel.currentDate = { monday }
         viewModel.refreshDay()
@@ -112,6 +118,7 @@ class HomeViewModelTest {
             authRepository = FakeAuthRepository(),
             profileRepository = FakeProfileRepository(),
             friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         viewModel.currentDate = { monday }
         viewModel.refreshDay()
@@ -133,6 +140,7 @@ class HomeViewModelTest {
             authRepository = FakeAuthRepository(),
             profileRepository = FakeProfileRepository(),
             friendsRepository = friends,
+            streakProtectionRepository = FakeStreakProtectionRepository(),
         )
         advanceUntilIdle()
         assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
@@ -143,4 +151,11 @@ class HomeViewModelTest {
 
         assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
     }
+}
+
+private class FakeStreakProtectionRepository : StreakProtectionRepository {
+    override suspend fun reconcile(
+        habits: List<com.marta.habittracker.domain.model.Habit>,
+        today: LocalDate,
+    ) = ProtectionReconcileResult(balance = 0, habits = emptyList(), newEvents = emptyList())
 }

@@ -18,6 +18,7 @@ data class Habit(
     val isPublic: Boolean = false,
     val reminderEnabled: Boolean = false,
     val daysPerWeek: Int = 7,
+    val scheduleMode: String = "",
 )
 
 data class HabitRecord(

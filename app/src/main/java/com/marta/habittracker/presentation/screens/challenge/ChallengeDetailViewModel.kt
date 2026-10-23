@@ -10,6 +10,8 @@ import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeStatus
 import com.marta.habittracker.domain.model.ownChallengeHabitId
+import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
+import com.marta.habittracker.domain.push.SilentChallengeDeclineNotifier
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.FriendsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +43,7 @@ class ChallengeDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val friendsRepository: FriendsRepository,
     private val authRepository: AuthRepository,
+    private val challengeDeclineNotifier: ChallengeDeclineNotifier = SilentChallengeDeclineNotifier,
 ) : ViewModel() {
 
     private val challengeId: String = checkNotNull(savedStateHandle["challengeId"])
@@ -53,6 +56,13 @@ class ChallengeDetailViewModel @Inject constructor(
 
     init {
         loadChallenge()
+        viewModelScope.launch {
+            challengeDeclineNotifier.declinedIds.collect { declinedId ->
+                if (declinedId == challengeId) {
+                    _events.send(ChallengeDetailEvent.NavigateBack)
+                }
+            }
+        }
     }
 
     fun onAccept() {

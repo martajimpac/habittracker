@@ -53,7 +53,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -70,10 +69,13 @@ import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.challengeLeaderLabel
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeHabitDraft
+import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.storedValue
 import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.presentation.components.DaysPerWeekStepper
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitDialog
@@ -600,6 +602,8 @@ private fun ChallengeSheet(
     var icon by remember { mutableStateOf(HabitIconKeys.DEFAULT) }
     var color by remember { mutableStateOf(HabitColorOptions.first()) }
     var daysPerWeek by remember { mutableIntStateOf(7) }
+    var schedule by remember { mutableStateOf(HabitSchedule.DAILY) }
+    var selectedDays by remember { mutableStateOf(setOf<DayOfWeek>()) }
     var duration by remember { mutableIntStateOf(7) }
     var criteria by remember { mutableStateOf(ChallengeCriteria.CompletionPct) }
     var showCriteriaHelp by remember { mutableStateOf(false) }
@@ -703,23 +707,54 @@ private fun ChallengeSheet(
                 modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                (1..7).forEach { count ->
-                    val selected = count == daysPerWeek
+                listOf(
+                    HabitSchedule.DAILY to R.string.frequency_daily,
+                    HabitSchedule.WEEKDAYS to R.string.frequency_weekdays,
+                    HabitSchedule.WEEKLY_COUNT to R.string.frequency_weekly_count,
+                ).forEach { (mode, label) ->
+                    val selected = schedule == mode
                     Text(
-                        text = pluralStringResource(R.plurals.frequency_days_per_week, count, count),
+                        text = stringResource(label),
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(
-                                    alpha = 0.2f
-                                )
+                                if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f),
                             )
-                            .clickable { daysPerWeek = count }
+                            .clickable { schedule = mode }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
                     )
                 }
+            }
+            if (schedule == HabitSchedule.WEEKDAYS) {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    DayOfWeek.entries.forEach { day ->
+                        val selected = day in selectedDays
+                        Text(
+                            text = stringResource(challengeWeekdayLabel(day)),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f),
+                                )
+                                .clickable {
+                                    selectedDays = if (selected) selectedDays - day else selectedDays + day
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+            if (schedule == HabitSchedule.WEEKLY_COUNT) {
+                DaysPerWeekStepper(
+                    days = daysPerWeek,
+                    onDaysChange = { daysPerWeek = it },
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
             }
             Text(
                 stringResource(R.string.friends_duration),
@@ -770,7 +805,7 @@ private fun ChallengeSheet(
             HabitButton(
                 text = stringResource(R.string.friends_send_challenge),
                 onClick = {
-                    if (name.isBlank()) {
+                    if (name.isBlank() || (schedule == HabitSchedule.WEEKDAYS && selectedDays.isEmpty())) {
                         showMissing = true
                     } else {
                         onSendChallenge(
@@ -778,15 +813,21 @@ private fun ChallengeSheet(
                                 name = name,
                                 icon = icon,
                                 colorHex = color.toHex(),
-                                daysOfWeek = DayOfWeek.entries.toSet(),
-                                daysPerWeek = daysPerWeek,
+                                daysOfWeek = if (schedule == HabitSchedule.WEEKDAYS) {
+                                    selectedDays
+                                } else {
+                                    DayOfWeek.entries.toSet()
+                                },
+                                daysPerWeek = if (schedule == HabitSchedule.WEEKLY_COUNT) daysPerWeek else 7,
+                                scheduleMode = schedule.storedValue(),
                             ),
                             criteria,
                             duration,
                         )
                     }
                 },
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() &&
+                    (schedule != HabitSchedule.WEEKDAYS || selectedDays.isNotEmpty()),
                 clickableWhenDisabled = true,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -959,6 +1000,16 @@ private fun FriendsAddButton(onClick: () -> Unit) {
         compact = true,
         icon = Icons.Rounded.Add,
     )
+}
+
+private fun challengeWeekdayLabel(day: DayOfWeek): Int = when (day) {
+    DayOfWeek.MONDAY -> R.string.activity_day_mon
+    DayOfWeek.TUESDAY -> R.string.activity_day_tue
+    DayOfWeek.WEDNESDAY -> R.string.activity_day_wed
+    DayOfWeek.THURSDAY -> R.string.activity_day_thu
+    DayOfWeek.FRIDAY -> R.string.activity_day_fri
+    DayOfWeek.SATURDAY -> R.string.activity_day_sat
+    DayOfWeek.SUNDAY -> R.string.activity_day_sun
 }
 
 // @Preview(showBackground = true)

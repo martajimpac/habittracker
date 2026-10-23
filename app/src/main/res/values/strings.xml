@@ -166,6 +166,8 @@
     <string name="challenge_status_cancelled">Cancelled</string>
     <string name="challenge_push_title">New challenge</string>
     <string name="challenge_push_body">%1$s challenged you</string>
+    <string name="challenge_declined_push_title">Challenge declined</string>
+    <string name="challenge_declined_push_body">%1$s declined the challenge</string>
     <string name="friend_request_push_title">Friend request</string>
     <string name="friend_request_push_body">%1$s sent you a friend request</string>
     <string name="friend_request_push_sender_fallback">Someone</string>
@@ -214,10 +216,29 @@
     <string name="add_habit_time">Time</string>
     <string name="add_habit_no_time">No time</string>
     <string name="add_habit_frequency">Frequency</string>
+    <string name="frequency_daily">Every day</string>
+    <string name="frequency_weekdays">Specific days</string>
+    <string name="frequency_weekly_count">Times per week</string>
+    <string name="streak_protection_count">%1$d/%2$d</string>
+    <string name="cd_streak_protection">Streak protections</string>
+    <string name="freeze_progress">%1$d/%2$d toward the next protection</string>
+    <string name="freeze_progress_help">What this progress means</string>
+    <string name="freeze_progress_help_title">Next protection</string>
+    <string name="freeze_progress_help_message">This counts completed occasions toward the next streak protection. A daily habit, or one on specific days, earns one every 7 times in a row. A times-per-week habit earns one every 4 successful weeks. Protections are shared by all habits, up to 3. If you miss a day that already ended and you have one, it is spent and the streak stays.</string>
+    <string name="freeze_used">A protection kept this streak</string>
+    <string name="streak_broken">Streak broken</string>
+    <string name="freeze_earned_title">Protection earned</string>
+    <string name="freeze_earned_message">You earned a streak protection. You can hold up to 3.</string>
     <plurals name="frequency_days_per_week">
         <item quantity="one">1 day a week</item>
         <item quantity="other">%d days a week</item>
     </plurals>
+    <plurals name="frequency_days_per_week_label">
+        <item quantity="one">day per week</item>
+        <item quantity="other">days per week</item>
+    </plurals>
+    <string name="cd_days_per_week_increase">Increase days per week</string>
+    <string name="cd_days_per_week_decrease">Decrease days per week</string>
     <plurals name="streak_weeks">
         <item quantity="one">%d week streak</item>
         <item quantity="other">%d-week streak</item>
@@ -352,9 +373,14 @@
     <string name="notification_default_title">Bloom</string>
     <string name="habit_reminder_channel_name">Habit reminders</string>
     <string name="habit_reminder_body">Time to check in</string>
+    <string name="habit_reminder_complete">Complete</string>
     <string name="habit_reminder_toggle">Reminder</string>
     <string name="habit_reminder_permission_denied">Notification permission is required to enable reminders.</string>
     <string name="habit_reminder_exact_alarm_denied">Exact alarms are required for habit reminders. Enable them in system settings.</string>
+    <string name="profile_daily_check_in">Remind me to log my habits</string>
+    <string name="profile_daily_check_in_enabled">Done. The reminder is on</string>
+    <string name="daily_check_in_title">Your habits</string>
+    <string name="daily_check_in_body">Time to log today\'s habits</string>
 
     <string name="widget_loading">Loading</string>
 

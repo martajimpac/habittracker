@@ -90,9 +90,9 @@ class BuildWeeklyHabitSummaryTest {
         val friday = buildWeeklyHabitSummary(habits, anchor)
             .single { it.date == LocalDate.of(2026, 8, 7) }
 
-        assertEquals(2, friday.scheduled)
+        assertEquals(3, friday.scheduled)
         assertEquals(1, friday.completed)
-        assertEquals(50, friday.percent)
+        assertEquals(33, friday.percent)
     }
 
     @Test

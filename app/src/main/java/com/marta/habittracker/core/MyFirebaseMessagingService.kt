@@ -13,8 +13,10 @@ import com.google.firebase.messaging.RemoteMessage
 import com.marta.habittracker.MainActivity
 import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
+import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
 import com.marta.habittracker.domain.push.ChallengePushIds
 import com.marta.habittracker.domain.push.FriendPushIds
+import com.marta.habittracker.domain.widget.AppWidgetRefresher
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -44,6 +46,37 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     body = getString(R.string.challenge_push_body, challengerName),
                     challengeId = challengeId,
                 )
+                return
+            }
+        }
+
+        if (data["type"] == CHALLENGE_DECLINED_TYPE) {
+            val challengeId = data["challengeId"]?.takeIf { it.isNotBlank() }
+            if (challengeId != null) {
+                Log.d(TAG, "Challenge declined push received challengeId=$challengeId")
+                val declinerName = data["declinerName"].orEmpty().ifBlank {
+                    getString(R.string.challenge_detail_title)
+                }
+                sendChallengeDeclinedNotification(
+                    title = getString(R.string.challenge_declined_push_title),
+                    body = getString(R.string.challenge_declined_push_body, declinerName),
+                    challengeId = challengeId,
+                )
+                tokenRefreshScope.launch {
+                    try {
+                        val entryPoint = EntryPointAccessors.fromApplication(
+                            applicationContext,
+                            DeviceTokenRegistrarEntryPoint::class.java,
+                        )
+                        entryPoint.challengeDeclineNotifier().publish(challengeId)
+                        entryPoint.appWidgetRefresher().refreshAll()
+                        Log.d(TAG, "Challenge declined follow-up finished challengeId=$challengeId")
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Challenge declined follow-up failed challengeId=$challengeId", e)
+                    }
+                }
                 return
             }
         }
@@ -100,6 +133,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         )
         postNotification(
             notificationId = ChallengePushIds.notificationIdFor(challengeId),
+            title = title,
+            body = body,
+            pendingIntent = pendingIntent,
+        )
+    }
+
+    private fun sendChallengeDeclinedNotification(title: String, body: String, challengeId: String) {
+        val notificationId = ChallengePushIds.declinedNotificationIdFor(challengeId)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            notificationId,
+            WidgetLaunchExtras.openFriendsIntent(this),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        postNotification(
+            notificationId = notificationId,
             title = title,
             body = body,
             pendingIntent = pendingIntent,
@@ -173,6 +222,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     @InstallIn(SingletonComponent::class)
     interface DeviceTokenRegistrarEntryPoint {
         fun deviceTokenRegistration(): DeviceTokenRegistration
+        fun challengeDeclineNotifier(): ChallengeDeclineNotifier
+        fun appWidgetRefresher(): AppWidgetRefresher
     }
 
     companion object {
@@ -180,6 +231,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val TAG = "MyFirebaseMsgService"
         private const val NOTIFICATION_CHANNEL_ID = "habit_tracker_notifications"
         private const val CHALLENGE_CREATED_TYPE = "challenge_created"
+        private const val CHALLENGE_DECLINED_TYPE = "challenge_declined"
         private const val FRIEND_REQUEST_TYPE = "friend_request"
     }
 }

@@ -1,5 +1,12 @@
 package com.marta.habittracker.presentation.screens.profile
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,7 +31,11 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -36,6 +47,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
@@ -57,6 +70,7 @@ import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitDialog
 import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.ProfileAvatar
+import com.marta.habittracker.domain.model.DailyCheckInSettings
 import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.presentation.theme.HabitCream
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
@@ -71,6 +85,7 @@ private data class ProfileMenuItem(
     val tint: Color,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onSignedOut: () -> Unit,
@@ -80,7 +95,32 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val dailyCheckIn by viewModel.dailyCheckIn.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showSignOutConfirm by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var deniedMessage by remember { mutableStateOf(0) }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            viewModel.onDailyCheckInEnabled(true)
+        } else {
+            viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
+        }
+    }
+
+    ObserveAsEvents(flow = viewModel.reminderDenied) { messageRes ->
+        deniedMessage = messageRes
+    }
+
+    ObserveAsEvents(flow = viewModel.dailyCheckInActivated) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.profile_daily_check_in_enabled),
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -97,6 +137,28 @@ fun ProfileScreen(
         onGoals = onGoals,
         themeMode = themeMode,
         onDarkModeChanged = viewModel::onDarkModeChanged,
+        dailyCheckIn = dailyCheckIn,
+        onDailyCheckInEnabled = { enabled ->
+            if (!enabled) {
+                viewModel.onDailyCheckInEnabled(false)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() != true
+            ) {
+                viewModel.onReminderDenied(R.string.habit_reminder_exact_alarm_denied)
+            } else if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.onDailyCheckInEnabled(true)
+            }
+        },
+        onDailyCheckInTimeClick = { showTimePicker = true },
     )
 
     if (showSignOutConfirm) {
@@ -113,6 +175,36 @@ fun ProfileScreen(
             },
         )
     }
+    if (deniedMessage != 0) {
+        HabitDialog(
+            onDismissRequest = { deniedMessage = 0 },
+            title = stringResource(R.string.profile_daily_check_in),
+            message = stringResource(deniedMessage),
+            confirmText = stringResource(R.string.dialog_ok),
+            onConfirm = { deniedMessage = 0 },
+            tone = HabitDialogTone.Negative,
+        )
+    }
+    if (showTimePicker) {
+        val parts = dailyCheckIn.time.split(":")
+        val timePickerState = rememberTimePickerState(
+            initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 20,
+            initialMinute = parts.getOrNull(1)?.toIntOrNull() ?: 0,
+            is24Hour = true,
+        )
+        HabitDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmText = stringResource(R.string.add_habit_save),
+            dismissText = stringResource(R.string.add_habit_cancel),
+            onConfirm = {
+                viewModel.onDailyCheckInTime(
+                    "%02d:%02d".format(timePickerState.hour, timePickerState.minute),
+                )
+                showTimePicker = false
+            },
+            content = { TimePicker(state = timePickerState) },
+        )
+    }
 }
 
 @Composable
@@ -123,6 +215,9 @@ fun ProfileContent(
     onGoals: () -> Unit = {},
     themeMode: ThemeMode = ThemeMode.System,
     onDarkModeChanged: (Boolean) -> Unit = {},
+    dailyCheckIn: DailyCheckInSettings = DailyCheckInSettings(),
+    onDailyCheckInEnabled: (Boolean) -> Unit = {},
+    onDailyCheckInTimeClick: () -> Unit = {},
 ) {
     if (!uiState.isReady) {
         Box(
@@ -175,6 +270,13 @@ fun ProfileContent(
             ProfileDarkModeRow(
                 checked = darkMode,
                 onCheckedChange = onDarkModeChanged,
+            )
+
+            ProfileDailyCheckInRow(
+                enabled = dailyCheckIn.enabled,
+                time = dailyCheckIn.time,
+                onEnabledChange = onDailyCheckInEnabled,
+                onTimeClick = onDailyCheckInTimeClick,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -403,6 +505,72 @@ private fun ProfileDarkModeRow(
                 checkedTrackColor = colors.primary,
                 checkedThumbColor = colors.onPrimary,
             ),
+        )
+    }
+}
+
+@Composable
+private fun ProfileDailyCheckInRow(
+    enabled: Boolean,
+    time: String,
+    onEnabledChange: (Boolean) -> Unit,
+    onTimeClick: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.surfaceContainerLowest)
+            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.primary.copy(alpha = 0.09f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Notifications,
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            Text(
+                text = stringResource(R.string.profile_daily_check_in),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.onSurface,
+            )
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange,
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = colors.primary,
+                    checkedThumbColor = colors.onPrimary,
+                ),
+            )
+        }
+        Text(
+            text = time.ifBlank { stringResource(R.string.add_habit_no_time) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.surface)
+                .clickable(onClick = onTimeClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onSurface,
         )
     }
 }

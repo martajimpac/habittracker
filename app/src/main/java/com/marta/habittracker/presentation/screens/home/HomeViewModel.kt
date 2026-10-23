@@ -8,11 +8,16 @@ import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
+import com.marta.habittracker.domain.repository.StreakProtectionRepository
+import com.marta.habittracker.domain.usecase.ProtectionEventType
+import com.marta.habittracker.domain.usecase.ProtectionReconcileResult
 import com.marta.habittracker.presentation.utils.getCurrentWeekDays
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +33,7 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val friendsRepository: FriendsRepository,
+    private val streakProtectionRepository: StreakProtectionRepository,
 ) : ViewModel() {
 
     internal var currentDate: () -> LocalDate = { LocalDate.now() }
@@ -56,6 +62,12 @@ class HomeViewModel @Inject constructor(
     private val _challengeHabitIds = MutableStateFlow<Set<String>>(emptySet())
     val challengeHabitIds: StateFlow<Set<String>> = _challengeHabitIds.asStateFlow()
 
+    private val _protection = MutableStateFlow(ProtectionReconcileResult(0, emptyList(), emptyList()))
+    val protection: StateFlow<ProtectionReconcileResult> = _protection.asStateFlow()
+
+    private val _events = Channel<HomeEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
     val allHabits: StateFlow<List<Habit>> = repository.getAllHabitsWithRecords()
         .stateIn(
             scope = viewModelScope,
@@ -75,6 +87,15 @@ class HomeViewModel @Inject constructor(
     init {
         refreshDisplayName()
         refreshChallengeHabits()
+        viewModelScope.launch {
+            allHabits.collect { habits ->
+                val result = streakProtectionRepository.reconcile(habits, currentDate())
+                _protection.value = result
+                if (result.newEvents.any { it.type == ProtectionEventType.GRANT }) {
+                    _events.send(HomeEvent.ProtectionEarned)
+                }
+            }
+        }
     }
 
     fun refreshDisplayName() {
@@ -134,4 +155,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+}
+
+sealed interface HomeEvent {
+    data object ProtectionEarned : HomeEvent
 }

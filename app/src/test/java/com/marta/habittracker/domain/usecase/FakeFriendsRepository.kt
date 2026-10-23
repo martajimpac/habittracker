@@ -14,7 +14,7 @@ import com.marta.habittracker.domain.repository.FriendsRepository
 class FakeFriendsRepository(
     private val acceptedFriendsResult: DataResult<List<FriendListItem>, AppError> =
         DataResult.Success(emptyList()),
-    private val activeChallengesResult: DataResult<List<ChallengeCard>, AppError> =
+    var activeChallengesResult: DataResult<List<ChallengeCard>, AppError> =
         DataResult.Success(emptyList()),
     private val getChallengeResult: DataResult<ChallengeCard, AppError> =
         DataResult.Error(AppError.Common.Unknown),

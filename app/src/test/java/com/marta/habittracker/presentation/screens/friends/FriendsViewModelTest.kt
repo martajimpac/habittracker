@@ -12,6 +12,7 @@ import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
@@ -19,6 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -158,6 +161,29 @@ class FriendsViewModelTest {
     }
 
     @Test
+    fun `declined challenge disappears from the list`() = runTest {
+        val profile = profile("friend")
+        val challenge = challengeCard(profile)
+        val repository = FakeFriendsRepository(
+            activeChallengesResult = DataResult.Success(listOf(challenge)),
+        )
+        val declines = FakeChallengeDeclineNotifier()
+        val viewModel = FriendsViewModel(
+            friendsRepository = repository,
+            habitRepository = FakeHabitRepository(),
+            challengeDeclineNotifier = declines,
+        )
+        advanceUntilIdle()
+        assertEquals(listOf(challenge), viewModel.uiState.value.challenges)
+
+        repository.activeChallengesResult = DataResult.Success(emptyList())
+        declines.publish(challenge.challenge.id)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.challenges.isEmpty())
+    }
+
+    @Test
     fun `create challenge sends the new shared habit`() = runTest {
         val repository = FakeFriendsRepository()
         val viewModel = FriendsViewModel(repository, FakeHabitRepository())
@@ -277,5 +303,14 @@ class FriendsViewModelTest {
             habitIcon = "menu_book",
             habitColorHex = "#6750A4",
         )
+    }
+}
+
+private class FakeChallengeDeclineNotifier : ChallengeDeclineNotifier {
+    private val declined = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    override val declinedIds: Flow<String> = declined
+
+    override fun publish(challengeId: String) {
+        declined.tryEmit(challengeId)
     }
 }

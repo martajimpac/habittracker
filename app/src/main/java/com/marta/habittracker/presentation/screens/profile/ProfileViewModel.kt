@@ -1,14 +1,17 @@
 package com.marta.habittracker.presentation.screens.profile
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.DailyCheckInSettings
 import com.marta.habittracker.domain.model.ThemeMode
 import com.marta.habittracker.domain.repository.AuthRepository
+import com.marta.habittracker.domain.repository.DailyCheckInRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.repository.ThemeRepository
-import com.marta.habittracker.domain.usecase.weeklyTarget
+import com.marta.habittracker.domain.model.countsInWeeks
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +56,7 @@ class ProfileViewModel @Inject constructor(
     habitRepository: HabitRepository,
     private val profileRepository: ProfileRepository,
     private val themeRepository: ThemeRepository,
+    private val dailyCheckInRepository: DailyCheckInRepository,
 ) : ViewModel() {
 
     private val profileRefresh = MutableStateFlow(0)
@@ -85,6 +89,34 @@ class ProfileViewModel @Inject constructor(
     private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
     val navigateToLogin = _navigateToLogin.receiveAsFlow()
 
+    private val _reminderDenied = Channel<Int>(Channel.BUFFERED)
+    val reminderDenied = _reminderDenied.receiveAsFlow()
+
+    private val _dailyCheckInActivated = Channel<Unit>(Channel.BUFFERED)
+    val dailyCheckInActivated = _dailyCheckInActivated.receiveAsFlow()
+
+    val dailyCheckIn: StateFlow<DailyCheckInSettings> = dailyCheckInRepository.settings()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = DailyCheckInSettings(),
+        )
+
+    fun onDailyCheckInEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dailyCheckInRepository.setEnabled(enabled)
+            if (enabled) _dailyCheckInActivated.send(Unit)
+        }
+    }
+
+    fun onDailyCheckInTime(time: String) {
+        viewModelScope.launch { dailyCheckInRepository.setTime(time) }
+    }
+
+    fun onReminderDenied(@StringRes messageRes: Int) {
+        viewModelScope.launch { _reminderDenied.send(messageRes) }
+    }
+
     val themeMode: StateFlow<ThemeMode> = themeRepository.themeMode()
         .stateIn(
             scope = viewModelScope,
@@ -110,7 +142,7 @@ class ProfileViewModel @Inject constructor(
             avatarUrl = identity.avatarUrl,
             avatarColor = identity.avatarColor,
             dayStreak = run {
-                val daily = habits.filter { it.weeklyTarget() >= 7 }
+                val daily = habits.filter { !it.countsInWeeks() }
                     .maxOfOrNull { calculateStreak(it, today = today) } ?: 0
                 if (daily > 0) {
                     daily
@@ -118,8 +150,8 @@ class ProfileViewModel @Inject constructor(
                     habits.maxOfOrNull { calculateStreak(it, today = today) } ?: 0
                 }
             },
-            streakInWeeks = habits.none { it.weeklyTarget() >= 7 && calculateStreak(it, today = today) > 0 } &&
-                habits.any { it.weeklyTarget() < 7 && calculateStreak(it, today = today) > 0 },
+            streakInWeeks = habits.none { !it.countsInWeeks() && calculateStreak(it, today = today) > 0 } &&
+                habits.any { it.countsInWeeks() && calculateStreak(it, today = today) > 0 },
             completedCount = habits.sumOf { habit -> habit.records.count { it.isCompleted } },
             habitsCount = habits.size,
             isReady = true,

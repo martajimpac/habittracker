@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.Habit
+import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.resolvedSchedule
+import com.marta.habittracker.domain.model.storedValue
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.usecase.SaveHabit
-import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +47,8 @@ data class AddContentUiState(
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "",
     val daysPerWeek: Int = 7,
+    val schedule: HabitSchedule = HabitSchedule.DAILY,
+    val selectedDays: Set<DayOfWeek> = emptySet(),
     val isPublic: Boolean = false,
     val isSaving: Boolean = false,
     val isEditing: Boolean = false,
@@ -85,7 +89,9 @@ class AddContentViewModel @Inject constructor(
                             color = parseHabitColor(habit.colorHex),
                             reminderEnabled = habit.reminderEnabled,
                             reminderTime = habit.reminderTime.orEmpty(),
-                            daysPerWeek = habit.weeklyTarget(),
+                            daysPerWeek = habit.daysPerWeek.coerceIn(1, 7),
+                            schedule = habit.resolvedSchedule(),
+                            selectedDays = habit.daysOfWeek,
                             isPublic = habit.isPublic,
                             isEditing = true,
                         )
@@ -133,6 +139,17 @@ class AddContentViewModel @Inject constructor(
         _uiState.update { it.copy(daysPerWeek = daysPerWeek.coerceIn(1, 7), errorMessageRes = null) }
     }
 
+    fun onScheduleSelected(schedule: HabitSchedule) {
+        _uiState.update { it.copy(schedule = schedule, errorMessageRes = null) }
+    }
+
+    fun onWeekdayToggled(day: DayOfWeek) {
+        _uiState.update { state ->
+            val next = if (day in state.selectedDays) state.selectedDays - day else state.selectedDays + day
+            state.copy(selectedDays = next, errorMessageRes = null)
+        }
+    }
+
     fun onPublicChanged(isPublic: Boolean) {
         _uiState.update { it.copy(isPublic = isPublic) }
     }
@@ -161,7 +178,9 @@ class AddContentViewModel @Inject constructor(
                 saveHabit(
                     name = currentState.name.trim(),
                     description = currentState.description.trim().ifBlank { null },
-                    daysPerWeek = currentState.daysPerWeek,
+                    daysPerWeek = savedDaysPerWeek(currentState),
+                    scheduleMode = currentState.schedule.storedValue(),
+                    daysOfWeek = savedDays(currentState),
                     icon = currentState.icon,
                     colorHex = currentState.color.toHex(),
                     reminderTime = reminderTime,
@@ -184,8 +203,9 @@ class AddContentViewModel @Inject constructor(
                         current.copy(
                             name = currentState.name.trim(),
                             description = currentState.description.trim().ifBlank { null },
-                            daysOfWeek = DayOfWeek.entries.toSet(),
-                            daysPerWeek = currentState.daysPerWeek.coerceIn(1, 7),
+                            daysOfWeek = savedDays(currentState),
+                            daysPerWeek = savedDaysPerWeek(currentState),
+                            scheduleMode = currentState.schedule.storedValue(),
                             icon = currentState.icon,
                             colorHex = currentState.color.toHex(),
                             reminderTime = reminderTime,
@@ -219,6 +239,8 @@ class AddContentViewModel @Inject constructor(
     private fun validate(state: AddContentUiState): Int? {
         return when {
             state.name.isBlank() -> R.string.add_habit_error_name_required
+            state.schedule == HabitSchedule.WEEKDAYS && state.selectedDays.isEmpty() ->
+                R.string.add_habit_error_days_required
             state.reminderEnabled &&
                 state.reminderTime.isNotBlank() &&
                 !ReminderTimePattern.matches(state.reminderTime.trim()) ->
@@ -227,3 +249,9 @@ class AddContentViewModel @Inject constructor(
         }
     }
 }
+
+private fun savedDays(state: AddContentUiState): Set<DayOfWeek> =
+    if (state.schedule == HabitSchedule.WEEKDAYS) state.selectedDays else DayOfWeek.entries.toSet()
+
+private fun savedDaysPerWeek(state: AddContentUiState): Int =
+    if (state.schedule == HabitSchedule.WEEKLY_COUNT) state.daysPerWeek.coerceIn(1, 7) else 7

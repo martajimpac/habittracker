@@ -61,6 +61,7 @@ class AddContentViewModelTest {
         val viewModel = createViewModel(repository)
 
         viewModel.onNameChanged("Morning Run")
+        viewModel.onScheduleSelected(com.marta.habittracker.domain.model.HabitSchedule.WEEKLY_COUNT)
         viewModel.onDaysPerWeekSelected(2)
         viewModel.onSaveClicked()
         advanceUntilIdle()
@@ -214,7 +215,8 @@ class AddContentViewModelTest {
         assertTrue(viewModel.uiState.value.isEditing)
         assertEquals("Read", viewModel.uiState.value.name)
         assertEquals("A chapter", viewModel.uiState.value.description)
-        assertEquals(2, viewModel.uiState.value.daysPerWeek)
+        assertEquals(com.marta.habittracker.domain.model.HabitSchedule.WEEKDAYS, viewModel.uiState.value.schedule)
+        assertEquals(setOf(KotlinDayOfWeek.MONDAY, KotlinDayOfWeek.FRIDAY), viewModel.uiState.value.selectedDays)
         assertEquals("book", viewModel.uiState.value.icon)
         assertTrue(viewModel.uiState.value.reminderEnabled)
         assertEquals("07:30", viewModel.uiState.value.reminderTime)

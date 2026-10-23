@@ -42,6 +42,8 @@ val HabitIconOptions: List<String> = listOf(
     HabitIconKeys.APPLE,
     HabitIconKeys.CLEANING,
     HabitIconKeys.CART,
+    HabitIconKeys.CAMERA,
+    HabitIconKeys.HAPPY,
     HabitIconKeys.FLOWER_BLOOM,
     HabitIconKeys.FLOWER_LOTUS,
 )
@@ -74,6 +76,8 @@ object HabitIconKeys {
     const val APPLE = "apple"
     const val CLEANING = "cleaning_services"
     const val CART = "shopping_cart"
+    const val CAMERA = "photo_camera"
+    const val HAPPY = "sentiment_satisfied"
     const val FLOWER_BLOOM = "flower_bloom"
     const val FLOWER_TULIP = "flower_tulip"
     const val FLOWER_LOTUS = "flower_lotus"
@@ -111,6 +115,8 @@ fun habitIconRes(iconKey: String?): Int = when (iconKey) {
     HabitIconKeys.APPLE -> R.drawable.ic_habit_apple
     HabitIconKeys.CLEANING -> R.drawable.ic_habit_cleaning_services
     HabitIconKeys.CART -> R.drawable.ic_habit_shopping_cart
+    HabitIconKeys.CAMERA -> R.drawable.ic_habit_photo_camera
+    HabitIconKeys.HAPPY -> R.drawable.ic_habit_sentiment_satisfied
     HabitIconKeys.FLOWER_BLOOM -> R.drawable.ic_flower_bloom
     HabitIconKeys.FLOWER_TULIP -> R.drawable.ic_flower_tulip
     HabitIconKeys.FLOWER_LOTUS -> R.drawable.ic_flower_lotus

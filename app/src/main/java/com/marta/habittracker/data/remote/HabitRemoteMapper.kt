@@ -34,6 +34,7 @@ object HabitRemoteMapper {
             updatedAt = updatedAt.toString(),
             deletedAt = deletedAt?.toString(),
             daysPerWeek = daysPerWeek,
+            scheduleMode = scheduleMode,
         )
 
     fun HabitDto.toEntity(): HabitEntity =
@@ -53,6 +54,7 @@ object HabitRemoteMapper {
             updatedAt = updatedAt.toEpochMillisOrNow(),
             deletedAt = deletedAt.toEpochMillisOrNull(),
             daysPerWeek = daysPerWeek.coerceIn(1, 7),
+            scheduleMode = scheduleMode,
         )
 
     fun HabitRecordDto.toEntity(): HabitRecordEntity =

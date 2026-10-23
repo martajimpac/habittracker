@@ -2,6 +2,7 @@ package com.marta.habittracker.presentation.screens.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,10 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -63,6 +66,9 @@ import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.MonthCalendar
+import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.countsInWeeks
+import com.marta.habittracker.domain.model.resolvedSchedule
 import com.marta.habittracker.domain.usecase.weeklyTarget
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.theme.HabitOnSurface
@@ -88,7 +94,9 @@ fun HabitDetailScreen(
     val history by viewModel.history.collectAsStateWithLifecycle()
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
     val inChallenge by viewModel.inChallenge.collectAsStateWithLifecycle()
+    val protectionProgress by viewModel.protectionProgress.collectAsStateWithLifecycle()
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showProtectionHelp by remember { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshChallengeMembership()
@@ -106,6 +114,8 @@ fun HabitDetailScreen(
         onEdit = { habit?.id?.let(onEdit) },
         onDelete = { showDeleteConfirm = true },
         inChallenge = inChallenge,
+        protectionProgress = protectionProgress,
+        onProtectionHelp = { showProtectionHelp = true },
     )
 
     if (showDeleteConfirm) {
@@ -122,6 +132,15 @@ fun HabitDetailScreen(
             },
         )
     }
+    if (showProtectionHelp) {
+        HabitDialog(
+            onDismissRequest = { showProtectionHelp = false },
+            title = stringResource(R.string.freeze_progress_help_title),
+            message = stringResource(R.string.freeze_progress_help_message),
+            confirmText = stringResource(R.string.dialog_ok),
+            onConfirm = { showProtectionHelp = false },
+        )
+    }
 }
 
 @Composable
@@ -133,6 +152,8 @@ fun HabitDetailContent(
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
     inChallenge: Boolean = false,
+    protectionProgress: HabitProtectionProgress? = null,
+    onProtectionHelp: () -> Unit = {},
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
@@ -192,6 +213,8 @@ fun HabitDetailContent(
                 accent = accent,
                 reminder = reminder,
                 inChallenge = inChallenge,
+                protectionProgress = protectionProgress,
+                onProtectionHelp = onProtectionHelp,
             )
 
             DetailChartsCard(
@@ -217,6 +240,8 @@ private fun DetailOverviewCard(
     accent: Color,
     reminder: String,
     inChallenge: Boolean,
+    protectionProgress: HabitProtectionProgress?,
+    onProtectionHelp: () -> Unit,
 ) {
     val streak = if (habit == null) 0 else calculateStreak(habit, records)
     val description = habit?.description?.takeIf { it.isNotBlank() }
@@ -282,7 +307,7 @@ private fun DetailOverviewCard(
                             modifier = Modifier.size(14.dp),
                         )
                         Text(
-                            text = if ((habit?.weeklyTarget() ?: 7) >= 7) {
+                            text = if (habit?.countsInWeeks() != true) {
                                 pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak)
                             } else {
                                 pluralStringResource(R.plurals.streak_weeks, streak, streak)
@@ -312,16 +337,63 @@ private fun DetailOverviewCard(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = pluralStringResource(
-                    R.plurals.frequency_days_per_week,
-                    habit.weeklyTarget(),
-                    habit.weeklyTarget(),
-                ),
+                text = habitFrequencyText(habit),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        protectionProgress?.let { progress ->
+            Row(
+                modifier = Modifier.padding(top = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.freeze_progress,
+                        progress.progress,
+                        progress.milestone,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onProtectionHelp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
+                        contentDescription = stringResource(R.string.freeze_progress_help),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun habitFrequencyText(habit: Habit): String = when (habit.resolvedSchedule()) {
+    HabitSchedule.DAILY -> stringResource(R.string.frequency_daily)
+    HabitSchedule.WEEKLY_COUNT -> pluralStringResource(
+        R.plurals.frequency_days_per_week,
+        habit.daysPerWeek.coerceIn(1, 7),
+        habit.daysPerWeek.coerceIn(1, 7),
+    )
+    HabitSchedule.WEEKDAYS -> listOf(
+        kotlinx.datetime.DayOfWeek.MONDAY to stringResource(R.string.activity_day_mon),
+        kotlinx.datetime.DayOfWeek.TUESDAY to stringResource(R.string.activity_day_tue),
+        kotlinx.datetime.DayOfWeek.WEDNESDAY to stringResource(R.string.activity_day_wed),
+        kotlinx.datetime.DayOfWeek.THURSDAY to stringResource(R.string.activity_day_thu),
+        kotlinx.datetime.DayOfWeek.FRIDAY to stringResource(R.string.activity_day_fri),
+        kotlinx.datetime.DayOfWeek.SATURDAY to stringResource(R.string.activity_day_sat),
+        kotlinx.datetime.DayOfWeek.SUNDAY to stringResource(R.string.activity_day_sun),
+    ).filter { (day, _) -> day in habit.daysOfWeek }
+        .joinToString(" · ") { it.second }
 }
 
 @Composable

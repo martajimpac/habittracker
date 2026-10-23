@@ -23,7 +23,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.domain.usecase.weeklyTarget
+import com.marta.habittracker.domain.model.countsInWeeks
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitSurface
@@ -68,7 +68,7 @@ class HabitGlanceWidget : GlanceAppWidget() {
                         streakText = habit?.let {
                             val streak = calculateStreak(it)
                             if (streak > 0) {
-                                val label = if (it.weeklyTarget() >= 7) {
+                                val label = if (!it.countsInWeeks()) {
                                     R.string.habit_widget_streak
                                 } else {
                                     R.string.habit_widget_streak_weeks

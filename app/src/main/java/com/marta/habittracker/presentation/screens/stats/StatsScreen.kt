@@ -49,7 +49,10 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.domain.usecase.weeklyTarget
+import com.marta.habittracker.domain.model.countsInWeeks
+import com.marta.habittracker.domain.usecase.HabitProtectionStatus
+import com.marta.habittracker.domain.usecase.StreakOutcome
+import com.marta.habittracker.presentation.components.StreakProtectionBadge
 import com.marta.habittracker.presentation.components.ActivityHeatmap
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
 import com.marta.habittracker.presentation.components.HabitLineIcon
@@ -74,6 +77,7 @@ fun StatsScreen(
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
+    val protection by viewModel.protection.collectAsStateWithLifecycle()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshChallengeHabits()
@@ -83,6 +87,8 @@ fun StatsScreen(
         habits = habits,
         onHabitClick = onHabitClick,
         challengeHabitIds = challengeHabitIds,
+        protectionBalance = protection.balance,
+        protectionByHabit = protection.habits.associateBy { it.habitId },
     )
 }
 
@@ -91,6 +97,8 @@ fun StatsContent(
     habits: List<Habit>,
     onHabitClick: (String) -> Unit = {},
     challengeHabitIds: Set<String> = emptySet(),
+    protectionBalance: Int = 0,
+    protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
 ) {
     val today = remember { LocalDate.now() }
     val streakHighlight = remember(habits, today) { statsStreakHighlight(habits, today) }
@@ -115,10 +123,12 @@ fun StatsContent(
         ) {
             Text(
                 text = stringResource(R.string.stats_title),
+                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+            StreakProtectionBadge(balance = protectionBalance)
         }
 
         if (habits.isEmpty()) {
@@ -173,6 +183,7 @@ fun StatsContent(
                         habit = habit,
                         today = today,
                         inChallenge = habit.id in challengeHabitIds,
+                        protection = protectionByHabit[habit.id],
                         onClick = { onHabitClick(habit.id) },
                     )
                 }
@@ -269,10 +280,11 @@ private fun StatsHabitRow(
     habit: Habit,
     today: LocalDate,
     inChallenge: Boolean,
+    protection: HabitProtectionStatus?,
     onClick: () -> Unit,
 ) {
     val accent = habitAccentColor(habit)
-    val streak = calculateStreak(habit)
+    val streak = protection?.streak ?: calculateStreak(habit)
     val weeks = remember(habit.id, habit.records, today) {
         toHeatmapWeeks(buildRollingFourWeeks(today)) { date ->
             habitDayIntensity(habit, date)
@@ -295,6 +307,7 @@ private fun StatsHabitRow(
             accent = accent,
             streak = streak,
             inChallenge = inChallenge,
+            protection = protection,
             modifier = Modifier.weight(1f),
         )
         ActivityHeatmap(
@@ -313,6 +326,7 @@ private fun StatsHabitSummary(
     accent: Color,
     streak: Int,
     inChallenge: Boolean,
+    protection: HabitProtectionStatus?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -366,10 +380,10 @@ private fun StatsHabitSummary(
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
-                        text = if (habit.weeklyTarget() >= 7) {
-                            pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak)
-                        } else {
+                        text = if (habit.countsInWeeks()) {
                             pluralStringResource(R.plurals.streak_weeks, streak, streak)
+                        } else {
+                            pluralStringResource(R.plurals.stats_habit_row_streak, streak, streak)
                         },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
@@ -378,6 +392,23 @@ private fun StatsHabitSummary(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+            }
+            val protectionOutcome = protection?.outcome
+            if (
+                protectionOutcome == StreakOutcome.PROTECTED ||
+                protectionOutcome == StreakOutcome.BROKEN
+            ) {
+                Text(
+                    text = if (protectionOutcome == StreakOutcome.PROTECTED) {
+                        stringResource(R.string.freeze_used)
+                    } else {
+                        stringResource(R.string.streak_broken)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             Text(
                 text = habitTimeLabel(habit),

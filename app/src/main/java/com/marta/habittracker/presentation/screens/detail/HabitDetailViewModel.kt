@@ -10,6 +10,7 @@ import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
+import com.marta.habittracker.domain.repository.StreakProtectionRepository
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -21,7 +22,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
+
+data class HabitProtectionProgress(
+    val progress: Int,
+    val milestone: Int,
+)
 
 private val ReminderTimePattern = Regex("""^([01]\d|2[0-3]):([0-5]\d)$""")
 private const val DefaultReminderTime = "08:00"
@@ -30,6 +37,7 @@ private const val DefaultReminderTime = "08:00"
 class HabitDetailViewModel @Inject constructor(
     private val repository: HabitRepository,
     private val friendsRepository: FriendsRepository,
+    private val streakProtectionRepository: StreakProtectionRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -61,6 +69,9 @@ class HabitDetailViewModel @Inject constructor(
     private val _inChallenge = MutableStateFlow(false)
     val inChallenge: StateFlow<Boolean> = _inChallenge.asStateFlow()
 
+    private val _protectionProgress = MutableStateFlow<HabitProtectionProgress?>(null)
+    val protectionProgress: StateFlow<HabitProtectionProgress?> = _protectionProgress.asStateFlow()
+
     private val _habitDeleted = Channel<Unit>(Channel.BUFFERED)
     val habitDeleted = _habitDeleted.receiveAsFlow()
 
@@ -76,6 +87,13 @@ class HabitDetailViewModel @Inject constructor(
                     reminderDraftInitialized = true
                     _reminderEnabled.value = loaded.reminderEnabled
                     _reminderTime.value = loaded.reminderTime ?: DefaultReminderTime
+                }
+                _protectionProgress.value = loaded?.let { habit ->
+                    val status = streakProtectionRepository
+                        .reconcile(listOf(habit), LocalDate.now())
+                        .habits
+                        .firstOrNull { it.habitId == habit.id }
+                    status?.let { HabitProtectionProgress(it.progress, it.milestone) }
                 }
             }
         }
