@@ -9,13 +9,25 @@ import javax.inject.Singleton
 @Singleton
 class LoginPromptCoordinator @Inject constructor() {
 
-    private val pending = AtomicReference<LoginMessage?>(null)
+    private val pending = AtomicReference<LoginArrival?>(null)
 
-    fun show(message: LoginMessage) {
-        pending.set(message)
+    fun show(
+        message: LoginMessage? = null,
+        email: String = "",
+        password: String = "",
+    ) {
+        pending.set(LoginArrival(message = message, email = email, password = password))
     }
 
-    fun consume(): LoginMessage? = pending.getAndSet(null)
+    fun consume(): LoginArrival? = pending.getAndSet(null)
+}
+
+data class LoginArrival(
+    val message: LoginMessage? = null,
+    val email: String = "",
+    val password: String = "",
+) {
+    override fun toString(): String = "LoginArrival(message=$message, hasCredentials=${email.isNotEmpty()})"
 }
 
 @HiltViewModel

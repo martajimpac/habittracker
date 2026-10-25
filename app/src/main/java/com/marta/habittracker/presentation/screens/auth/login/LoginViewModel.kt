@@ -11,6 +11,7 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
+import com.marta.habittracker.presentation.navigation.LoginArrival
 import com.marta.habittracker.presentation.navigation.LoginMessage
 import com.marta.habittracker.presentation.navigation.LoginPromptCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,10 +32,12 @@ class LoginViewModel @Inject constructor(
     promptCoordinator: LoginPromptCoordinator,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
+    private val arrival = promptCoordinator.consume()
+
+    private val _uiState = MutableStateFlow(loginStateFrom(arrival))
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _prompt = MutableStateFlow(promptCoordinator.consume())
+    private val _prompt = MutableStateFlow(arrival?.message)
     val prompt: StateFlow<LoginMessage?> = _prompt.asStateFlow()
 
     fun dismissPrompt() {
@@ -87,6 +90,16 @@ class LoginViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun loginStateFrom(arrival: LoginArrival?): LoginUiState {
+        val state = LoginUiState()
+        if (arrival == null || (arrival.email.isEmpty() && arrival.password.isEmpty())) return state
+        return state.copy(
+            email = arrival.email,
+            password = arrival.password,
+            isLoginEnabled = isEmailValid(arrival.email) && isPasswordValid(arrival.password),
+        )
     }
 
     private fun verifyLogin() {

@@ -78,6 +78,7 @@ import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.HabitTopBarHorizontalPadding
 import com.marta.habittracker.presentation.utils.HabitColorOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -226,7 +227,7 @@ fun AddContentContent(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
                 .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = HabitTopBarHorizontalPadding, vertical = 16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

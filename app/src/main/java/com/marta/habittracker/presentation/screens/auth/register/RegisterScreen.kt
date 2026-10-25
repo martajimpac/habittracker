@@ -68,6 +68,7 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.theme.HabitSurfaceVariant
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
@@ -82,7 +83,7 @@ import kotlinx.coroutines.launch
 fun RegisterScreen(
     registerViewModel: RegisterViewModel = hiltViewModel(),
     navigateBack: () -> Unit,
-    navigateToLogin: () -> Unit = {},
+    navigateToLogin: (email: String, password: String) -> Unit = { _, _ -> },
     navigateToHome: () -> Unit = {},
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
@@ -90,8 +91,8 @@ fun RegisterScreen(
     ObserveAsEvents(flow = registerViewModel.navigateToHome) {
         navigateToHome()
     }
-    ObserveAsEvents(flow = registerViewModel.accountCreated) {
-        navigateToLogin()
+    ObserveAsEvents(flow = registerViewModel.accountCreated) { account ->
+        navigateToLogin(account.email, account.password)
     }
 
     RegisterContent(
@@ -168,7 +169,7 @@ fun RegisterContent(
                 TopAppBar(
                     navigationIcon = {
                         HabitIconButton(
-                            modifier = Modifier.padding(start = 20.dp),
+                            modifier = Modifier.habitTopBarButtonHorizontalPadding(),
                             onClick = onBack,
                             icon = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = stringResource(R.string.register_back),

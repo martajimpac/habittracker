@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.theme
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,15 +10,17 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.ThemeMode
-import androidx.compose.runtime.getValue
 
 private val DarkColorScheme = darkColorScheme(
     primary = HabitPrimaryOnDark,
@@ -148,15 +151,34 @@ fun HabitAppTheme(
     content: @Composable () -> Unit,
 ) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
-    InstaDevTheme(darkTheme = themeMode.isDarkTheme(), content = content)
+    BloomTheme(darkTheme = themeMode.isDarkTheme(), content = content)
 }
 
 @Composable
-fun InstaDevTheme(
+fun BloomTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+
+    //hacer que barra inferior se ajuste al modo oscuro
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+                ?: return@SideEffect
+
+            WindowCompat.getInsetsController(
+                window,
+                view
+            ).apply {
+                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars = !darkTheme
+            }
+        }
+    }
+
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

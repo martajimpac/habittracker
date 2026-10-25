@@ -2,19 +2,16 @@ package com.marta.habittracker.presentation.screens.bottom_nav_screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import com.marta.habittracker.presentation.theme.isHabitDarkTheme
@@ -24,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -34,7 +30,6 @@ import com.marta.habittracker.presentation.navigation.BottomNavigation
 import com.marta.habittracker.presentation.navigation.NavigationBottomWrapper
 import com.marta.habittracker.presentation.navigation.TabScreens
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
-import com.marta.habittracker.presentation.theme.InstaDevTheme
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 
 @Composable
@@ -129,12 +124,9 @@ fun BottomNavContent(
     onSignedOut: () -> Unit,
 ) {
     Scaffold(
-        modifier = Modifier.windowInsetsPadding(
-            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-        ),
-        // The top inset must stay available so each screen paints its own header
-        // through the status bar. Default insets would pad the content down and
-        // leave the notch in the scaffold surface color.
+        modifier = Modifier.fillMaxSize(),
+        // Top inset: each tab screen draws its own header under the status bar.
+        // Bottom inset: handled by NavigationBar defaults (do not pad the whole Scaffold).
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
@@ -173,10 +165,10 @@ fun HabitBottomBar(
     onTabSelected: (BottomNavigation) -> Unit,
     onAdd: () -> Unit,
 ) {
+    val itemColors = habitBottomBarItemColors()
     NavigationBar(
         modifier = Modifier.height(64.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        windowInsets = WindowInsets(0),
     ) {
         BottomNavigation.tabBarItems.forEach { tab ->
             if (tab == BottomNavigation.TabNew) {
@@ -188,6 +180,7 @@ fun HabitBottomBar(
                 NavigationBarItem(
                     selected = tab == selectedTab,
                     onClick = { onTabSelected(tab) },
+                    colors = itemColors,
                     icon = {
                         Icon(
                             imageVector = if (tab == selectedTab) tab.selectedIcon else tab.icon,
@@ -199,6 +192,21 @@ fun HabitBottomBar(
         }
     }
 }
+
+@Composable
+private fun habitBottomBarItemColors() = NavigationBarItemDefaults.colors(
+    selectedIconColor = MaterialTheme.colorScheme.primary,
+    unselectedIconColor = if (isHabitDarkTheme()) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    },
+    indicatorColor = if (isHabitDarkTheme()) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    },
+)
 
 @Composable
 private fun NewHabitBarButton(

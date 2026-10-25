@@ -46,7 +46,7 @@ class RegisterViewModel @Inject constructor(
     private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
     val navigateToHome = _navigateToHome.receiveAsFlow()
 
-    private val _accountCreated = Channel<Unit>(Channel.BUFFERED)
+    private val _accountCreated = Channel<RegisteredAccount>(Channel.BUFFERED)
     val accountCreated = _accountCreated.receiveAsFlow()
 
     private val _focusField = Channel<RegisterField>(Channel.BUFFERED)
@@ -156,7 +156,12 @@ class RegisterViewModel @Inject constructor(
         }
         _uiState.update { it.copy(isLoading = true, errorMessageRes = null) }
         viewModelScope.launch {
-            when (val result = registerUseCase(state.email.trim(), state.password, state.username)) {
+            when (val result = registerUseCase(
+                state.email.trim(),
+                state.password,
+                state.username,
+                state.name,
+            )) {
                 is DataResult.Success -> {
                     deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
@@ -165,7 +170,12 @@ class RegisterViewModel @Inject constructor(
                 is DataResult.Error -> {
                     if (result.error is RegisterError.EmailConfirmationRequired) {
                         _uiState.update { it.copy(isLoading = false, errorMessageRes = null) }
-                        _accountCreated.send(Unit)
+                        _accountCreated.send(
+                            RegisteredAccount(
+                                email = state.email.trim(),
+                                password = state.password,
+                            ),
+                        )
                     } else {
                         _uiState.update {
                             it.copy(
@@ -233,6 +243,13 @@ class RegisterViewModel @Inject constructor(
     private companion object {
         const val USERNAME_CHECK_DELAY_MS = 350L
     }
+}
+
+data class RegisteredAccount(
+    val email: String,
+    val password: String,
+) {
+    override fun toString(): String = "RegisteredAccount(hasCredentials=${email.isNotEmpty()})"
 }
 
 data class RegisterUiState(

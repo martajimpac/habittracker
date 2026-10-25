@@ -81,6 +81,7 @@ import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitDialog
 import com.marta.habittracker.presentation.components.HabitDialogTone
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.HabitTopBarHorizontalPadding
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.HabitIconKeys
 import com.marta.habittracker.presentation.components.HabitIconOptions
@@ -209,7 +210,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .padding(horizontal = HabitTopBarHorizontalPadding, vertical = 16.dp)
             .heightIn(min = 44.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -267,7 +268,10 @@ private fun FriendsBody(
                     FriendsSectionTitle(R.string.friends_pending_requests)
                     Spacer(Modifier.height(10.dp))
                     uiState.pendingRequests.forEach { request ->
-                        PendingRequestRow(request = request, onRespondToRequest = onRespondToRequest)
+                        PendingRequestRow(
+                            request = request,
+                            onRespondToRequest = onRespondToRequest
+                        )
                         Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -514,6 +518,7 @@ private fun AddFriendSheet(
     onSendRequest: (String) -> Unit,
     onClose: () -> Unit,
 ) {
+
     SheetColumn(
         titleRes = R.string.friends_add_friend,
         showDivider = false,
@@ -592,6 +597,22 @@ private fun FriendHabitsSheet(friend: Profile?, habits: List<Habit>) {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun FriendsHabitsSheet() {
+    FriendHabitsSheet(
+        friend = Profile(
+            id = "1",
+            username = "johndoe",
+            displayName = "John Doe",
+            avatarUrl = null,
+            avatarColor = "6200EE",
+        ),
+        habits = listOf(
+        )
+    )
+}
+
 @Composable
 private fun ChallengeSheet(
     friend: Profile?,
@@ -608,7 +629,7 @@ private fun ChallengeSheet(
     var criteria by remember { mutableStateOf(ChallengeCriteria.CompletionPct) }
     var showCriteriaHelp by remember { mutableStateOf(false) }
 
-    SheetColumn(titleRes = R.string.friends_create_challenge) {
+    SheetColumn(titleRes = R.string.friends_create_challenge, addHorizontalPadding = false) {
         Column(
             modifier = Modifier
                 .heightIn(max = 480.dp)
@@ -704,7 +725,9 @@ private fun ChallengeSheet(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
             Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 listOf(
@@ -718,7 +741,9 @@ private fun ChallengeSheet(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f),
+                                if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(
+                                    alpha = 0.2f
+                                ),
                             )
                             .clickable { schedule = mode }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -728,7 +753,9 @@ private fun ChallengeSheet(
             }
             if (schedule == HabitSchedule.WEEKDAYS) {
                 Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     DayOfWeek.entries.forEach { day ->
@@ -738,10 +765,13 @@ private fun ChallengeSheet(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(
-                                    if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(alpha = 0.2f),
+                                    if (selected) MaterialTheme.colorScheme.primary else HabitPrimaryLight.copy(
+                                        alpha = 0.2f
+                                    ),
                                 )
                                 .clickable {
-                                    selectedDays = if (selected) selectedDays - day else selectedDays + day
+                                    selectedDays =
+                                        if (selected) selectedDays - day else selectedDays + day
                                 }
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
@@ -827,7 +857,7 @@ private fun ChallengeSheet(
                     }
                 },
                 enabled = name.isNotBlank() &&
-                    (schedule != HabitSchedule.WEEKDAYS || selectedDays.isNotEmpty()),
+                        (schedule != HabitSchedule.WEEKDAYS || selectedDays.isNotEmpty()),
                 clickableWhenDisabled = true,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -849,7 +879,9 @@ private fun <T> ChoiceRow(
     options: List<T>, selected: T, onSelected: (T) -> Unit, label: @Composable (T) -> String
 ) {
     Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         options.forEach { option ->
@@ -893,6 +925,7 @@ private fun HabitSheetRow(habit: Habit) {
 private fun SheetColumn(
     titleRes: Int,
     showDivider: Boolean = true,
+    addHorizontalPadding: Boolean = true,
     onClose: (() -> Unit)? = null,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
@@ -904,16 +937,16 @@ private fun SheetColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         content = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HabitTopBarHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
                     text = stringResource(titleRes),
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 20.dp),
-
+                        .weight(1f),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -927,10 +960,21 @@ private fun SheetColumn(
                 }
             }
             if (showDivider) {
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp)
-                )
+                HorizontalDivider(Modifier.padding(horizontal = 20.dp))
             }
-            content()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (addHorizontalPadding) {
+                            Modifier.padding(horizontal = 20.dp)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                content = content,
+            )
+
             Spacer(Modifier.height(16.dp))
         },
     )
@@ -1015,8 +1059,8 @@ private fun challengeWeekdayLabel(day: DayOfWeek): Int = when (day) {
 // @Preview(showBackground = true)
 // @Composable
 // private fun AddFriendSheetPreview() {
-    // ChallengeSheet(
-        // friend = null,
-        // onSendChallenge = { _, _, _ -> },
-    // )
+// ChallengeSheet(
+// friend = null,
+// onSendChallenge = { _, _, _ -> },
+// )
 // }

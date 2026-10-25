@@ -33,14 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.usecase.WeeklyGoalDay
 import com.marta.habittracker.presentation.components.HabitIconButton
-import com.marta.habittracker.presentation.theme.InstaDevTheme
+import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
 import java.time.DayOfWeek
 
 @Composable
@@ -69,6 +68,7 @@ fun GoalsContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
+                        modifier = Modifier.habitTopBarButtonHorizontalPadding(),
                         icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.preferences_back),
                     )

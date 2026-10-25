@@ -33,6 +33,7 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
@@ -80,6 +81,7 @@ fun ForgotPasswordContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
+                        modifier = Modifier.habitTopBarButtonHorizontalPadding(),
                         icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.forgot_password_back),
                     )

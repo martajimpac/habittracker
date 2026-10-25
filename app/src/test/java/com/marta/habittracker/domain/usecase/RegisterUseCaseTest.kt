@@ -88,6 +88,21 @@ class RegisterUseCaseTest {
     }
 
     @Test
+    fun `invoke sends the trimmed registration name`() = runTest {
+        val repository = FakeAuthRepository()
+        val useCase = RegisterUseCase(repository)
+
+        useCase(
+            email = "user@example.com",
+            password = "Secret12",
+            username = "marta",
+            name = "  Marta Jimenez  ",
+        )
+
+        assertEquals("Marta Jimenez", repository.lastRegisterName)
+    }
+
+    @Test
     fun `invoke returns repository error when email is already registered`() = runTest {
         val repository = FakeAuthRepository(
             registerResult = DataResult.Error(RegisterError.EmailAlreadyRegistered),

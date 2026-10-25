@@ -25,6 +25,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -121,6 +122,23 @@ class LoginViewModelTest {
         first.dismissPrompt()
         assertNull(first.prompt.value)
         assertNull(loginViewModel(coordinator = coordinator).prompt.value)
+    }
+
+    @Test
+    fun `registration credentials fill the login fields once`() {
+        val coordinator = LoginPromptCoordinator()
+        coordinator.show(
+            LoginMessage.AccountCreated,
+            email = "user@example.com",
+            password = "Secret12",
+        )
+        val first = loginViewModel(coordinator = coordinator)
+
+        assertEquals("user@example.com", first.uiState.value.email)
+        assertEquals("Secret12", first.uiState.value.password)
+        assertTrue(first.uiState.value.isLoginEnabled)
+        assertEquals("", loginViewModel(coordinator = coordinator).uiState.value.email)
+        assertEquals("", loginViewModel(coordinator = coordinator).uiState.value.password)
     }
 
     private fun loginViewModel(

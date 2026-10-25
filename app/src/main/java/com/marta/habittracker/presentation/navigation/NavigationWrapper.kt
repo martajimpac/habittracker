@@ -50,8 +50,14 @@ fun NavigationWrapper(
 
     val navController = rememberNavController()
 
-    fun openLogin(message: LoginMessage? = null) {
-        if (message != null) loginPromptCoordinator.show(message)
+    fun openLogin(
+        message: LoginMessage? = null,
+        email: String = "",
+        password: String = "",
+    ) {
+        if (message != null || email.isNotEmpty() || password.isNotEmpty()) {
+            loginPromptCoordinator.show(message, email, password)
+        }
         navController.navigate(Login) {
             popUpTo(0) { inclusive = true }
         }
@@ -113,7 +119,11 @@ fun NavigationWrapper(
         }
     }
 
-    NavHost(navController = navController, startDestination = route) {
+    NavHost(
+        modifier = Modifier.fillMaxSize(),
+        navController = navController,
+        startDestination = route,
+    ) {
         composable<Onboarding> {
             OnboardingScreen(
                 navigateToLogin = {
@@ -157,8 +167,8 @@ fun NavigationWrapper(
         composable<Register> {
             RegisterScreen(
                 navigateBack = { navController.popBackStack() },
-                navigateToLogin = {
-                    openLogin(LoginMessage.AccountCreated)
+                navigateToLogin = { email, password ->
+                    openLogin(LoginMessage.AccountCreated, email, password)
                 },
                 navigateToHome = {
                     navController.navigate(Home) {

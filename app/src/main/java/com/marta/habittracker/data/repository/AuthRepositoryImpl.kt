@@ -62,6 +62,7 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         username: String,
+        name: String,
     ): DataResult<User, AppError> {
         return try {
             Log.d(TAG, "Register started")
@@ -70,6 +71,7 @@ class AuthRepositoryImpl @Inject constructor(
                 this.password = password
                 data = buildJsonObject {
                     put("username", username)
+                    put("name", name)
                 }
             }
             Log.d(TAG, "Register finished")

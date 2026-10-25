@@ -97,6 +97,7 @@ fun ProfileScreen(
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val dailyCheckIn by viewModel.dailyCheckIn.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val checkInEnabledMessage = stringResource(R.string.profile_daily_check_in_enabled)
     var showSignOutConfirm by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var deniedMessage by remember { mutableStateOf(0) }
@@ -117,7 +118,7 @@ fun ProfileScreen(
     ObserveAsEvents(flow = viewModel.dailyCheckInActivated) {
         Toast.makeText(
             context,
-            context.getString(R.string.profile_daily_check_in_enabled),
+            checkInEnabledMessage,
             Toast.LENGTH_SHORT,
         ).show()
     }

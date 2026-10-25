@@ -48,6 +48,7 @@ class LoginSecurityTest {
             email: String,
             password: String,
             username: String,
+            name: String,
         ): DataResult<User, AppError> {
             calls++
             return DataResult.Error(AppError.Common.Unknown)

@@ -10,6 +10,8 @@ import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.repository.AuthRepository
 import javax.inject.Inject
 
+private const val MAX_DISPLAY_NAME_LENGTH = 40
+
 class RegisterUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
@@ -17,6 +19,7 @@ class RegisterUseCase @Inject constructor(
         email: String,
         password: String,
         username: String = "marta",
+        name: String = "",
     ): DataResult<User, AppError> {
         if (!EmailValidator.isValid(email)) {
             return DataResult.Error(RegisterError.InvalidEmail)
@@ -28,6 +31,11 @@ class RegisterUseCase @Inject constructor(
         if (!UsernameRules.isValid(normalizedUsername)) {
             return DataResult.Error(RegisterError.InvalidUsername)
         }
-        return authRepository.doRegister(email.trim(), password, normalizedUsername)
+        return authRepository.doRegister(
+            email.trim(),
+            password,
+            normalizedUsername,
+            name.trim().take(MAX_DISPLAY_NAME_LENGTH),
+        )
     }
 }

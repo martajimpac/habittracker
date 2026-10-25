@@ -30,7 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +42,8 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
+import com.marta.habittracker.presentation.theme.BloomTheme
 import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.coroutines.launch
@@ -54,7 +56,7 @@ fun DeleteAccountScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
     BackHandler(enabled = uiState.isDeleting) { }
@@ -64,7 +66,7 @@ fun DeleteAccountScreen(
             DeleteAccountEvent.AccountDeleted -> onSignedOut()
             is DeleteAccountEvent.ShowError -> {
                 scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(event.messageRes))
+                    snackbarHostState.showSnackbar(resources.getString(event.messageRes))
                 }
             }
         }
@@ -103,6 +105,7 @@ fun DeleteAccountContent(
                 navigationIcon = {
                     HabitIconButton(
                         onClick = onBack,
+                        modifier = Modifier.habitTopBarButtonHorizontalPadding(),
                         icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.preferences_back),
                         enabled = !uiState.isDeleting,
@@ -168,31 +171,18 @@ fun DeleteAccountContent(
     }
 }
 
-// @Preview(showBackground = true, showSystemUi = true)
-// @Composable
-// private fun DeleteAccountContentPreview() {
-    // DeleteAccountContent(
-        // uiState = DeleteAccountUiState(),
-        // snackbarHostState = remember { SnackbarHostState() },
-        // onBack = {},
-        // onConfirmationChanged = {},
-        // onDeleteConfirmed = {},
-        // onCancel = {},
-    // )
-// }
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun DeleteAccountContentPreview() {
+    BloomTheme {
+        DeleteAccountContent(
+            uiState = DeleteAccountUiState(),
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onConfirmationChanged = {},
+            onDeleteConfirmed = {},
+            onCancel = {},
+        )
+    }
+}
 
-// @Preview(showBackground = true, showSystemUi = true)
-// @Composable
-// private fun DeleteAccountContentReadyPreview() {
-    // DeleteAccountContent(
-        // uiState = DeleteAccountUiState(
-            // confirmation = "DELETE",
-            // isDeleteEnabled = true,
-        // ),
-        // snackbarHostState = remember { SnackbarHostState() },
-        // onBack = {},
-        // onConfirmationChanged = {},
-        // onDeleteConfirmed = {},
-        // onCancel = {},
-    // )
-// }

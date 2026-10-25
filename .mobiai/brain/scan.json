@@ -9,15 +9,18 @@
     "gradle"
   ],
   "ui": [
+    "coil",
     "compose"
   ],
   "di": [
     "hilt"
   ],
   "network": [
+    "ktor",
     "retrofit"
   ],
   "persistence": [
+    "datastore",
     "room"
   ],
   "serialization": [
@@ -26,13 +29,19 @@
   "testing": [
     "espresso"
   ],
-  "integrations": [],
-  "ci_cd": [],
+  "integrations": [
+    "firebase"
+  ],
+  "ci_cd": [
+    "github_actions"
+  ],
   "detected_files": {
     "android_manifest": "app/src/main/AndroidManifest.xml",
     "settings_gradle": "settings.gradle.kts"
   },
-  "warnings": [],
-  "created_at": "2026-07-15T10:18:57Z",
-  "updated_at": "2026-07-15T10:18:57Z"
+  "warnings": [
+    "sensitive file detected: app/google-services.json (not read)"
+  ],
+  "created_at": "2026-10-23T11:14:04Z",
+  "updated_at": "2026-10-23T11:14:04Z"
 }

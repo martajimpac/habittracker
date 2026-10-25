@@ -373,6 +373,7 @@ class ChallengeDetailViewModelTest {
             email: String,
             password: String,
             username: String,
+            name: String,
         ) = error("not used")
 
         override suspend fun requestPasswordReset(email: String) = error("not used")

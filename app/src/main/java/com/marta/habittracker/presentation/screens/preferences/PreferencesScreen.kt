@@ -47,6 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,6 +59,7 @@ import com.marta.habittracker.presentation.components.CustomTextField
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitIconButton
+import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.HabitPrimary
@@ -75,6 +77,8 @@ fun PreferencesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val resources = LocalResources.current
+    val usernameCopiedMessage = stringResource(R.string.preferences_username_copied)
     val scope = rememberCoroutineScope()
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -87,12 +91,12 @@ fun PreferencesScreen(
             PreferencesEvent.NavigateBack -> onBack()
             is PreferencesEvent.ShowError -> {
                 scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(event.messageRes))
+                    snackbarHostState.showSnackbar(resources.getString(event.messageRes))
                 }
             }
             PreferencesEvent.UsernameCopied -> {
                 scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(R.string.preferences_username_copied))
+                    snackbarHostState.showSnackbar(usernameCopiedMessage)
                 }
             }
         }
@@ -155,7 +159,7 @@ fun PreferencesContent(
                         onClick = onBack,
                         icon = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.preferences_back),
-                        modifier = Modifier.padding(start = 20.dp),
+                        modifier = Modifier.habitTopBarButtonHorizontalPadding(),
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

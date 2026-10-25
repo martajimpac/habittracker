@@ -152,7 +152,7 @@ class RegisterViewModelTest {
                 override suspend fun clearCurrentToken() = Unit
             },
         )
-        val created = mutableListOf<Unit>()
+        val created = mutableListOf<RegisteredAccount>()
         val collectJob = launch { viewModel.accountCreated.collect { created.add(it) } }
 
         viewModel.onNameChanged("Marta")
@@ -164,7 +164,7 @@ class RegisterViewModelTest {
         viewModel.onRegisterClicked()
         advanceUntilIdle()
 
-        assertEquals(1, created.size)
+        assertEquals(listOf(RegisteredAccount("user@example.com", "abcdefg1")), created)
         assertNull(viewModel.uiState.value.errorMessageRes)
         assertFalse(viewModel.uiState.value.isLoading)
         collectJob.cancel()
