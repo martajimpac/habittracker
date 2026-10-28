@@ -14,6 +14,7 @@ import com.marta.habittracker.presentation.navigation.TabScreens.TabFriends
 import com.marta.habittracker.presentation.navigation.TabScreens.TabHome
 import com.marta.habittracker.presentation.navigation.TabScreens.TabGoals
 import com.marta.habittracker.presentation.navigation.TabScreens.TabPreferences
+import com.marta.habittracker.presentation.navigation.TabScreens.TabRecommendations
 import com.marta.habittracker.presentation.navigation.TabScreens.TabProfile
 import com.marta.habittracker.presentation.navigation.TabScreens.TabStats
 import com.marta.habittracker.presentation.screens.add_content.AddContentScreen
@@ -24,6 +25,7 @@ import com.marta.habittracker.presentation.screens.friends.FriendsScreen
 import com.marta.habittracker.presentation.screens.goals.GoalsScreen
 import com.marta.habittracker.presentation.screens.home.HomeScreen
 import com.marta.habittracker.presentation.screens.preferences.PreferencesScreen
+import com.marta.habittracker.presentation.screens.recommendations.RecommendationScreen
 import com.marta.habittracker.presentation.screens.profile.ProfileScreen
 import com.marta.habittracker.presentation.screens.stats.StatsScreen
 
@@ -43,6 +45,9 @@ fun NavigationBottomWrapper(
             StatsScreen(
                 onHabitClick = { habitId ->
                     navHostController.navigate(TabDetail(habitId))
+                },
+                onOpenRecommendations = {
+                    navHostController.navigate(TabRecommendations)
                 },
             )
         }
@@ -71,6 +76,12 @@ fun NavigationBottomWrapper(
 
         composable<TabGoals> {
             GoalsScreen(
+                onBack = { navHostController.popBackStack() },
+            )
+        }
+
+        composable<TabRecommendations> {
+            RecommendationScreen(
                 onBack = { navHostController.popBackStack() },
             )
         }

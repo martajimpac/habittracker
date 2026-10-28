@@ -5,6 +5,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.AppError
 import com.marta.habittracker.domain.model.LoginError
 import com.marta.habittracker.domain.model.ProfileError
+import com.marta.habittracker.domain.model.RecommendationError
 import com.marta.habittracker.domain.model.RegisterError
 
 @StringRes
@@ -17,6 +18,12 @@ fun AppError.toUserMessageRes(): Int = when (this) {
     RegisterError.EmailConfirmationRequired -> R.string.error_register_email_confirmation_required
     RegisterError.InvalidUsername -> R.string.error_register_username_format
     ProfileError.InvalidDisplayName -> R.string.error_preferences_invalid_display_name
+    RecommendationError.InvalidRequest -> R.string.recommendation_error_invalid
+    RecommendationError.TimedOut -> R.string.recommendation_error_timeout
+    RecommendationError.EmptyResponse -> R.string.recommendation_error_empty
+    RecommendationError.Unavailable,
+    RecommendationError.MissingBaseUrl,
+    -> R.string.recommendation_error_unavailable
     AppError.Common.Network -> R.string.error_no_internet
     AppError.Common.Unauthorized -> R.string.error_common_unauthorized
     AppError.Common.Unknown -> R.string.error_common_unknown

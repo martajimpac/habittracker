@@ -26,6 +26,31 @@ android {
     namespace = "com.marta.habittracker"
     compileSdk = 37
 
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("emulator") {
+            dimension = "environment"
+
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_EMULATOR", "")}\"",
+            )
+        }
+
+        create("phone") {
+            dimension = "environment"
+
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEVICE", "")}\"", //ip de mi ordenador
+            )
+        }
+    }
+
     defaultConfig {
         applicationId = "com.marta.habittracker"
         minSdk = 26
@@ -48,11 +73,22 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Cada flavor utiliza su propia URL local.
+        }
+
         release {
             isMinifyEnabled = false
+
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_PRODUCTION", "")}\"",
+            )
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -73,6 +109,7 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.isReturnDefaultValues = true
     }
 
 }

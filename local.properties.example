@@ -4,3 +4,6 @@
 sdk.dir=C\:\\path\\to\\Android\\Sdk
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+# bloom-api base URL. Emulator: http://10.0.2.2:8000
+# Physical device on the same Wi-Fi: http://<this-computer-private-ip>:8000
+BLOOM_API_BASE_URL=http://10.0.2.2:8000

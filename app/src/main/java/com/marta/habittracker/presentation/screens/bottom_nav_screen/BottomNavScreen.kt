@@ -97,6 +97,7 @@ fun BottomNavScreen(
             destinationRoute.contains(TabScreens.TabEditHabit::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabPreferences::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabGoals::class.qualifiedName.toString()) ||
+            destinationRoute.contains(TabScreens.TabRecommendations::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabDeleteAccount::class.qualifiedName.toString()) ||
             destinationRoute.contains(TabScreens.TabChallengeDetail::class.qualifiedName.toString())
 

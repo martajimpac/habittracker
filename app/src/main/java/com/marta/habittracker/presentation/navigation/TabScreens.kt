@@ -26,6 +26,9 @@ sealed class TabScreens {
     data object TabGoals : TabScreens()
 
     @Serializable
+    data object TabRecommendations : TabScreens()
+
+    @Serializable
     data object TabDeleteAccount : TabScreens()
 
     @Serializable

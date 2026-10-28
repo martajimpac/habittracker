@@ -55,6 +55,7 @@ import com.marta.habittracker.domain.usecase.StreakOutcome
 import com.marta.habittracker.presentation.components.StreakProtectionBadge
 import com.marta.habittracker.presentation.components.ActivityHeatmap
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
+import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.buildRollingFourWeeks
 import com.marta.habittracker.presentation.components.globalDayIntensity
@@ -73,6 +74,7 @@ import java.time.LocalDate
 @Composable
 fun StatsScreen(
     onHabitClick: (String) -> Unit,
+    onOpenRecommendations: () -> Unit,
     viewModel: StatsViewModel = hiltViewModel(),
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
@@ -86,6 +88,7 @@ fun StatsScreen(
     StatsContent(
         habits = habits,
         onHabitClick = onHabitClick,
+        onOpenRecommendations = onOpenRecommendations,
         challengeHabitIds = challengeHabitIds,
         protectionBalance = protection.balance,
         protectionByHabit = protection.habits.associateBy { it.habitId },
@@ -96,6 +99,7 @@ fun StatsScreen(
 fun StatsContent(
     habits: List<Habit>,
     onHabitClick: (String) -> Unit = {},
+    onOpenRecommendations: () -> Unit = {},
     challengeHabitIds: Set<String> = emptySet(),
     protectionBalance: Int = 0,
     protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
@@ -131,10 +135,18 @@ fun StatsContent(
             StreakProtectionBadge(balance = protectionBalance)
         }
 
+        HabitButton(
+            text = stringResource(R.string.recommendation_open),
+            onClick = onOpenRecommendations,
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            compact = true,
+        )
+
         if (habits.isEmpty()) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth()
                     .padding(horizontal = 32.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -162,6 +174,7 @@ fun StatsContent(
             }
         } else {
             LazyColumn(
+                modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

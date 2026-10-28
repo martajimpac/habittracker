@@ -434,5 +434,20 @@
     <string name="today_widget_preview_pending">Water</string>
     <string name="today_widget_preview_done">Done · Read</string>
 
+    <!-- Recommendations -->
+    <string name="recommendation_open">Get a recommendation</string>
+    <string name="recommendation_title">Recommendation</string>
+    <string name="recommendation_request">Ask for a recommendation</string>
+    <string name="recommendation_retry">Try again</string>
+    <string name="recommendation_loading">Preparing your recommendation</string>
+    <string name="recommendation_empty_title">No habits yet</string>
+    <string name="recommendation_empty_message">Create a habit before asking for a recommendation.</string>
+    <string name="recommendation_suggestion_label">Suggestion</string>
+    <string name="recommendation_stat">%1$s: %2$d of %3$d days this week</string>
+    <string name="recommendation_error_invalid">The weekly numbers could not be sent. Try again.</string>
+    <string name="recommendation_error_timeout">The recommendation took too long. Try again.</string>
+    <string name="recommendation_error_empty">No recommendation came back. Try again.</string>
+    <string name="recommendation_error_unavailable">The recommendation service is unavailable. Try again.</string>
+
     <!-- Legacy tab keys -->
 </resources>
