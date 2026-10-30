@@ -1,7 +1,7 @@
-# PLAN: Recomendación de hábitos con bloom-api
+# PLAN: Chat de hábitos con bloom-api
 
 **SPEC de referencia:** `docs/features/habit-ai-recommendations/SPEC.md`
-**Versión de la spec revisada:** Aprobada el 2026-10-28 en el árbol de trabajo. No hay commit de esa aprobación.
+**Versión de la spec revisada:** Aprobada el 2026-10-30 en el árbol de trabajo, al pedir cerrar el flujo con las acciones recomendadas.
 **Estado:** Aprobado <!-- Borrador | En revisión | Aprobado -->
 
 <!-- PARA LA PERSONA
@@ -26,136 +26,110 @@ derivar TASKS.md con tareas, dependencias y comprobaciones.
   para implementar debe ser explícita; no se deduce del estado de los documentos.
 -->
 
+La misma instrucción del 2026-10-30 que aprobó la spec aprueba este plan y autoriza la implementación. No se añaden dependencias.
+
 ## Contexto técnico verificado
 
 | Componente o archivo existente | Ruta verificada | Responsabilidad y uso previsto |
 | --- | --- | --- |
-| API intermedia | `C:\Users\marta\bloom-api\main.py` | `GET /health` y `POST /api/recommendations`. Ella llama a Ollama. La app no la modifica. |
-| Hábitos con registros | `HabitRepository.getAllHabitsWithRecords()` vía `StatsViewModel` | Origen local de los hábitos. La pantalla nueva lee el mismo flujo. |
-| Objetivo y días de la semana | `WeeklyQuota.kt`: `weeklyTarget()`, `completedInWeek()` | Cálculo ya existente para `total_days` y `completed_days`. |
-| Estadísticas | `StatsScreen.kt`, ruta `TabStats` en `NavigationBottomWrapper.kt` | Ahí se añade el botón. El contenido actual de la pestaña no se rediseña. |
-| Pantalla secundaria | `GoalsScreen.kt`, `TabGoals`, `hideBottomBar` en `BottomNavScreen.kt` | Patrón de pantalla con atrás y barra inferior oculta. |
-| Configuración local | `app/build.gradle.kts`, `local.properties`, `local.properties.example` | `SUPABASE_URL` ya pasa de `local.properties` a `BuildConfig`. La URL de la API sigue ese camino. |
-| HTTP | `ktor` 3.5.1 en `gradle/libs.versions.toml`, dependencia `ktor-client-android` | Cliente para el `POST`. No se reutiliza el cliente de Supabase. |
-| Textos | `values/strings.xml` y `values-es/strings.xml` | Rótulos y errores nuevos en los dos idiomas. |
-| Eventos de UI | `presentation/utils/ObserveAsEvents.kt` | No hace falta un evento one-shot: el resultado y el error son estado de la pantalla. |
-| Manifiesto | `AndroidManifest.xml` | Ya tiene `INTERNET`. No hay `usesCleartextTraffic` ni `networkSecurityConfig`. |
+| Pantalla actual | `app/src/main/java/com/marta/habittracker/presentation/screens/recommendations/RecommendationScreen.kt` | Un solo uso: cifras y botón. Pasa a ser el hilo y el campo. |
+| Estado actual | `.../recommendations/RecommendationViewModel.kt` | Sustituir el estado de una sugerencia por mensajes, borrador y un envío en curso. |
+| Contadores | `domain/usecase/HabitWeekRecommendationStats.kt` | Reutilizar `habitWeekRecommendationStats`. No cambia el cálculo. |
+| Contrato remoto | `domain/repository/RecommendationRepository.kt` | Añadir el envío del hilo. Conservar `request` para no borrar `POST /api/recommendations`. La pantalla no lo usa. |
+| Cliente | `data/remote/BloomRecommendationDataSource.kt` | Añadir `POST /api/chat` sobre el mismo transporte y la misma URL base. |
+| Transporte | `data/remote/KtorRecommendationTransport.kt` | Reutilizar. Timeout de llamada ya es 100 s, por encima de los 90 s del servicio. |
+| Inyección | `di/BloomApiModule.kt` | Sin cambios de grafo: el repositorio sigue recibiendo el data source. |
+| Navegación | `presentation/navigation/NavigationBottomWrapper.kt` | Estadísticas sigue abriendo `TabRecommendations`. |
+| Actividad | `MainActivity.kt` ya llama a `enableEdgeToEdge`. El manifiesto no declara `windowSoftInputMode`. | Añadir `adjustResize` en `MainActivity`. |
+| API | `C:\Users\marta\apis\bloom-api\main.py` | Solo `GET /health` y `POST /api/recommendations`. El endpoint de chat se añade ahí. |
 
-**Convenciones y patrón de referencia:** Clean Architecture en un solo módulo `:app`. Pantalla y contenido separados, como `GoalsScreen`. ViewModel con `StateFlow` e inyección por Hilt. Repositorios de dominio implementados en `data`. Textos de UI en recursos. Logs con `android.util.Log` en el acceso remoto, sin cuerpos ni nombres de hábitos.
+**Convenciones y patrón de referencia:** Clean Architecture. La pantalla no llama al repositorio. El ViewModel sí. `StateFlow` para el estado. Errores como `RecommendationError` y textos en `values` y `values-es`. Fakes en los tests unitarios, sin mocks.
 
 ## Solución propuesta
 
-La app calcula en dominio la pareja semanal de cada hábito y la muestra ella. Un cliente HTTP propio envía solo ese resumen a `bloom-api` y pinta el texto `recommendations` como sugerencia. La dirección sale de `BuildConfig`, no del código que calcula los contadores.
+`bloom-api` gana `POST /api/chat`. El cuerpo lleva `habits` (mismo significado que hoy), `language` (`en` o `es`) y `messages` (`role` + `content`) en orden. La respuesta útil es `message`, un texto. El servicio valida la lista de hábitos como ya hace recomendaciones, exige al menos un mensaje, exige que el último sea de la persona y responde en el idioma pedido usando solo esos contadores. Sigue llamando a Ollama con `stream: false`, el modelo `qwen2.5-coder:7b` y 90 segundos.
 
-```text
-Estadísticas --botón--> pantalla nueva
-    |                       |
-    |                       lee Room (hábitos y registros)
-    |                       weeklyTarget + completedInWeek
-    |                       muestra nombre y dos contadores
-    |                       POST {BASE_URL}/api/recommendations
-    |                       bloom-api --POST /api/chat--> Ollama en 127.0.0.1:11434
-    |                       pinta el texto aparte
-```
+En la app, el ViewModel guarda los mensajes y el borrador solo en memoria. Cada envío recalcula los contadores, añade el mensaje de la persona, limpia el borrador y llama a `send`. Un fallo deja ese mensaje, guarda el error y `retry` repite la misma lista sin añadir otra copia. El idioma sale de la configuración de la app: `es` si el idioma empieza por `es`; si no, `en`.
 
-Al salir de la pantalla se destruye su ViewModel y se cancela la petición. No hay tabla nueva ni notificación.
-
-No se añade un módulo Gradle. No se propone otra API ni sustituir `bloom-api`.
+La pantalla usa el `Scaffold` existente, insets de dibujo seguro y el teclado con `fitInside` del IME para que el campo quede visible. Sin hábitos solo muestra la explicación.
 
 ## Módulos y componentes afectados
 
-El proyecto de esta rama tiene un solo módulo de aplicación. No se crea otro.
+El proyecto no está modularizado. No se crea un módulo.
 
 | Módulo | Existe / nuevo | Responsabilidad y cambios | Dependencias afectadas |
 | --- | --- | --- | --- |
-| `:app` | Existente | Pantalla, cálculo semanal, cliente de `bloom-api` y URL de entorno | Ningún módulo nuevo. Sigue dependiendo de Room, Hilt, Compose y Ktor, que ya están declarados |
+| No aplica | — | La app sigue en `:app`. | — |
 
 | Componente o ruta | Acción | Cambio y responsabilidad | Requisito relacionado |
 | --- | --- | --- | --- |
-| `domain/usecase/WeeklyQuota.kt` | Reutilizar | `weeklyTarget()` y `completedInWeek()` | RF-02, CA-02 |
-| `domain/usecase/HabitWeekRecommendationStats.kt` | Crear | Función pura: hábitos y fecha de hoy a la lista `name`, `completed_days`, `total_days`. Omite un nombre en blanco. No recorta contadores ni nombres | RF-02, RF-04, CA-02 |
-| `domain/repository/RecommendationRepository.kt` | Crear | Contrato: enviar la lista y recibir el texto, o un error de dominio sin textos de UI | RF-03, RF-05 |
-| `data/remote/BloomRecommendationDataSource.kt` | Crear | `POST` con Ktor al `baseUrl` inyectado. Timeout de llamada de 100 s para poder recibir el 504 de la API. No registra el cuerpo | RF-03, RF-05, RF-08 |
-| `data/repository/RecommendationRepositoryImpl.kt` | Crear | Traduce HTTP 400, 502, 504, cuerpo vacío y fallo de red a error de dominio | RF-05, CA-05 |
-| `di/BloomApiModule.kt` | Crear | Entrega la URL de `BuildConfig` y el origen de datos. Vive en `di`, como el resto de Hilt | RF-08 |
-| `app/build.gradle.kts`, `local.properties.example` | Modificar | `BLOOM_API_BASE_URL` junto a `SUPABASE_URL`. El ejemplo documenta las dos direcciones de desarrollo | RF-08, CA-09 |
-| `src/debug/AndroidManifest.xml` | Crear | `usesCleartextTraffic` solo en debug, porque las direcciones aprobadas son `http` y el manifiesto actual bloquea el claro | RF-08, CA-09 |
-| `presentation/navigation/TabScreens.kt` | Modificar | Destino `TabRecommendations` | RF-01 |
-| `NavigationBottomWrapper.kt`, `BottomNavScreen.kt` | Modificar | Navegación desde Estadísticas y barra inferior oculta, igual que Metas | RF-01 |
-| `presentation/screens/stats/StatsScreen.kt` | Modificar | Un botón que llama a `onOpenRecommendations`. No cambia los gráficos | RF-01 |
-| `presentation/screens/recommendations/RecommendationScreen.kt` y `RecommendationContent.kt` | Crear | `Scaffold`, atrás, lista de hechos, acción, carga, vacío, error y texto de sugerencia. El contenido no ve el ViewModel | RF-01, RF-06, RF-07 |
-| `RecommendationViewModel.kt` | Crear | Lee el repositorio de hábitos, calcula, llama una sola vez y guarda el estado de la visita | RF-04, RF-06, CA-06 |
-| `values/strings.xml`, `values-es/strings.xml` | Modificar | Botón, títulos, vacío, carga, error y etiqueta de sugerencia | RF-07, CA-08 |
+| `domain/model/AssistantTurn.kt` | Crear | Mensaje del hilo: persona o asistente, y texto. | RF-02 |
+| `domain/repository/RecommendationRepository.kt` | Modificar | `send(stats, language, messages)`. | RF-02 |
+| `data/remote/BloomRecommendationDataSource.kt` | Modificar | `POST /api/chat` y lectura de `message`. | RF-02, RF-06 |
+| `data/repository/RecommendationRepositoryImpl.kt` | Modificar | Delegar `send`. | RF-02 |
+| `presentation/screens/recommendations/RecommendationViewModel.kt` | Modificar | Hilo, borrador, un envío, reintento. | RF-01 a RF-08 |
+| `presentation/screens/recommendations/RecommendationScreen.kt` | Modificar | Lista, campo, error y reintento. Sin bloque de cifras. | RF-01, RF-03, RF-05, RF-07 |
+| `res/values/strings.xml` y `values-es/strings.xml` | Modificar | Rótulos del chat. | RF-04 |
+| `app/src/main/AndroidManifest.xml` | Modificar | `adjustResize` en `MainActivity`. | RF-08 |
+| `C:\Users\marta\apis\bloom-api\main.py` | Modificar | Endpoint nuevo. No se elimina `/api/recommendations`. | RF-02, RF-03, RF-04 |
+| Tests de data source y ViewModel | Modificar | Cubren el contrato y el hilo. | CA-02, CA-05, CA-06, CA-07, CA-09 |
 
 ## Datos y contratos
 
-- **Modelos y contratos de entrada y salida:** cuerpo `{"habits":[{"name","completed_days","total_days"}]}`. Respuesta útil `{"recommendations":"<texto>"}`. El modelo de dominio de la petición es esa pareja más el nombre. El texto no se parsea para extraer cifras.
-- **Identificadores, relaciones y restricciones:** no hay id nuevo. `completed_days` puede ser mayor que `total_days`; se envía igual y un 400 se muestra como error. Un nombre de más de 100 caracteres también falla la validación de la API y se muestra como error, sin recortar el nombre visible.
-- **Origen de los datos mostrados y transformaciones:** Room, semana lunes–domingo de hoy en la zona local, funciones ya citadas. La sugerencia solo llega de `recommendations`.
-- **Persistencia, consultas y actualizaciones:** no se escribe la sugerencia. La lectura de hábitos es la que ya existe.
-- **Convivencia entre datos locales y remotos:** los contadores salen de Room aunque no haya internet hacia Supabase. La sugerencia exige que `bloom-api` responda. No se mezclan con el aviso de «sin internet» de guardar un hábito.
-- **Compatibilidad y migraciones de datos existentes:** no hay migración.
+- **Modelos y contratos de entrada y salida:** `POST /api/chat` con `habits[{name, completed_days, total_days}]`, `language` y `messages[{role, content}]`. Respuesta `{ "message": "<texto>" }`. `role` es `user` o `assistant`.
+- **Identificadores, relaciones y restricciones:** Sin ids nuevos. Nombre de hábito de 1 a 100 caracteres tras recortar. Contadores enteros de cero o más. Si `completed_days` supera `total_days`, el servicio responde 400. Mensaje vacío no sale de la app. El servicio rechaza una lista de mensajes vacía y un último mensaje que no sea de la persona.
+- **Origen de los datos mostrados y transformaciones:** Los contadores salen de `habitWeekRecommendationStats` en el momento del envío y no se muestran. Los mensajes visibles son los de la visita más la respuesta.
+- **Persistencia, consultas y actualizaciones:** El hilo y el borrador no se escriben en Room ni en `SavedState`. Viven en el ViewModel de esa visita.
+- **Convivencia entre datos locales y remotos:** La lectura de hábitos sigue en Room. El envío es remoto y no modifica hábitos.
+- **Compatibilidad y migraciones de datos existentes:** No hay migración. `POST /api/recommendations` permanece.
 
 ## Estado, operaciones y errores
 
-- **Gestión del estado de interfaz y navegación:** `StateFlow` con reposo, carga, vacío, resultado y error. El botón de Estadísticas navega con el callback que ya usan Metas y el detalle. Atrás hace `popBackStack`. No hay `Channel`: no hay diálogo, snackbar ni navegación disparados por un resultado.
-- **Conservación y restauración del estado:** el ViewModel conserva la visita si la pantalla se recrea o pasa a segundo plano y el proceso sigue vivo. Al salir o al morir el proceso, el estado desaparece. Cumple D7.
-- **Ejecución, concurrencia y cancelación de operaciones:** la petición corre en `viewModelScope`. Un segundo toque no llama si el estado es carga. Salir cancela el ámbito. La UI no espera en el hilo principal.
-- **Errores, reintentos y prevención de duplicados:** 400, 502, 504, cuerpo sin texto, URL vacía y fallo de conexión usan `@StringRes` en el ViewModel. Reintentar lanza otra petición solo cuando no hay una en curso. El código de estado se registra con `Log.e`; el cuerpo y los nombres, no.
-- **Otras consideraciones mobile aplicables y su solución:** `Scaffold` con el `innerPadding` del contenido, como el resto de pantallas con barra superior. No hay campo de texto. El estado de carga tiene texto, no solo un indicador. Los rótulos largos van en una columna con scroll. No se piden permisos nuevos.
+- **Gestión del estado de interfaz y navegación:** Fases `LoadingHabits`, `Empty`, `Ready` y `Sending`. Estadísticas sigue navegando a la misma ruta. Volver atrás destruye el ViewModel de la visita.
+- **Conservación y restauración del estado:** El ViewModel conserva mensajes y borrador al rotar. Matar el proceso crea un estado nuevo y vacío.
+- **Ejecución, concurrencia y cancelación de operaciones:** Una corrutina por envío. `Sending` ignora otro `send` o `retry`. Salir de la pantalla cancela el ámbito del ViewModel. No se lanza una segunda llamada al volver de segundo plano.
+- **Errores, reintentos y prevención de duplicados:** 400 y 422 son petición inválida; 504 y el timeout del transporte son espera agotada; cuerpo sin texto es respuesta vacía; el resto es no disponible. El mensaje de la persona ya está en la lista. `retry` reutiliza esa lista.
+- **Otras consideraciones mobile aplicables y su solución:** Teclado con `adjustResize` y `fitInside` del IME. Rótulos en recursos. El estado de carga usa texto y un indicador, no solo color. El campo y el botón tienen descripción para el lector. No hay permiso nuevo ni notificación.
 
 ## Dependencias y configuración
 
-- No se añade ninguna librería. El `POST` usa el cliente Ktor 3.5.1 ya declarado. El cliente de Supabase no sirve: apunta a otro host y lleva la sesión.
-- `BLOOM_API_BASE_URL` en `local.properties`, copiada a `BuildConfig` en `defaultConfig`. Vacía si falta la propiedad. `local.properties` sigue sin versionarse. El ejemplo, sí, con `http://10.0.2.2:8000` y un comentario para la IP privada y el puerto `8000`.
-- El claro se permite solo en el manifiesto `debug`. Un build release contra esas URLs `http` no llegará a la API. Encaja con el uso de desarrollo aprobado. Release no abre el claro para todo el tráfico.
-- La API se arranca fuera de la app: `python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`, con Ollama en el mismo ordenador.
+- No hay librerías nuevas. Se reutilizan Ktor, kotlinx.serialization, Hilt, Compose y el transporte actual.
+- `BLOOM_API_BASE_URL` no cambia.
+- El endpoint vive en `bloom-api`, fuera de este repositorio. El código queda escrito en `main.py` y también se entrega en el informe para copiarlo.
 
 ## Estrategia de validación
 
 | Criterio | Método y test existente o propuesto | Entorno y datos necesarios | Evidencia prevista |
 | --- | --- | --- | --- |
-| CA-01 | Manual. No hay test de UI de esta pantalla | Emulador, API y Ollama en marcha, cuenta con hábitos | Una respuesta, sin lista de mensajes |
-| CA-02 | Test unitario nuevo de `HabitWeekRecommendationStats`. No hay test previo de `weeklyTarget` | Hábitos y registros fijados, sin red | Contadores iguales a `weeklyTarget` y `completedInWeek` |
-| CA-03 | Test unitario del data source con un motor HTTP falso | URL base inyectada | La ruta es `/api/recommendations` y no `/api/chat` |
-| CA-04 | Test unitario del ViewModel con repositorio falso | Lista de hábitos vacía | El remoto no se llama y el estado es vacío |
-| CA-05 | Test unitario del repositorio para 400, 502, 504, cuerpo vacío y conexión fallida | Respuestas controladas | Error de dominio y ningún texto de sugerencia |
-| CA-06 | Test unitario del ViewModel | Petición que no termina | Una sola llamada al remoto |
-| CA-07 | Manual, revisando que los contadores de la lista no salen del texto | Respuesta que mencione un número ausente del resumen | La lista de hechos no incorpora ese número |
-| CA-08 | Revisión de `values` y `values-es`, y cambio de idioma en el emulador | Cadenas nuevas en los dos ficheros | Los rótulos cambian. El párrafo sigue en español |
-| CA-09 | Test de que la URL usada es la inyectada, más prueba manual | `local.properties` con `10.0.2.2` y, en otro arranque, la IP privada | Cada entorno llama a su base. El cálculo no referencia la URL |
+| CA-01 | Prueba manual. El unitario comprueba que con hábitos la fase queda `Ready` y la lista vacía, sin llamada. | Cuenta con hábitos, o el fake del ViewModel. | Test de ViewModel. La pantalla en emulador queda pendiente si no hay dispositivo. |
+| CA-02 | `RecommendationViewModelTest` envía dos turnos y revisa la lista enviada. | Fake del repositorio. | La segunda llamada lleva los mensajes previos y los contadores. |
+| CA-03 | Revisión de `RecommendationScreen`: no queda `recommendation_stat`. El prompt de `main.py` prohíbe otras cifras. | Código. | Diff de la pantalla y el prompt. |
+| CA-04 | El ViewModel pasa el idioma inyectado. Los recursos existen en `values` y `values-es`. | Tests y recursos. | Llamada con `en` o `es`. No se ejecuta el modelo en este entorno salvo que la API esté levantada. |
+| CA-05 | Test de ViewModel sin hábitos. | Fake. | Fase `Empty` y cero llamadas. |
+| CA-06 | Test de ViewModel con error y `retry`. Test del data source para cuerpo vacío, 400, 504 y fallo de transporte. | Fakes. | Un solo mensaje de la persona y segunda llamada con la misma lista. |
+| CA-07 | Test de ViewModel con la primera llamada bloqueada. | `CompletableDeferred`. | `calls == 1`. |
+| CA-08 | El estado está en el ViewModel, sin `SavedState`. | Revisión de código. | No hay clave de guardado. La rotación real queda para dispositivo. |
+| CA-09 | `BloomRecommendationDataSourceTest` comprueba `http://10.0.2.2:8000/api/chat` y que la URL no contiene el puerto 11434. | Fake del transporte. | URL y cuerpo. El móvil con IP privada no se ejecuta aquí. |
 
-**Comprobaciones de regresión:** `StatsScreen` sigue mostrando racha y heatmap. Metas y el resto de destinos siguen navegando. No se llama a Supabase para esta sugerencia.
+**Comprobaciones de regresión:** `HabitWeekRecommendationStatsTest` y el test existente de `POST /api/recommendations`.
 
-**Comandos verificados para compilar y ejecutar tests:** el proyecto usa el wrapper de Gradle. Los comandos previstos, aún no ejecutados para este plan, son `gradlew.bat :app:testDebugUnitTest` y `gradlew.bat :app:assembleDebug`.
+**Comandos verificados para compilar y ejecutar tests:** `gradlew.bat :app:testDebugUnitTest` y `gradlew.bat :app:assembleDebug`.
 
-**Pruebas en dispositivo, emulador o simulador:**
+**Pruebas en dispositivo, emulador o simulador:** Abrir Estadísticas, entrar al chat, enviar un mensaje con la API en marcha y comprobar el teclado. Hace falta emulador o móvil, Ollama y `bloom-api`.
 
-1. Arrancar Ollama en este ordenador y la API con el comando aprobado.
-2. Poner `BLOOM_API_BASE_URL=http://10.0.2.2:8000` y pedir la recomendación en el emulador estándar.
-3. Cambiar la propiedad a `http://<IP privada>:8000`, reinstalar y repetir en un móvil de la misma Wi-Fi.
-4. Repetir con la API apagada y con una cuenta sin hábitos.
-
-Hace falta un móvil real solo para el paso 3. El emulador no demuestra la IP privada.
-
-**Limitaciones del entorno:** este plan no ha ejecutado esos comandos ni la prueba manual. Un build release contra HTTP queda fuera de lo comprobable con el manifiesto debug. No se puede demostrar desde aquí que el firewall de Windows deje pasar el puerto `8000` al móvil.
+**Limitaciones del entorno:** Sin un dispositivo conectado no se demuestra la rotación, el teclado ni el idioma visual. Sin la API en marcha no se demuestra una respuesta real del modelo. Esas comprobaciones quedan pendientes en `TASKS.md`.
 
 ## Orden de implementación
 
-1. Función de dominio y su test. Comprobar CA-02 antes de tocar la red.
-2. Data source, repositorio, módulo Hilt y URL. Tests de CA-03 y CA-05.
-3. ViewModel y tests de CA-04 y CA-06.
-4. Pantalla, navegación, cadenas y manifiesto debug. Compilar `assembleDebug`.
-5. Prueba manual de CA-01, CA-07, CA-08 y CA-09. Anotar en `TASKS.md` lo que no se haya podido ejecutar.
+1. Test del data source en rojo, luego `POST /api/chat` en el cliente. Comprobar el test.
+2. Tests del ViewModel en rojo, luego el estado del hilo. Comprobar los tests.
+3. Pantalla, cadenas y `adjustResize`. Compilar.
+4. Endpoint en `main.py`.
+5. `testDebugUnitTest` del paquete de recomendaciones y `assembleDebug`.
 
 ## Riesgos y decisiones pendientes
 
-- **Riesgos y medidas acordadas:**
-  - El modelo `qwen2.5-coder:7b` puede redactar mal un consejo de hábitos. La pantalla mantiene los contadores calculados por la app separados del texto.
-  - Un hábito con más días completados que su objetivo, o un nombre de más de 100 caracteres, recibe 400 o 422. Se muestra error y no se alteran los datos.
-  - El teléfono no llega a `0.0.0.0`. Por eso la app usa `10.0.2.2` o la IP privada. Si el firewall bloquea el `8000`, la prueba de móvil falla y se registra, sin cambiar la API.
-  - `usesCleartextTraffic` en debug abre el HTTP claro de ese build, no solo hacia `bloom-api`. Se acepta porque la IP de desarrollo no es fija y el release no lleva esa bandera.
-  - No se usan subagentes en este plan. `android-architect` y `android-code-reviewer` existen; la implementación aún no está autorizada.
+- **Riesgos y medidas acordadas:** Un hilo largo puede exceder el contexto del modelo. No se recorta: el fallo vuelve como error recuperable, que es el comportamiento aprobado. El modelo puede ignorar la instrucción de no inventar cifras; el prompt lo prohíbe y la pantalla no crea un bloque de estadísticas. `fitInside` del IME depende de Compose 2026.06.01, que es el BOM ya declarado; si no compila, se usa `imePadding` debajo de `consumeWindowInsets`, una sola vez.
 - **Decisiones pendientes:** Ninguna.
 
 <!-- ANTES DE SOLICITAR APROBACIÓN

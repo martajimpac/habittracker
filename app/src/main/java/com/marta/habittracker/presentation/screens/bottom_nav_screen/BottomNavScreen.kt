@@ -168,7 +168,6 @@ fun HabitBottomBar(
 ) {
     val itemColors = habitBottomBarItemColors()
     NavigationBar(
-        modifier = Modifier.height(64.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         BottomNavigation.tabBarItems.forEach { tab ->

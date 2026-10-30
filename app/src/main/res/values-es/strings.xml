@@ -436,19 +436,21 @@
     <string name="today_widget_preview_done">Hecho · Leer</string>
 
     <!-- Recommendations -->
-    <string name="recommendation_open">Pedir una recomendación</string>
-    <string name="recommendation_title">Recomendación</string>
-    <string name="recommendation_request">Pedir recomendación</string>
+    <string name="recommendation_open">Escribir al asistente</string>
+    <string name="recommendation_title">Asistente</string>
     <string name="recommendation_retry">Reintentar</string>
-    <string name="recommendation_loading">Preparando tu recomendación</string>
+    <string name="recommendation_hint">Escribe un mensaje</string>
+    <string name="recommendation_greeting">¿En qué te ayudo con tus hábitos?</string>
+    <string name="recommendation_send">Enviar</string>
+    <string name="recommendation_sending">Esperando la respuesta</string>
+    <string name="recommendation_you">Tú</string>
+    <string name="recommendation_assistant">Asistente</string>
     <string name="recommendation_empty_title">Aún no hay hábitos</string>
-    <string name="recommendation_empty_message">Crea un hábito antes de pedir una recomendación.</string>
-    <string name="recommendation_suggestion_label">Sugerencia</string>
-    <string name="recommendation_stat">%1$s: %2$d de %3$d días esta semana</string>
+    <string name="recommendation_empty_message">Crea un hábito antes de enviar un mensaje.</string>
     <string name="recommendation_error_invalid">No se han podido enviar los números de la semana. Inténtalo de nuevo.</string>
-    <string name="recommendation_error_timeout">La recomendación ha tardado demasiado. Inténtalo de nuevo.</string>
-    <string name="recommendation_error_empty">No ha llegado ninguna recomendación. Inténtalo de nuevo.</string>
-    <string name="recommendation_error_unavailable">El servicio de recomendaciones no está disponible. Inténtalo de nuevo.</string>
+    <string name="recommendation_error_timeout">La respuesta ha tardado demasiado. Inténtalo de nuevo.</string>
+    <string name="recommendation_error_empty">No ha llegado ninguna respuesta. Inténtalo de nuevo.</string>
+    <string name="recommendation_error_unavailable">El asistente no está disponible. Inténtalo de nuevo.</string>
 
     <!-- Legacy tab keys -->
 </resources>

@@ -216,29 +216,29 @@ fun HomeContent(
         }
     }
 
-    Scaffold(
-        topBar = {
-            HomeHeader(
-                selectedDate = selectedDate,
-                today = today,
-                isToday = isToday,
-                isPast = isPast,
-                dateLabel = dateLabel,
-                dayLabel = dayLabel,
-                greetingRes = greetingRes,
-                userDisplayName = userDisplayName,
-                avatarUrl = avatarUrl,
-                weekDays = weekDays,
-                allHabits = allHabits,
-                onDateSelected = onDateSelected,
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        HomeHeader(
+            selectedDate = selectedDate,
+            today = today,
+            isToday = isToday,
+            isPast = isPast,
+            dateLabel = dateLabel,
+            dayLabel = dayLabel,
+            greetingRes = greetingRes,
+            userDisplayName = userDisplayName,
+            avatarUrl = avatarUrl,
+            weekDays = weekDays,
+            allHabits = allHabits,
+            onDateSelected = onDateSelected,
+        )
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .weight(1f),
             contentPadding = PaddingValues(
                 start = 20.dp,
                 end = 20.dp,
@@ -247,106 +247,106 @@ fun HomeContent(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-                actionErrorRes?.let { errorRes ->
-                    item {
+            actionErrorRes?.let { errorRes ->
+                item {
+                    Text(
+                        text = stringResource(errorRes),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onClearActionError),
+                    )
+                }
+            }
+
+            item {
+                HomeProgressCard(
+                    pct = pct,
+                    completedCount = completedCount,
+                    totalCount = totalCount,
+                    isToday = isToday,
+                    dayLabel = dayLabel(selectedDate),
+                    habits = habits,
+                    selectedDate = selectedDate,
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (isToday) {
+                            stringResource(R.string.home_todays_habits)
+                        } else {
+                            stringResource(R.string.home_day_habits, dayLabel(selectedDate))
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.home_total_count, totalCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = HabitOnSurfaceVariant,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(HabitField)
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
+            }
+
+            if (habits.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        WiltedFlower()
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = stringResource(errorRes),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(onClick = onClearActionError),
+                            text = stringResource(R.string.home_empty_habits),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
+            } else {
+                items(habits, key = { it.id }) { habit ->
+                    HomeHabitCard(
+                        habit = habit,
+                        isDone = habit.isCompleted,
+                        isToday = isToday,
+                        inChallenge = habit.id in challengeHabitIds,
+                        protection = protectionByHabit[habit.id],
+                        onToggle = { onToggleHabit(habit) },
+                    )
+                }
+            }
 
-                item {
-                    HomeProgressCard(
+            when {
+                isToday && overallStreak.first > 2 -> item {
+                    HomeMotivationCard(
+                        overallStreak = overallStreak.first,
+                        inWeeks = overallStreak.second,
+                    )
+                }
+                isPast && pct < 100 -> item {
+                    HomeDayInfoCard(
                         pct = pct,
                         completedCount = completedCount,
                         totalCount = totalCount,
-                        isToday = isToday,
-                        dayLabel = dayLabel(selectedDate),
-                        habits = habits,
-                        selectedDate = selectedDate,
                     )
                 }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = if (isToday) {
-                                stringResource(R.string.home_todays_habits)
-                            } else {
-                                stringResource(R.string.home_day_habits, dayLabel(selectedDate))
-                            },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = stringResource(R.string.home_total_count, totalCount),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = HabitOnSurfaceVariant,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(HabitField)
-                                .padding(horizontal = 12.dp, vertical = 4.dp),
-                        )
-                    }
-                }
-
-                if (habits.isEmpty()) {
-                    item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            WiltedFlower()
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.home_empty_habits),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                } else {
-                    items(habits, key = { it.id }) { habit ->
-                        HomeHabitCard(
-                            habit = habit,
-                            isDone = habit.isCompleted,
-                            isToday = isToday,
-                            inChallenge = habit.id in challengeHabitIds,
-                            protection = protectionByHabit[habit.id],
-                            onToggle = { onToggleHabit(habit) },
-                        )
-                    }
-                }
-
-                when {
-                    isToday && overallStreak.first > 2 -> item {
-                        HomeMotivationCard(
-                            overallStreak = overallStreak.first,
-                            inWeeks = overallStreak.second,
-                        )
-                    }
-                    isPast && pct < 100 -> item {
-                        HomeDayInfoCard(
-                            pct = pct,
-                            completedCount = completedCount,
-                            totalCount = totalCount,
-                        )
-                    }
-                }
+            }
         }
     }
 }
@@ -781,20 +781,20 @@ private fun HomeDayInfoCard(
     }
 }
 
-// @Preview(showBackground = true, showSystemUi = true)
-// @Composable
-// private fun HomeContentPreview() {
-    // HomeContent(
-        // habits = emptyList(),
-        // allHabits = emptyList(),
-        // selectedDate = LocalDate.now(),
-        // today = LocalDate.now(),
-        // userDisplayName = "John",
-        // avatarUrl = null,
-        // actionErrorRes = null,
-        // weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
-        // onDateSelected = {},
-        // onToggleHabit = {},
-        // onClearActionError = {},
-    // )
-// }
+ @Preview(showBackground = true, showSystemUi = true)
+ @Composable
+ private fun HomeContentPreview() {
+     HomeContent(
+         habits = emptyList(),
+         allHabits = emptyList(),
+         selectedDate = LocalDate.now(),
+         today = LocalDate.now(),
+         userDisplayName = "John",
+         avatarUrl = null,
+         actionErrorRes = null,
+         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
+         onDateSelected = {},
+         onToggleHabit = {},
+         onClearActionError = {},
+     )
+ }

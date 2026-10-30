@@ -1,6 +1,8 @@
 package com.marta.habittracker.data.remote
 
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.AssistantRole
+import com.marta.habittracker.domain.model.AssistantTurn
 import com.marta.habittracker.domain.model.RecommendationError
 import com.marta.habittracker.domain.usecase.HabitWeekStat
 import kotlinx.coroutines.test.runTest
@@ -33,6 +35,49 @@ class BloomRecommendationDataSourceTest {
         assertFalse(transport.url.orEmpty().contains("/api/chat"))
         assertTrue(transport.body.orEmpty().contains("\"completed_days\":2"))
         assertTrue(transport.body.orEmpty().contains("\"total_days\":3"))
+    }
+
+    @Test
+    fun `posts the chat thread to bloom api and does not call ollama`() = runTest {
+        val transport = FakeRecommendationTransport(
+            TransportResult.Http(200, """{"message":"Walk after lunch."}"""),
+        )
+        val source = BloomRecommendationDataSource(
+            baseUrl = "http://10.0.2.2:8000/",
+            transport = transport,
+        )
+
+        val result = source.send(
+            stats = stats,
+            language = "en",
+            messages = listOf(
+                AssistantTurn(role = AssistantRole.User, text = "How is my week?"),
+            ),
+        )
+
+        assertEquals(DataResult.Success("Walk after lunch."), result)
+        assertEquals("http://10.0.2.2:8000/api/chat", transport.url)
+        assertFalse(transport.url.orEmpty().contains("11434"))
+        assertTrue(transport.body.orEmpty().contains("\"language\":\"en\""))
+        assertTrue(transport.body.orEmpty().contains("\"role\":\"user\""))
+        assertTrue(transport.body.orEmpty().contains("How is my week?"))
+        assertTrue(transport.body.orEmpty().contains("\"completed_days\":2"))
+    }
+
+    @Test
+    fun `maps an empty chat body to an empty response`() = runTest {
+        val source = BloomRecommendationDataSource(
+            baseUrl = "http://10.0.2.2:8000",
+            transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"  "}""")),
+        )
+
+        val result = source.send(
+            stats = stats,
+            language = "es",
+            messages = listOf(AssistantTurn(role = AssistantRole.User, text = "Hola")),
+        )
+
+        assertEquals(DataResult.Error(RecommendationError.EmptyResponse), result)
     }
 
     @Test

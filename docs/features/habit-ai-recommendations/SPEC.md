@@ -1,4 +1,4 @@
-# SPEC: Recomendación de hábitos con Ollama
+# SPEC: Chat de hábitos con bloom-api
 
 **Estado:** Aprobada <!-- Borrador | En revisión | Aprobada -->
 
@@ -24,118 +24,118 @@ TASKS.md organiza los pasos de ejecución.
   antes de marcarlo como Aprobada. No implementes durante esta etapa.
 -->
 
+Esta revisión sustituye el comportamiento de recomendación de un solo uso aprobado el 2026-10-28. Quedó aprobada el 2026-10-30, cuando se pidió cerrar el flujo con las acciones recomendadas y autorizar la implementación.
+
 ## Qué construimos y para quién
 
-La persona que usa Bloom puede pedir **una** recomendación sobre sus hábitos. La app calcula antes los números con los datos que ya tiene guardados y se los enseña como hechos. El texto del modelo solo es una sugerencia y no añade cifras.
+La persona que usa Bloom, con la sesión iniciada, puede escribir a un asistente sobre sus hábitos y leer la respuesta en la misma pantalla. Cada mensaje sale con los contadores que la app ya calcula. La respuesta puede usar esos contadores y no añade otras cifras. El hilo dura solo mientras esa pantalla sigue abierta.
 
-**Confirmado por el pedido:** no es un chat. No hay hilo de mensajes, ni preguntas de seguimiento, ni un modelo que decida las estadísticas. La app Android no llama a Ollama. Llama a la API intermedia que ya existe. Esa API es quien habla con Ollama.
+**Confirmado — Chat-D1.** Hay un hilo: la persona escribe, la app envía el texto con los contadores y la respuesta aparece como mensaje.
 
-**Alcance que permite la API actual.** `bloom-api` es una aplicación FastAPI. Quien puede usarla es cualquier cliente que alcance el proceso mientras está en marcha. El código no fija el host ni el puerto, no tiene autenticación y no trae una dirección pública. Ollama lo llama la propia API, por defecto en `http://127.0.0.1:11434`, configurable con `OLLAMA_URL`. Eso encaja con Ollama instalado en el mismo ordenador que `bloom-api`. No convierte el asistente en una función disponible para cualquier instalación de Bloom si ese proceso no es alcanzable desde esos teléfonos.
+**Confirmado — Chat-D8.** La app no llama a Ollama. Llama a un endpoint nuevo de chat en `bloom-api`, distinto de `POST /api/recommendations`. Cada envío lleva los contadores, el idioma de la app y los mensajes de la visita. La respuesta útil es un solo texto del asistente. El teléfono conserva el hilo en memoria durante la visita.
 
 ## Situación actual
 
-Bloom ya guarda los hábitos de la cuenta y sus registros de cumplimiento, y los lee en local aunque no haya internet para modificarlos. Las mutaciones de hábitos siguen exigiendo red.
+Bloom guarda los hábitos de la cuenta y sus registros. Leerlos no exige internet. Crear, editar, completar o borrar un hábito sigue exigiendo red.
 
-Hoy no hay asistente en la app Android. El acceso remoto de Bloom sigue siendo Supabase. La API intermedia está fuera de este repositorio, en `C:\Users\marta\bloom-api`, y solo contiene `main.py`. Estadísticas, perfil, la meta semanal y el detalle ya muestran cifras calculadas por la app, entre ellas:
+Estadísticas abre una pantalla de recomendación. Muestra, por hábito, el nombre, los días completados y el objetivo de la semana lunes–domingo que contiene hoy, y un botón que pide un único texto. No hay campo para escribir ni hilo. Pedir otra vez sustituye el texto anterior. Sin hábitos, esa pantalla no llama a la API.
 
-- cuántos hábitos hay y cuántos registros están completados;
-- la racha de días programados cumplidos;
-- la tarjeta de racha de Estadísticas, si llega al mínimo actual de 3 días;
-- la meta de 5 días en la semana lunes–domingo que contiene hoy;
-- el resumen de esa semana, con programados y completados por día;
-- el objetivo semanal de cada hábito y los días ya cumplidos en esa semana.
+`bloom-api` está en `C:\Users\marta\apis\bloom-api`. Hoy expone `GET /health` y `POST /api/recommendations`. El cuerpo de recomendaciones es una lista `habits` con `name`, `completed_days` y `total_days`. La respuesta útil es `recommendations`. Una lista vacía recibe 400. Si los días completados superan el total, también. La API espera a Ollama como máximo 90 segundos, con el modelo `qwen2.5-coder:7b`, en `{OLLAMA_URL}/api/chat` y con `stream: false`. No tiene autenticación. La dirección base de la app es configuración de entorno: en desarrollo, `http://10.0.2.2:8000` en el emulador estándar y `http://<IP privada del ordenador>:8000` en un móvil de la misma Wi-Fi.
 
-Esas reglas siguen igual. Esta función no las cambia ni las sustituye.
+Esas reglas de contadores, de dirección y de acceso a Ollama se mantienen. Esta revisión no cambia rachas, metas, calendarios ni gráficos.
 
 ## Dentro del alcance
 
-- **RF-01:** Quien haya iniciado sesión puede pedir una recomendación a partir de sus hábitos guardados.
-- **RF-02:** Las cifras visibles las calcula la app con las reglas ya existentes. El texto del modelo no es una fuente de cifras.
-- **RF-03:** La app pide la recomendación con `POST /api/recommendations` a `bloom-api`. No llama a Ollama. El cuerpo es una lista `habits` con `name`, `completed_days` y `total_days`. La respuesta útil es `recommendations`, un texto.
-- **RF-04:** Si no hay hábitos, no se llama a la API y se muestra el estado vacío. La API también rechaza una lista vacía.
-- **RF-05:** Un fallo, un tiempo de espera agotado o una respuesta vacía no muestra una recomendación. Se puede reintentar.
-- **RF-06:** Mientras llega la respuesta, la interfaz sigue usable y un segundo toque no lanza otra petición.
-- **RF-07:** Los textos fijos de la pantalla salen de recursos, en el inglés y el español que ya tiene la app. El texto generado llega en español, porque así lo pide el prompt de `bloom-api`.
-- **RF-08:** La dirección base de `bloom-api` se configura por entorno y no forma parte de la lógica que calcula o presenta la recomendación. En desarrollo, el emulador estándar usa `http://10.0.2.2:8000` y un móvil en la misma Wi-Fi usa `http://<IP privada del ordenador>:8000`.
+- **RF-01:** Quien haya iniciado sesión y tenga hábitos abre desde Estadísticas un hilo vacío y puede escribir un mensaje.
+- **RF-02:** Cada envío lleva los contadores actuales de la semana lunes–domingo que contiene hoy, el idioma de la app y los mensajes de esta visita, en orden. La respuesta es un mensaje del asistente.
+- **RF-03:** La respuesta puede usar los contadores enviados y no introduce otras cifras. Esta pantalla no presenta cifras como dato calculado por la app.
+- **RF-04:** El texto del asistente llega en el idioma de la app, inglés o español. Los rótulos fijos salen de los recursos de ese idioma.
+- **RF-05:** Sin hábitos no hay llamada. La pantalla explica que hace falta un hábito y no permite enviar.
+- **RF-06:** Un fallo, un tiempo de espera agotado o una respuesta vacía no añade un mensaje del asistente. El mensaje de la persona permanece y se puede reintentar ese envío sin duplicarlo.
+- **RF-07:** Mientras llega la respuesta, la pantalla sigue usable y no sale otra llamada.
+- **RF-08:** El hilo y el texto aún no enviado duran mientras la pantalla sigue abierta, también si se recrea. Volver a Estadísticas o terminarse el proceso deja la siguiente apertura vacía. No se publica una notificación.
 
 ## Fuera de alcance
 
-Estas exclusiones salen del pedido. No son una lista cerrada de producto:
+Estas exclusiones salen del pedido o de acuerdos anteriores que esta revisión no reabre:
 
-- Un chatbot, un historial de conversación o respuestas en streaming.
-- Que el modelo invente o corrija estadísticas.
-- Cambiar el cálculo de rachas, metas, calendarios o gráficos que ya existen.
-
-Amigos, retos y protecciones de racha no forman parte del contrato actual: `bloom-api` solo acepta, por hábito, el nombre y dos contadores. Incluirlos exigiría cambiar esa API. No se propone ese cambio.
+- Respuestas en streaming. Cada respuesta llega entera.
+- Guardar el hilo en el dispositivo o en `bloom-api` después de la visita.
+- Mostrar los contadores como un bloque propio de la pantalla.
+- Enviar un mensaje sin hábitos.
+- Quitar `POST /api/recommendations` de `bloom-api`.
+- Incluir amigos, retos o protecciones de racha en el envío. El acuerdo anterior los dejó fuera y esta revisión no los añade.
+- Cambiar el cálculo de rachas, metas, calendarios o gráficos.
+- Cambiar el modelo `qwen2.5-coder:7b` o hacer que la app llame a Ollama.
 
 ## Flujo de usuario
 
-**Confirmado — D3.** Un botón en Estadísticas abre una pantalla nueva con los contadores y el texto. La pestaña Estadísticas se queda como está.
-
-1. La persona abre esa pantalla y ve la acción para pedir la recomendación. Todavía no hay sugerencia.
-2. Si no tiene hábitos, ve el estado vacío y no puede pedirla.
-3. Si tiene hábitos, pide la recomendación. Ve que está en curso y las cifras que la app ya calculó.
-4. Si la respuesta sirve, ve esas mismas cifras y, aparte, el texto `recommendations`. Ese texto pide entre tres y cinco recomendaciones y va marcado como sugerencia.
-5. Pedir otra vez sustituye la sugerencia anterior. No acumula mensajes.
-6. Si falla, ve el error y puede reintentar. Las cifras calculadas pueden seguir visibles.
+1. La persona abre la pantalla desde Estadísticas. Con hábitos, ve el hilo vacío y puede escribir. Todavía no hay llamada.
+2. Sin hábitos, ve la explicación y no puede enviar.
+3. Escribe y envía. Su mensaje aparece en el hilo y ve que la respuesta está en curso.
+4. Si la respuesta sirve, aparece debajo como mensaje del asistente, en el idioma de la app.
+5. Otro mensaje continúa el mismo hilo. El envío incluye los mensajes anteriores y los contadores actuales.
+6. Si falla, el mensaje de la persona sigue en el hilo, no aparece una respuesta del asistente y puede reintentar ese envío.
+7. Volver atrás abandona la petición de esa visita. La próxima apertura empieza vacía.
 
 ## Datos y reglas de negocio
 
-Los hechos salen de los hábitos y registros ya guardados de la cuenta. No se crean cifras nuevas para esta pantalla.
+Los contadores salen de los hábitos y registros ya guardados. No se crean cifras nuevas.
 
-La API acepta y la pantalla muestra, por cada hábito, el nombre, `completed_days` y `total_days`. El nombre es obligatorio, de 1 a 100 caracteres. Los dos contadores son enteros de cero o más, y los días completados no pueden superar el total. No se envían correos, contraseñas ni tokens.
+Por cada hábito se envían el nombre, los días completados y el objetivo semanal. El nombre va sin espacios sobrantes; un nombre vacío no se envía. Si después de eso no queda ningún hábito, se trata como el caso sin hábitos.
 
-**Confirmado — D5.** El periodo es la semana lunes–domingo que contiene hoy.
+**Heredado de la spec del 2026-10-28.** El periodo es la semana lunes–domingo que contiene hoy.
 
-- `total_days` es el objetivo semanal del hábito, el mismo que ya usa Bloom: si pide menos de 7 días, ese número; si no, los días de la semana configurados cuando son entre 1 y 6; en otro caso, 7.
-- `completed_days` es cuántos días distintos de esa semana tienen un registro completado.
+- El objetivo semanal es el que Bloom ya usa: si el hábito pide menos de 7 días, ese número; si pide 7 y tiene entre 1 y 6 días configurados, esos días; en otro caso, 7.
+- Los días completados son los días distintos de esa semana con un registro completado.
 
-La app envía esos valores reales. No los recorta para que quepan en el objetivo. Si un hábito tiene más días completados que su objetivo, `bloom-api` responde 400 y la pantalla muestra el error recuperable. Rachas, la meta de 5 días y los resúmenes por día no entran en este cuerpo.
+La app envía esos valores reales y no los recorta. Si los días completados superan el objetivo, el servicio rechaza el envío y la pantalla muestra el error recuperable. Cada envío usa los contadores de ese momento.
 
-La sugerencia se presenta separada de las cifras. Una cifra que solo aparezca en el párrafo del modelo no se muestra como dato de la app.
+El idioma enviado es el de la app, inglés o español. Los mensajes van en el orden de la visita: lo escrito por la persona y lo respondido por el asistente. No se envían correos, contraseñas ni tokens.
 
-**Confirmado — D7.** La sugerencia no se guarda. Volver atrás abandona la petición de esa visita y no publica una notificación. Si el sistema termina el proceso, la pantalla vuelve a estar en reposo y hay que pedirla otra vez. Mientras la pantalla sigue abierta y el proceso vive, se conserva el estado de esa visita.
+Un texto vacío o formado solo por espacios no se envía y no llama al servicio. Reintentar un envío fallido no añade otra copia del mismo mensaje de la persona.
+
+El hilo no se guarda. Salir de la pantalla lo abandona.
 
 ## Comportamiento mobile y casos alternativos
 
 | Situación | Comportamiento esperado |
 | --- | --- |
-| Carga o acción en curso | Se indica que la recomendación está en curso. La acción no se puede repetir hasta que termine o falle. El resto de la app sigue respondiendo. |
-| Sin datos | Sin hábitos no hay llamada a `bloom-api` ni sugerencia. |
-| Entrada inválida | No aplica: no hay formulario. La persona solo pide la recomendación. |
-| Error o espera excesiva | Mensaje de error y opción de reintentar. No aparece una sugerencia vacía ni inventada. `bloom-api` espera a Ollama como máximo 90 segundos y responde 504 si se agota, 502 si Ollama falla o devuelve un texto vacío, y 400 si la lista no es válida. |
-| Sin conexión o conexión interrumpida | Leer los hábitos no exige internet. Si la API intermedia no responde o se corta a mitad, el resultado es el error recuperable. No se equipara, sin decidirlo, al aviso de «sin internet» de guardar un hábito. |
-| Cancelar o volver atrás | Salir de la pantalla abandona la petición de esta visita y no publica la sugerencia en una notificación. |
-| Pasar a segundo plano y regresar | Si la petición termina mientras la pantalla no está delante, al volver se ve el resultado o el error de esa visita. No se lanza una segunda petición sola. |
-| Recrear la pantalla | Se conserva el estado de esta visita: en curso, resultado o error. |
-| Reabrir después de terminarse el proceso | No queda una sugerencia guardada. La pantalla vuelve a estar en reposo. |
-| Pulsaciones repetidas | Una sola petición a la vez. |
-| Texto largo, tamaño de letra y pantallas pequeñas | Las cifras y la sugerencia se pueden desplazar. No quedan tapadas por las barras del sistema ni por el teclado, porque no hay campo de texto. |
-| Accesibilidad | El estado de carga y el de error no dependen solo del color. La acción y el estado tienen nombre para el lector de pantalla. |
-| Idioma | Los rótulos siguen el idioma de la app (inglés y español). El texto generado llega en español. |
+| Carga o acción en curso | Se indica que la respuesta está en curso. No sale otra llamada hasta que termine o falle. El resto de la app sigue respondiendo. |
+| Sin datos | Sin hábitos, o si ninguno tiene nombre, hay explicación y ninguna llamada. Con hábitos y sin mensajes, el hilo está vacío y se puede escribir. |
+| Entrada inválida | Un texto vacío o solo con espacios no se envía. |
+| Error o espera excesiva | Error visible y reintento de ese envío. No aparece un mensaje vacío ni inventado del asistente. El servicio espera como máximo 90 segundos. |
+| Sin conexión o conexión interrumpida | Leer los hábitos no exige internet. Si `bloom-api` no responde o se corta el envío, el resultado es el error recuperable. No se muestra el aviso de «sin internet» que usa guardar un hábito. |
+| Cancelar o volver atrás | Salir abandona la petición de esta visita y no publica una notificación. La próxima apertura está vacía. |
+| Pasar a segundo plano y regresar | Si el proceso sigue vivo, el hilo permanece. Si la petición termina fuera de la pantalla, al volver se ve la respuesta o el error. No se lanza otra petición sola. |
+| Recrear la pantalla | Se conservan los mensajes, el texto aún no enviado y el envío en curso, su respuesta o su error. |
+| Reabrir después de terminarse el proceso | No queda hilo ni borrador. Hay que escribir de nuevo. |
+| Pulsaciones repetidas | Una sola llamada a la vez. |
+| Texto largo, tamaño de letra, teclado y pantallas pequeñas | Los mensajes se pueden recorrer. El campo y la acción de enviar no quedan tapados por el teclado ni por las barras del sistema. |
+| Accesibilidad | La carga y el error no dependen solo del color. Enviar, el campo y los mensajes tienen nombre para el lector de pantalla. |
+| Idioma | Los rótulos y la respuesta del asistente siguen el inglés o el español de la app. |
 
-**Puntos de la guía no aplicables y motivo:** permisos nuevos, porque no se pide ninguno; trabajo en segundo plano con notificación, porque la propuesta no publica el resultado fuera de la pantalla; enlaces externos, porque no forman parte del pedido.
+**Puntos de la guía no aplicables y motivo:** permisos nuevos, porque no se pide ninguno; trabajo en segundo plano con notificación, porque el resultado no sale de la pantalla; enlaces externos, porque no forman parte del pedido; guardar el hilo, porque Chat-D3 lo limita a la visita.
 
 ## Restricciones del pedido
 
-- Jetpack Compose y los hábitos ya guardados en Room. Reutilizar los cálculos existentes; no crear otro criterio de racha o de meta.
-- La app usa la API intermedia existente. No se crea otra ni se sustituye sin una justificación técnica y tu aprobación.
-- El modelo sigue siendo `qwen2.5-coder:7b`. `bloom-api` llama a `{OLLAMA_URL}/api/chat` con `stream: false`. La app no hace esa llamada.
-- **Confirmado — D9.** La app no llama a Ollama. La dirección base de `bloom-api` es configuración de entorno, separada de la recomendación, y no se versiona como secreto. Durante el desarrollo la API se arranca con `python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`. Esas direcciones de desarrollo son HTTP.
-- El modelo `qwen2.5-coder:7b` está elegido aunque esté orientado a código. Cambiarlo queda fuera de este pedido.
-- No se añade un chatbot ni una dependencia nueva salvo que el plan posterior demuestre que la pila actual no puede hacer esta llamada.
+- Jetpack Compose y los hábitos ya guardados. Reutilizar el cálculo de contadores; no crear otro criterio de racha o de meta.
+- La app llama al endpoint nuevo de chat en `bloom-api`. No llama a Ollama ni usa `POST /api/recommendations` para este hilo.
+- El modelo sigue siendo `qwen2.5-coder:7b`. `bloom-api` llama a `{OLLAMA_URL}/api/chat` con `stream: false`. La espera máxima sigue siendo 90 segundos.
+- La dirección base de `bloom-api` es configuración de entorno y no se versiona como secreto. En desarrollo la API se arranca con `python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`. El emulador estándar usa `http://10.0.2.2:8000` y un móvil en la misma Wi-Fi usa `http://<IP privada del ordenador>:8000`.
+- El hilo vive solo en la visita a esta pantalla.
 
 ## Criterios de aceptación
 
-- **CA-01 · RF-01:** Dado un usuario con hábitos guardados, cuando pide la recomendación, entonces ve un solo texto de respuesta, sin hilo de chat.
-- **CA-02 · RF-02:** Dado un conjunto conocido de hábitos y registros, cuando se muestra el resultado, entonces cada hábito muestra el nombre, los días completados de la semana lunes–domingo actual y su objetivo semanal, calculados por la app, y no cifras añadidas por el modelo.
-- **CA-03 · RF-03:** Dada `bloom-api` en marcha, cuando la app pide la recomendación, entonces hace `POST /api/recommendations` y no llama a `/api/chat`.
-- **CA-04 · RF-04:** Dado un usuario sin hábitos, cuando abre la pantalla, entonces no hay llamada al modelo y ve el estado vacío.
-- **CA-05 · RF-05:** Dado que la API intermedia no responde, tarda más del límite o devuelve un cuerpo vacío, cuando termina la espera, entonces ve un error con reintento y ninguna sugerencia.
-- **CA-06 · RF-06:** Dado que una petición está en curso, cuando la persona pulsa otra vez, entonces no sale una segunda llamada.
-- **CA-07 · RF-02:** Dado un resultado correcto, cuando se mira la pantalla, entonces las cifras y la sugerencia están separadas y la sugerencia no se presenta como un dato calculado.
-- **CA-08 · RF-07:** Dado el idioma inglés o español del dispositivo, cuando se ve la pantalla, entonces los rótulos fijos salen de los recursos de ese idioma.
-- **CA-09 · RF-08:** Dado el emulador estándar, cuando la app pide la recomendación, entonces llama a `http://10.0.2.2:8000`. Dado un móvil en la misma Wi-Fi, cuando pide la recomendación, entonces llama a `http://<IP privada del ordenador>:8000`. Cambiar esa dirección no exige cambiar el cálculo de los contadores.
+- **CA-01 · RF-01:** Dado un usuario con hábitos, cuando abre la pantalla desde Estadísticas, entonces ve un hilo vacío y puede escribir.
+- **CA-02 · RF-02:** Dado un hilo con una pregunta y una respuesta, cuando envía otra pregunta, entonces la llamada lleva los contadores actuales, el idioma de la app y los tres mensajes en orden, y la nueva respuesta aparece al final.
+- **CA-03 · RF-03:** Dado un resultado correcto, cuando se mira la pantalla, entonces no hay un bloque de cifras de la app y el mensaje del asistente no afirma una cifra que no estuviera entre los contadores enviados.
+- **CA-04 · RF-04:** Dada la app en inglés, cuando llega la respuesta, entonces ese texto está en inglés. Dada la app en español, cuando llega, entonces está en español. Los rótulos coinciden con ese idioma.
+- **CA-05 · RF-05:** Dado un usuario sin hábitos, cuando abre la pantalla, entonces ve la explicación y no hay llamada.
+- **CA-06 · RF-06:** Dado que el envío falla, se agota la espera o la respuesta llega vacía, cuando termina, entonces su mensaje sigue en el hilo, no hay mensaje del asistente y puede reintentar sin duplicar el suyo.
+- **CA-07 · RF-07:** Dado un envío en curso, cuando intenta enviar otra vez, entonces no sale una segunda llamada.
+- **CA-08 · RF-08:** Dado un hilo visible, cuando gira el teléfono, entonces los mensajes y el borrador siguen. Cuando vuelve a Estadísticas y abre de nuevo, o cuando el proceso ha terminado, entonces el hilo está vacío.
+- **CA-09 · RF-02:** Dado el emulador estándar, cuando envía un mensaje, entonces llama a `http://10.0.2.2:8000` en el endpoint nuevo de chat. Dado un móvil en la misma Wi-Fi, cuando envía, entonces llama a `http://<IP privada del ordenador>:8000` en ese mismo endpoint. La app no abre una conexión con Ollama.
 
 ## Cómo se comprueba el comportamiento
 
@@ -145,17 +145,17 @@ No marques los criterios como superados durante la especificación. -->
 
 | Criterio | Condiciones y pasos | Resultado esperado |
 | --- | --- | --- |
-| CA-01 | Cuenta con hábitos. Pedir una recomendación. | Un texto `recommendations`, sin hilo de chat. |
-| CA-02 | Hábitos y registros fijados de antemano. Comparar nombre, días completados de la semana actual y objetivo semanal. | Coinciden con el cálculo ya existente. El texto del modelo no crea otra cifra oficial. |
-| CA-03 | `bloom-api` en marcha. Pedir la recomendación y observar la petición de la app. | `POST /api/recommendations`. No aparece una conexión de la app a Ollama. |
-| CA-04 | Cuenta sin hábitos. Abrir la pantalla. | Estado vacío y ninguna petición. |
-| CA-05 | `bloom-api` apagada, respuesta 502 o 504, o cuerpo sin texto. | Error, reintento y ninguna sugerencia. |
-| CA-06 | Pulsar repetidamente durante la carga. | Una sola petición. |
-| CA-07 | Respuesta válida del modelo, aunque mencione un número que no estaba en el resumen. | Ese número no aparece como estadística de la app. |
-| CA-08 | Abrir la pantalla en inglés y en español. | Los rótulos cambian con el idioma. El texto generado sigue en español. |
-| CA-09 | Pedir la recomendación en el emulador estándar y en un móvil de la misma Wi-Fi. | El emulador llama a `http://10.0.2.2:8000`. El móvil llama a `http://<IP privada>:8000`. El cálculo de los contadores no depende de esa dirección. |
+| CA-01 | Cuenta con hábitos. Abrir la pantalla desde Estadísticas. | Hilo vacío y se puede escribir. Ninguna llamada todavía. |
+| CA-02 | Enviar una pregunta, recibir respuesta y enviar otra. Observar la segunda llamada. | Lleva los contadores de ese momento, el idioma y los mensajes previos más el nuevo, en orden. La respuesta nueva queda al final. |
+| CA-03 | Respuesta válida. Revisar el mensaje del asistente frente a los contadores enviados. | No hay un bloque de cifras. El mensaje no afirma una cifra ausente de esos contadores. |
+| CA-04 | Abrir la app en inglés y en español y recibir una respuesta en cada idioma. | Rótulos y respuesta coinciden con el idioma de la app. |
+| CA-05 | Cuenta sin hábitos. Abrir la pantalla. | Explicación y ninguna llamada. |
+| CA-06 | `bloom-api` apagada, respuesta de error, espera agotada o cuerpo sin texto. Reintentar. | El mensaje de la persona sigue una sola vez, no hay respuesta del asistente y el reintento vuelve a enviar ese mensaje. |
+| CA-07 | Intentar enviar otra vez durante la espera. | Una sola llamada. |
+| CA-08 | Con mensajes y texto sin enviar, girar el teléfono. Salir a Estadísticas y volver a entrar. Repetir tras terminar el proceso. | El giro conserva hilo y borrador. Las otras dos aperturas están vacías. |
+| CA-09 | Enviar un mensaje en el emulador estándar y en un móvil de la misma Wi-Fi. | El emulador llama a `http://10.0.2.2:8000`. El móvil llama a `http://<IP privada>:8000`. No hay conexión de la app con Ollama. |
 
-Ningún criterio está superado: no hay implementación.
+Ningún criterio de esta revisión está superado: el chat no está implementado.
 
 ## Decisiones pendientes
 
@@ -164,7 +164,9 @@ no queden pendientes funcionales ni restricciones por decidir. -->
 
 Ninguna.
 
-Cerradas: D1 queda descrito por el alcance de `bloom-api`; D2, amigos y retos no entran en el contrato; D3, botón en Estadísticas y pantalla nueva; D4, el texto generado es español; D5, semana lunes–domingo actual, días completados frente al objetivo semanal; D6, el nombre del hábito se envía; D7, la sugerencia no se guarda; D8, la API espera como máximo 90 segundos; D9, dirección base configurable por entorno, con `http://10.0.2.2:8000` en el emulador y `http://<IP privada>:8000` en un móvil de la misma Wi-Fi; D10, la API está localizada.
+Cerradas en esta revisión: Chat-D1, hilo con mensaje escrito por la persona; Chat-D2, cada envío incluye los mensajes anteriores y los contadores actuales; Chat-D3, el hilo dura solo con la pantalla abierta; Chat-D4, la pantalla es el hilo y el campo, sin bloque de contadores; Chat-D5, sin hábitos no se envía; Chat-D6, la respuesta puede usar los contadores enviados y no otras cifras; Chat-D7, la respuesta usa el idioma de la app; Chat-D8, endpoint nuevo de chat en `bloom-api`, con el hilo en memoria durante la visita.
+
+Se mantienen de la spec del 2026-10-28: semana lunes–domingo actual, contadores reales sin recortar, dirección base por entorno, modelo `qwen2.5-coder:7b`, espera máxima de 90 segundos y la app sin llamada directa a Ollama.
 
 <!-- ANTES DE SOLICITAR APROBACIÓN
 Comprueba que el alcance está acordado, los flujos son coherentes, los puntos

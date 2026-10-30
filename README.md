@@ -43,6 +43,18 @@ Friends, active challenges and the sheet to create one.
   <img src="IMAGENES_README/BLOOM/Screenshot_20261020_172327_Bloom.jpg" width="200" alt="Create a challenge">
 </p>
 
+Assistant chat. From Statistics, someone with habits can ask about their week. Each message goes out with the current Monday–Sunday counts, and the reply can use those numbers without adding others. The thread stays on screen until you leave it.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261030_113030_Bloom.png" width="200" alt="Habit assistant chat">
+</p>
+
+Today's habits on the home screen.
+
+<p>
+  <img src="IMAGENES_README/BLOOM/Screenshot_20261021_120847_Bloom.jpg" width="200" alt="Today's habits widget">
+</p>
+
 ## Features
 
 ### Authentication
@@ -78,13 +90,7 @@ Four Glance widgets:
 - Weekly summary of scheduled habits
 - Today's habits (up to five rows)
 
-Today's habits on the home screen.
-
-<p>
-  <img src="IMAGENES_README/BLOOM/Screenshot_20261021_120847_Bloom.jpg" width="200" alt="Today's habits widget">
-</p>
-
-## Architecture
+### AI-powered suggestions based on your habits.
 
 ```
 presentation → domain ← data
@@ -96,17 +102,19 @@ presentation → domain ← data
 
 ## Tech stack
 
-| Area | Choice |
-| --- | --- |
-| UI | Jetpack Compose, Material 3, Navigation Compose, Coil |
-| State | Kotlin Coroutines, `Flow`, `StateFlow` |
-| DI | Hilt |
-| Local | Room, DataStore |
-| Remote | Supabase Auth, PostgREST, Storage and Edge Functions, via Ktor |
-| Background | WorkManager for widget refresh, `AlarmManager` for habit reminders |
-| Widgets | Jetpack Glance |
-| Push and crashes | Firebase Cloud Messaging, Analytics and Crashlytics |
-| Tests | JUnit, Robolectric, `kotlinx-coroutines-test`, Espresso, Kover |
+| Area             | Choice                                                                 |
+| ---------------- | ---------------------------------------------------------------------- |
+| UI               | Jetpack Compose, Material 3, Navigation Compose, Coil                  |
+| State            | Kotlin Coroutines, `Flow`, `StateFlow`                                 |
+| DI               | Hilt                                                                   |
+| Local            | Room, DataStore                                                        |
+| Remote           | Supabase Auth, PostgREST, Storage and Edge Functions, via Ktor         |
+| AI               | Ollama for AI-powered habit suggestions, with a Python FastAPI backend |
+| Background       | WorkManager for widget refresh, `AlarmManager` for habit reminders     |
+| Widgets          | Jetpack Glance                                                         |
+| Push and crashes | Firebase Cloud Messaging, Analytics and Crashlytics                    |
+| Tests            | JUnit, Robolectric, `kotlinx-coroutines-test`, Espresso, Kover         |
+
 
 `minSdk` is 26 and `targetSdk` is 36. CI uses JDK 17.
 

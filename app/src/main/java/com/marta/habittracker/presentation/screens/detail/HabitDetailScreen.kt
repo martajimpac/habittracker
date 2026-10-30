@@ -164,6 +164,7 @@ fun HabitDetailContent(
     val actionsEnabled = habit != null
     val danger = habitDangerColors()
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()

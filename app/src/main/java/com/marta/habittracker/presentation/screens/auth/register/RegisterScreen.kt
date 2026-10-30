@@ -3,6 +3,7 @@ package com.marta.habittracker.presentation.screens.auth.register
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import com.marta.habittracker.presentation.theme.BloomTheme
 import com.marta.habittracker.presentation.theme.bloomLogoRes
 import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.foundation.clickable
@@ -163,240 +164,243 @@ fun RegisterContent(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        HabitIconButton(
-                            modifier = Modifier.habitTopBarButtonHorizontalPadding(),
-                            onClick = onBack,
-                            icon = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.register_back),
-                        )
-                    },
-                    title = {},
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) { innerPadding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    HabitIconButton(
+                        modifier = Modifier.habitTopBarButtonHorizontalPadding(),
+                        onClick = onBack,
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.register_back),
+                    )
+                },
+                title = {},
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp),
             ) {
-                Image(
-                    painter = painterResource(bloomLogoRes()),
-                    contentDescription = stringResource(R.string.app_name),
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = stringResource(R.string.register_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = stringResource(R.string.register_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Image(
+                painter = painterResource(bloomLogoRes()),
+                contentDescription = stringResource(R.string.app_name),
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.register_title),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.register_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-                CustomTextField(
-                    label = stringResource(R.string.register_name_label),
-                    value = uiState.name,
-                    onValueChange = onNameChanged,
-                    placeholder = stringResource(R.string.register_name_placeholder),
-                    modifier = Modifier
-                        .focusRequester(nameFocus)
-                        .bringIntoViewRequester(nameBringIntoView),
-                    isError = uiState.nameErrorRes != null,
-                    supportingText = uiState.nameErrorRes?.let { stringResource(it) }.orEmpty(),
-                )
+            CustomTextField(
+                label = stringResource(R.string.register_name_label),
+                value = uiState.name,
+                onValueChange = onNameChanged,
+                placeholder = stringResource(R.string.register_name_placeholder),
+                modifier = Modifier
+                    .focusRequester(nameFocus)
+                    .bringIntoViewRequester(nameBringIntoView),
+                isError = uiState.nameErrorRes != null,
+                supportingText = uiState.nameErrorRes?.let { stringResource(it) }.orEmpty(),
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                CustomTextField(
-                    label = stringResource(R.string.register_username_label),
-                    value = uiState.username,
-                    onValueChange = onUsernameChanged,
-                    placeholder = stringResource(R.string.register_username_placeholder),
-                    modifier = Modifier
-                        .focusRequester(usernameFocus)
-                        .bringIntoViewRequester(usernameBringIntoView),
-                    isError = uiState.usernameErrorRes != null,
-                    supportingText = uiState.usernameErrorRes?.let { stringResource(it) }.orEmpty(),
-                )
-                if (uiState.usernameSuggestions.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        uiState.usernameSuggestions.forEach { suggestion ->
-                            Text(
-                                text = stringResource(R.string.profile_username, suggestion),
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                                    .clickable { onUsernameSuggestionSelected(suggestion) }
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                            )
-                        }
+            CustomTextField(
+                label = stringResource(R.string.register_username_label),
+                value = uiState.username,
+                onValueChange = onUsernameChanged,
+                placeholder = stringResource(R.string.register_username_placeholder),
+                modifier = Modifier
+                    .focusRequester(usernameFocus)
+                    .bringIntoViewRequester(usernameBringIntoView),
+                isError = uiState.usernameErrorRes != null,
+                supportingText = uiState.usernameErrorRes?.let { stringResource(it) }.orEmpty(),
+            )
+            if (uiState.usernameSuggestions.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    uiState.usernameSuggestions.forEach { suggestion ->
+                        Text(
+                            text = stringResource(R.string.profile_username, suggestion),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                .clickable { onUsernameSuggestionSelected(suggestion) }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                CustomTextField(
-                    label = stringResource(R.string.register_email_label),
-                    value = uiState.email,
-                    onValueChange = onEmailChanged,
-                    placeholder = stringResource(R.string.register_email_placeholder),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier
-                        .focusRequester(emailFocus)
-                        .bringIntoViewRequester(emailBringIntoView),
-                    isError = uiState.emailErrorRes != null,
-                    supportingText = uiState.emailErrorRes?.let { stringResource(it) }.orEmpty(),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                CustomTextField(
-                    label = stringResource(R.string.register_password_label),
-                    value = uiState.password,
-                    onValueChange = onPasswordChanged,
-                    placeholder = stringResource(R.string.register_password_placeholder),
-                    modifier = Modifier
-                        .focusRequester(passwordFocus)
-                        .bringIntoViewRequester(passwordBringIntoView),
-                    trailingIcon = {
-                        IconButton(onClick = onTogglePasswordVisibility) {
-                            Icon(
-                                imageVector = if (uiState.isPasswordVisible) {
-                                    Icons.Rounded.VisibilityOff
-                                } else {
-                                    Icons.Rounded.Visibility
-                                },
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    },
-                    visualTransformation = if (uiState.isPasswordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    isError = uiState.passwordErrorRes != null,
-                    supportingText = uiState.passwordErrorRes?.let { stringResource(it) }.orEmpty(),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(termsFocus)
-                        .bringIntoViewRequester(termsBringIntoView)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HabitSurfaceVariant)
-                        .clickable { onTermsChecked(!uiState.termsAccepted) }
-                        .focusable()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    FlowerCheck(
-                        checked = uiState.termsAccepted,
-                        isError = uiState.termsErrorRes != null,
-                    )
-                    Spacer(modifier = Modifier.size(12.dp))
-                    Text(
-                        text = buildAnnotatedString {
-                            append(stringResource(R.string.register_terms_prefix))
-                            append(" ")
-                            withStyle(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    textDecoration = TextDecoration.Underline,
-                                ),
-                            ) {
-                                append(stringResource(R.string.register_terms_of_service))
-                            }
-                            append(" ")
-                            append(stringResource(R.string.register_terms_and))
-                            append(" ")
-                            withStyle(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    textDecoration = TextDecoration.Underline,
-                                ),
-                            ) {
-                                append(stringResource(R.string.register_privacy_policy))
-                            }
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                uiState.termsErrorRes?.let { messageRes ->
-                    Text(
-                        text = stringResource(messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                uiState.errorMessageRes?.let { messageRes ->
-                    Text(
-                        text = stringResource(messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                HabitButton(
-                    text = stringResource(
-                        if (uiState.isLoading) {
-                            R.string.register_creating_account
-                        } else {
-                            R.string.register_create_account
-                        }
-                    ),
-                    onClick = onRegisterClicked,
-                    enabled = uiState.isRegisterEnabled && !uiState.isLoading,
-                    clickableWhenDisabled = !uiState.isLoading,
-                    loading = uiState.isLoading,
-                    variant = HabitButtonVariant.Primary,
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CustomTextField(
+                label = stringResource(R.string.register_email_label),
+                value = uiState.email,
+                onValueChange = onEmailChanged,
+                placeholder = stringResource(R.string.register_email_placeholder),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier
+                    .focusRequester(emailFocus)
+                    .bringIntoViewRequester(emailBringIntoView),
+                isError = uiState.emailErrorRes != null,
+                supportingText = uiState.emailErrorRes?.let { stringResource(it) }.orEmpty(),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CustomTextField(
+                label = stringResource(R.string.register_password_label),
+                value = uiState.password,
+                onValueChange = onPasswordChanged,
+                placeholder = stringResource(R.string.register_password_placeholder),
+                modifier = Modifier
+                    .focusRequester(passwordFocus)
+                    .bringIntoViewRequester(passwordBringIntoView),
+                trailingIcon = {
+                    IconButton(onClick = onTogglePasswordVisibility) {
+                        Icon(
+                            imageVector = if (uiState.isPasswordVisible) {
+                                Icons.Rounded.VisibilityOff
+                            } else {
+                                Icons.Rounded.Visibility
+                            },
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                visualTransformation = if (uiState.isPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = uiState.passwordErrorRes != null,
+                supportingText = uiState.passwordErrorRes?.let { stringResource(it) }.orEmpty(),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(termsFocus)
+                    .bringIntoViewRequester(termsBringIntoView)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(HabitSurfaceVariant)
+                    .clickable { onTermsChecked(!uiState.termsAccepted) }
+                    .focusable()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                FlowerCheck(
+                    checked = uiState.termsAccepted,
+                    isError = uiState.termsErrorRes != null,
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+                Text(
+                    text = buildAnnotatedString {
+                        append(stringResource(R.string.register_terms_prefix))
+                        append(" ")
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        ) {
+                            append(stringResource(R.string.register_terms_of_service))
+                        }
+                        append(" ")
+                        append(stringResource(R.string.register_terms_and))
+                        append(" ")
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        ) {
+                            append(stringResource(R.string.register_privacy_policy))
+                        }
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            uiState.termsErrorRes?.let { messageRes ->
+                Text(
+                    text = stringResource(messageRes),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            uiState.errorMessageRes?.let { messageRes ->
+                Text(
+                    text = stringResource(messageRes),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            HabitButton(
+                text = stringResource(
+                    if (uiState.isLoading) {
+                        R.string.register_creating_account
+                    } else {
+                        R.string.register_create_account
+                    }
+                ),
+                onClick = onRegisterClicked,
+                enabled = uiState.isRegisterEnabled && !uiState.isLoading,
+                clickableWhenDisabled = !uiState.isLoading,
+                loading = uiState.isLoading,
+                variant = HabitButtonVariant.Primary,
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
 
         if (uiState.isLoading) {
             HabitLoadingIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
+}
 }
 
 @Composable
@@ -442,17 +446,19 @@ private fun FlowerCheck(
     }
 }
 
- @Preview(showBackground = true, showSystemUi = true)
- @Composable
- private fun RegisterContentPreview() {
-     RegisterContent(
-         uiState = RegisterUiState(),
-         onBack = {},
-         onNameChanged = {},
-         onEmailChanged = {},
-         onPasswordChanged = {},
-         onTogglePasswordVisibility = {},
-         onTermsChecked = {},
-         onRegisterClicked = {},
-     )
- }
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun RegisterContentPreview() {
+    BloomTheme {
+        RegisterContent(
+            uiState = RegisterUiState(),
+            onBack = {},
+            onNameChanged = {},
+            onEmailChanged = {},
+            onPasswordChanged = {},
+            onTogglePasswordVisibility = {},
+            onTermsChecked = {},
+            onRegisterClicked = {},
+        )
+    }
+}

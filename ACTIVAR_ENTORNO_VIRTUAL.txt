@@ -1,0 +1,10 @@
+LANZAR SERVIDOR EN TERMINAL. /marta/apis/bloom-api comando:
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn main:app --reload
+
+LANZAR PARA QUE CUALQUIER MOVIL CONCETADO A MI WIFI ACCEDA:
+
+.\.venv\Scripts\Activate.ps1
+
+
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
