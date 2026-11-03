@@ -92,13 +92,6 @@ Four Glance widgets:
 
 ### AI-powered suggestions based on your habits.
 
-```
-presentation → domain ← data
-```
-
-- **presentation** — Compose screens split into `*Screen` (ViewModel and navigation) and `*Content` (state and callbacks). ViewModels expose `StateFlow`. One-shot events use a buffered `Channel` and `ObserveAsEvents`.
-- **domain** — use cases, validators and repository contracts. No Android framework types.
-- **data** — Room, DataStore and Supabase. Entities and DTOs stay in this layer.
 
 ## Tech stack
 
