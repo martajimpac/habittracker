@@ -1,10 +1,6 @@
 # Bloom
 
-Android app for creating, completing and reviewing personal habits. The UI is Jetpack Compose with Material 3. Data follows Clean Architecture: the screen renders state, the ViewModel sends it, and repositories talk to Supabase and a local Room cache.
-
-Habits are online-first. A write needs a network connection and lands in Supabase before Room is updated. Reads can use the cache already on the device.
-
-The functional source of truth is [`spec.md`](spec.md).
+Android app for creating, completing and reviewing personal habits.
 
 ## Screenshots
 
