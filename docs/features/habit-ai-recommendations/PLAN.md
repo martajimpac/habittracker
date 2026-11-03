@@ -76,7 +76,7 @@ El proyecto no está modularizado. No se crea un módulo.
 
 ## Datos y contratos
 
-- **Modelos y contratos de entrada y salida:** `POST /api/chat` con `habits[{name, completed_days, total_days}]`, `language` y `messages[{role, content}]`. Respuesta `{ "message": "<texto>" }`. `role` es `user` o `assistant`.
+- **Modelos y contratos de entrada y salida:** `POST /api/chat` con `habits[{name, completed_days, total_days}]`, `language` y `messages[{role, content}]`. Respuesta `{ "message": "<texto>" }`. `role` es `user` o `assistant`. Si `message` falta y llega `recommendations`, o si el texto es un JSON con `recommendations`, el hilo guarda solo ese texto. La burbuja del asistente interpreta negrita, viñetas, listas numeradas y separadores `---`. Sin librería nueva.
 - **Identificadores, relaciones y restricciones:** Sin ids nuevos. Nombre de hábito de 1 a 100 caracteres tras recortar. Contadores enteros de cero o más. Si `completed_days` supera `total_days`, el servicio responde 400. Mensaje vacío no sale de la app. El servicio rechaza una lista de mensajes vacía y un último mensaje que no sea de la persona.
 - **Origen de los datos mostrados y transformaciones:** Los contadores salen de `habitWeekRecommendationStats` en el momento del envío y no se muestran. Los mensajes visibles son los de la visita más la respuesta.
 - **Persistencia, consultas y actualizaciones:** El hilo y el borrador no se escriben en Room ni en `SavedState`. Viven en el ViewModel de esa visita.
@@ -94,7 +94,7 @@ El proyecto no está modularizado. No se crea un módulo.
 ## Dependencias y configuración
 
 - No hay librerías nuevas. Se reutilizan Ktor, kotlinx.serialization, Hilt, Compose y el transporte actual.
-- `BLOOM_API_BASE_URL` no cambia.
+- `BLOOM_API_BASE_URL` sale de `local.properties`. Emulador, móvil y release usan `https://bloom-api-oe9g.onrender.com`.
 - El endpoint vive en `bloom-api`, fuera de este repositorio. El código queda escrito en `main.py` y también se entrega en el informe para copiarlo.
 
 ## Estrategia de validación

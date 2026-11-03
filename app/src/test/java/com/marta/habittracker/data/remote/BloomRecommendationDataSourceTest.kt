@@ -6,6 +6,8 @@ import com.marta.habittracker.domain.model.AssistantTurn
 import com.marta.habittracker.domain.model.RecommendationError
 import com.marta.habittracker.domain.usecase.HabitWeekStat
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -62,6 +64,43 @@ class BloomRecommendationDataSourceTest {
         assertTrue(transport.body.orEmpty().contains("\"role\":\"user\""))
         assertTrue(transport.body.orEmpty().contains("How is my week?"))
         assertTrue(transport.body.orEmpty().contains("\"completed_days\":2"))
+    }
+
+    @Test
+    fun `unwraps a recommendations json message into markdown`() = runTest {
+        val markdown = "**Observaciones:**\n* El hábito aún no tiene registros.\n\n---\n\n1. **Empezar:** da el primer paso."
+        val envelope = buildJsonObject { put("recommendations", markdown) }.toString()
+        val payload = buildJsonObject { put("message", envelope) }.toString()
+        val source = BloomRecommendationDataSource(
+            baseUrl = "http://10.0.2.2:8000",
+            transport = FakeRecommendationTransport(TransportResult.Http(200, payload)),
+        )
+
+        val result = source.send(
+            stats = stats,
+            language = "es",
+            messages = listOf(AssistantTurn(role = AssistantRole.User, text = "¿Cómo voy?")),
+        )
+
+        assertEquals(DataResult.Success(markdown), result)
+    }
+
+    @Test
+    fun `reads recommendations when the chat body has no message`() = runTest {
+        val source = BloomRecommendationDataSource(
+            baseUrl = "http://10.0.2.2:8000",
+            transport = FakeRecommendationTransport(
+                TransportResult.Http(200, """{"recommendations":"**Hola**\n* uno"}"""),
+            ),
+        )
+
+        val result = source.send(
+            stats = stats,
+            language = "es",
+            messages = listOf(AssistantTurn(role = AssistantRole.User, text = "Hola")),
+        )
+
+        assertEquals(DataResult.Success("**Hola**\n* uno"), result)
     }
 
     @Test

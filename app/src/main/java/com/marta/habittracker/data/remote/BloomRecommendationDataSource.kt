@@ -120,12 +120,13 @@ class BloomRecommendationDataSource(
     private fun parseChat(body: String): DataResult<String, RecommendationError> {
         if (body.isBlank()) return DataResult.Error(RecommendationError.EmptyResponse)
         val text = try {
-            json.decodeFromString<ChatResponseBody>(body).message
+            val parsed = json.decodeFromString<ChatResponseBody>(body)
+            parsed.message?.takeIf { it.isNotBlank() } ?: parsed.recommendations
         } catch (error: IllegalArgumentException) {
             Log.e(TAG, "Chat response was not valid JSON", error)
             return DataResult.Error(RecommendationError.Unavailable)
         }
-        val reply = text?.trim().orEmpty()
+        val reply = unwrapAssistantReply(text?.trim().orEmpty(), json).trim()
         return if (reply.isEmpty()) {
             DataResult.Error(RecommendationError.EmptyResponse)
         } else {
@@ -194,4 +195,5 @@ private data class ChatMessageBody(
 @Serializable
 private data class ChatResponseBody(
     val message: String? = null,
+    val recommendations: String? = null,
 )

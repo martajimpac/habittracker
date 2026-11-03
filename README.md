@@ -1,6 +1,8 @@
 # Bloom
 
-Android app for creating, completing and reviewing personal habits.
+Bloom is an Android app for keeping personal habits. You create a habit with a name, an icon, a color and the weekdays it applies to, then mark it done on the day you open the app. Home follows the selected date, the habit detail keeps the history, the calendar and the streak, and Statistics shows the last weeks. A reminder can fire locally on the habit's days. You can add friends, challenge them, and pin today's habits on the home screen with a widget.
+
+The assistant in Statistics does not call Gemini from the phone. The app sends the current Monday–Sunday counts, the app language and the messages of that visit to a FastAPI service deployed on Render: [https://bloom-api-oe9g.onrender.com](https://bloom-api-oe9g.onrender.com). That service calls the Gemini API (model `gemini-flash-latest`, unless `GEMINI_MODEL` is set on the server) and returns one reply. The chat shows it formatted — bold titles, bullet and numbered lists, and separators — instead of the raw JSON. The Gemini key stays on Render as `GEMINI_API_KEY`. The OpenAPI docs are at [https://bloom-api-oe9g.onrender.com/docs](https://bloom-api-oe9g.onrender.com/docs).
 
 ## Screenshots
 
@@ -86,8 +88,10 @@ Four Glance widgets:
 - Weekly summary of scheduled habits
 - Today's habits (up to five rows)
 
-### AI-powered suggestions based on your habits.
-
+### Habit assistant
+- Opened from Statistics. Each message includes the Monday–Sunday counts already calculated by the app
+- The phone calls `POST /api/chat` on the Render FastAPI service. The service calls Gemini and returns one reply
+- The assistant bubble renders the reply's markdown. The thread lasts until you leave the screen
 
 ## Tech stack
 
@@ -98,7 +102,7 @@ Four Glance widgets:
 | DI               | Hilt                                                                   |
 | Local            | Room, DataStore                                                        |
 | Remote           | Supabase Auth, PostgREST, Storage and Edge Functions, via Ktor         |
-| AI               | Ollama for AI-powered habit suggestions, with a Python FastAPI backend |
+| AI               | FastAPI on Render (`bloom-api`), which calls the Gemini API. The app never calls Gemini itself |
 | Background       | WorkManager for widget refresh, `AlarmManager` for habit reminders     |
 | Widgets          | Jetpack Glance                                                         |
 | Push and crashes | Firebase Cloud Messaging, Analytics and Crashlytics                    |
@@ -125,6 +129,9 @@ app/src/main/java/com/marta/habittracker/
    ```properties
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+   BLOOM_API_BASE_URL_EMULATOR=https://bloom-api-oe9g.onrender.com
+   BLOOM_API_BASE_URL_DEVICE=https://bloom-api-oe9g.onrender.com
+   BLOOM_API_BASE_URL_PRODUCTION=https://bloom-api-oe9g.onrender.com
    ```
 
 2. Place the Firebase Android config at `app/google-services.json` so Messaging and Crashlytics can start. Crash reports must not include passwords or tokens.

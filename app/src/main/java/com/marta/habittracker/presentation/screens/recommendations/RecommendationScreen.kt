@@ -248,6 +248,8 @@ private fun MessageBubble(message: AssistantTurn) {
     val label = stringResource(
         if (fromUser) R.string.recommendation_you else R.string.recommendation_assistant,
     )
+    val spoken = if (fromUser) message.text else assistantPlainText(message.text).ifBlank { message.text }
+    val wide = !fromUser && parseAssistantMarkdown(message.text).any { it.isStructural() }
     val scheme = MaterialTheme.colorScheme
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -255,19 +257,27 @@ private fun MessageBubble(message: AssistantTurn) {
     ) {
         Surface(
             modifier = Modifier
-                .widthIn(max = 300.dp)
+                .then(if (wide) Modifier.fillMaxWidth() else Modifier.widthIn(max = 300.dp))
                 .semantics(mergeDescendants = true) {
-                    contentDescription = "$label. ${message.text}"
+                    contentDescription = "$label. $spoken"
                 },
             shape = if (fromUser) UserBubbleShape else AssistantBubbleShape,
             color = if (fromUser) scheme.primary else scheme.surfaceContainerLowest,
             contentColor = if (fromUser) scheme.onPrimary else scheme.onSurface,
         ) {
-            Text(
-                text = message.text,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            if (fromUser) {
+                Text(
+                    text = message.text,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            } else {
+                AssistantMarkdownText(
+                    text = message.text,
+                    color = scheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                )
+            }
         }
     }
 }

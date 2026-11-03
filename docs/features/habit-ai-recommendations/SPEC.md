@@ -40,7 +40,7 @@ Bloom guarda los hábitos de la cuenta y sus registros. Leerlos no exige interne
 
 Estadísticas abre una pantalla de recomendación. Muestra, por hábito, el nombre, los días completados y el objetivo de la semana lunes–domingo que contiene hoy, y un botón que pide un único texto. No hay campo para escribir ni hilo. Pedir otra vez sustituye el texto anterior. Sin hábitos, esa pantalla no llama a la API.
 
-`bloom-api` está en `C:\Users\marta\apis\bloom-api`. Hoy expone `GET /health` y `POST /api/recommendations`. El cuerpo de recomendaciones es una lista `habits` con `name`, `completed_days` y `total_days`. La respuesta útil es `recommendations`. Una lista vacía recibe 400. Si los días completados superan el total, también. La API espera a Ollama como máximo 90 segundos, con el modelo `qwen2.5-coder:7b`, en `{OLLAMA_URL}/api/chat` y con `stream: false`. No tiene autenticación. La dirección base de la app es configuración de entorno: en desarrollo, `http://10.0.2.2:8000` en el emulador estándar y `http://<IP privada del ordenador>:8000` en un móvil de la misma Wi-Fi.
+`bloom-api` está publicada en `https://bloom-api-oe9g.onrender.com`. Expone `GET /health`, `POST /api/recommendations` y `POST /api/chat`. El cuerpo de recomendaciones es una lista `habits` con `name`, `completed_days` y `total_days`. La respuesta útil es `recommendations`. Una lista vacía recibe 400. Si los días completados superan el total, también. No tiene autenticación. La dirección base de la app es configuración de entorno y, en emulador, móvil y release, apunta a ese host.
 
 Esas reglas de contadores, de dirección y de acceso a Ollama se mantienen. Esta revisión no cambia rachas, metas, calendarios ni gráficos.
 
@@ -54,6 +54,7 @@ Esas reglas de contadores, de dirección y de acceso a Ollama se mantienen. Esta
 - **RF-06:** Un fallo, un tiempo de espera agotado o una respuesta vacía no añade un mensaje del asistente. El mensaje de la persona permanece y se puede reintentar ese envío sin duplicarlo.
 - **RF-07:** Mientras llega la respuesta, la pantalla sigue usable y no sale otra llamada.
 - **RF-08:** El hilo y el texto aún no enviado duran mientras la pantalla sigue abierta, también si se recrea. Volver a Estadísticas o terminarse el proceso deja la siguiente apertura vacía. No se publica una notificación.
+- **RF-09:** Si el texto del asistente es un JSON con el campo `recommendations`, o la respuesta del chat trae ese campo, la burbuja muestra solo ese texto. La negrita, las listas con viñeta, las listas numeradas y los separadores se ven formateados. El mensaje de la persona se muestra tal cual. No se abre ningún enlace.
 
 ## Fuera de alcance
 
@@ -73,7 +74,7 @@ Estas exclusiones salen del pedido o de acuerdos anteriores que esta revisión n
 1. La persona abre la pantalla desde Estadísticas. Con hábitos, ve el hilo vacío y puede escribir. Todavía no hay llamada.
 2. Sin hábitos, ve la explicación y no puede enviar.
 3. Escribe y envía. Su mensaje aparece en el hilo y ve que la respuesta está en curso.
-4. Si la respuesta sirve, aparece debajo como mensaje del asistente, en el idioma de la app.
+4. Si la respuesta sirve, aparece debajo como mensaje del asistente, en el idioma de la app. Si llega envuelta en JSON con `recommendations`, se ve ese texto formateado y no el JSON.
 5. Otro mensaje continúa el mismo hilo. El envío incluye los mensajes anteriores y los contadores actuales.
 6. Si falla, el mensaje de la persona sigue en el hilo, no aparece una respuesta del asistente y puede reintentar ese envío.
 7. Volver atrás abandona la petición de esa visita. La próxima apertura empieza vacía.
@@ -122,7 +123,7 @@ El hilo no se guarda. Salir de la pantalla lo abandona.
 - Jetpack Compose y los hábitos ya guardados. Reutilizar el cálculo de contadores; no crear otro criterio de racha o de meta.
 - La app llama al endpoint nuevo de chat en `bloom-api`. No llama a Ollama ni usa `POST /api/recommendations` para este hilo.
 - El modelo sigue siendo `qwen2.5-coder:7b`. `bloom-api` llama a `{OLLAMA_URL}/api/chat` con `stream: false`. La espera máxima sigue siendo 90 segundos.
-- La dirección base de `bloom-api` es configuración de entorno y no se versiona como secreto. En desarrollo la API se arranca con `python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`. El emulador estándar usa `http://10.0.2.2:8000` y un móvil en la misma Wi-Fi usa `http://<IP privada del ordenador>:8000`.
+- La dirección base de `bloom-api` es configuración de entorno y no se versiona como secreto. Emulador, móvil y release usan `https://bloom-api-oe9g.onrender.com`.
 - El hilo vive solo en la visita a esta pantalla.
 
 ## Criterios de aceptación
@@ -135,7 +136,8 @@ El hilo no se guarda. Salir de la pantalla lo abandona.
 - **CA-06 · RF-06:** Dado que el envío falla, se agota la espera o la respuesta llega vacía, cuando termina, entonces su mensaje sigue en el hilo, no hay mensaje del asistente y puede reintentar sin duplicar el suyo.
 - **CA-07 · RF-07:** Dado un envío en curso, cuando intenta enviar otra vez, entonces no sale una segunda llamada.
 - **CA-08 · RF-08:** Dado un hilo visible, cuando gira el teléfono, entonces los mensajes y el borrador siguen. Cuando vuelve a Estadísticas y abre de nuevo, o cuando el proceso ha terminado, entonces el hilo está vacío.
-- **CA-09 · RF-02:** Dado el emulador estándar, cuando envía un mensaje, entonces llama a `http://10.0.2.2:8000` en el endpoint nuevo de chat. Dado un móvil en la misma Wi-Fi, cuando envía, entonces llama a `http://<IP privada del ordenador>:8000` en ese mismo endpoint. La app no abre una conexión con Ollama.
+- **CA-09 · RF-02:** Dado el emulador, un móvil o un build de release, cuando envía un mensaje, entonces llama a `https://bloom-api-oe9g.onrender.com` en el endpoint de chat. La app no abre una conexión directa con el modelo.
+- **CA-10 · RF-09:** Dada una respuesta cuyo texto útil está en `recommendations` y usa negrita, viñetas, una lista numerada y un separador, cuando aparece en el hilo, entonces no se ven las llaves del JSON ni los marcadores `**`, y sí los títulos, las viñetas, los números y el separador. El mensaje de la persona sigue en texto plano.
 
 ## Cómo se comprueba el comportamiento
 
@@ -153,7 +155,8 @@ No marques los criterios como superados durante la especificación. -->
 | CA-06 | `bloom-api` apagada, respuesta de error, espera agotada o cuerpo sin texto. Reintentar. | El mensaje de la persona sigue una sola vez, no hay respuesta del asistente y el reintento vuelve a enviar ese mensaje. |
 | CA-07 | Intentar enviar otra vez durante la espera. | Una sola llamada. |
 | CA-08 | Con mensajes y texto sin enviar, girar el teléfono. Salir a Estadísticas y volver a entrar. Repetir tras terminar el proceso. | El giro conserva hilo y borrador. Las otras dos aperturas están vacías. |
-| CA-09 | Enviar un mensaje en el emulador estándar y en un móvil de la misma Wi-Fi. | El emulador llama a `http://10.0.2.2:8000`. El móvil llama a `http://<IP privada>:8000`. No hay conexión de la app con Ollama. |
+| CA-09 | Enviar un mensaje en el emulador, en un móvil o en release. | La llamada va a `https://bloom-api-oe9g.onrender.com` en el endpoint de chat. La app no llama al modelo por su cuenta. |
+| CA-10 | Recibir una respuesta `recommendations` con negrita, viñetas, números y un separador. Revisar la burbuja del asistente y un mensaje propio. | Se lee el texto formateado, sin JSON ni `**`. Lo escrito por la persona no se reformatea. |
 
 Ningún criterio de esta revisión está superado: el chat no está implementado.
 
@@ -165,6 +168,8 @@ no queden pendientes funcionales ni restricciones por decidir. -->
 Ninguna.
 
 Cerradas en esta revisión: Chat-D1, hilo con mensaje escrito por la persona; Chat-D2, cada envío incluye los mensajes anteriores y los contadores actuales; Chat-D3, el hilo dura solo con la pantalla abierta; Chat-D4, la pantalla es el hilo y el campo, sin bloque de contadores; Chat-D5, sin hábitos no se envía; Chat-D6, la respuesta puede usar los contadores enviados y no otras cifras; Chat-D7, la respuesta usa el idioma de la app; Chat-D8, endpoint nuevo de chat en `bloom-api`, con el hilo en memoria durante la visita.
+
+**Confirmado — Chat-D9 (2026-11-03).** La respuesta que llega como JSON `recommendations` con markdown se muestra formateada en la burbuja del asistente. El pedido fija negrita, listas y separadores. No incluye tablas, imágenes ni abrir enlaces.
 
 Se mantienen de la spec del 2026-10-28: semana lunes–domingo actual, contadores reales sin recortar, dirección base por entorno, modelo `qwen2.5-coder:7b`, espera máxima de 90 segundos y la app sin llamada directa a Ollama.
 

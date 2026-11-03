@@ -29,27 +29,6 @@ android {
 
     flavorDimensions += "environment"
 
-    productFlavors {
-        create("emulator") {
-            dimension = "environment"
-
-            buildConfigField(
-                "String",
-                "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_EMULATOR", "")}\"",
-            )
-        }
-
-        create("phone") {
-            dimension = "environment"
-
-            buildConfigField(
-                "String",
-                "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEVICE", "")}\"", //ip de mi ordenador
-            )
-        }
-    }
 
     defaultConfig {
         applicationId = "com.marta.habittracker"
@@ -74,7 +53,11 @@ android {
 
     buildTypes {
         debug {
-            // Cada flavor utiliza su propia URL local.
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEBUG", "")}\"",
+            )
         }
 
         release {
@@ -92,6 +75,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

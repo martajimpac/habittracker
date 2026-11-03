@@ -3,7 +3,7 @@
 **SPEC:** `docs/features/habit-ai-recommendations/SPEC.md` (Aprobada, 2026-10-30)
 **PLAN:** `docs/features/habit-ai-recommendations/PLAN.md` (Aprobado, 2026-10-30)
 
-Implementación autorizada el 2026-10-30 al pedir cerrar el flujo. Las tareas T1 y T2 de la recomendación de un solo uso siguen vigentes: el cálculo semanal y `BLOOM_API_BASE_URL` no se rehacen.
+Implementación autorizada el 2026-10-30 al pedir cerrar el flujo. Las tareas T1 y T2 de la recomendación de un solo uso siguen vigentes. Desde el 2026-11-03 la dirección base, en emulador, móvil y release, es `https://bloom-api-oe9g.onrender.com`.
 
 ## T3 — Cliente del chat
 
@@ -40,6 +40,15 @@ Implementación autorizada el 2026-10-30 al pedir cerrar el flujo. Las tareas T1
 - **Requisitos:** RF-02, RF-03, RF-04, RF-06.
 - **Validación:** `python -m py_compile main.py`.
 - **Estado:** Hecha. `python -m py_compile main.py` terminó con código 0. No se llamó a Ollama.
+
+## T8 — Respuesta formateada
+
+- **Objetivo:** Mostrar el texto de `recommendations` con negrita, listas y separadores, sin el JSON.
+- **Alcance:** `AssistantReplyText`, `parseChat`, `AssistantMarkdown` y la burbuja del asistente.
+- **Depende de:** T3, T5.
+- **Requisitos:** RF-09, CA-10.
+- **Validación:** `BloomRecommendationDataSourceTest` y `AssistantMarkdownTest`.
+- **Estado:** Hecha en tests. `:app:testPhoneDebugUnitTest` de esas dos clases, 2026-11-03: 7 tests del cliente (0 fallos) y 3 del formateo (0 fallos). No se abrió el chat en un dispositivo.
 
 ## T7 — Verificación
 
