@@ -11,7 +11,7 @@ import com.marta.habittracker.data.remote.dto.ChallengeDto
 import com.marta.habittracker.data.remote.dto.HabitDto
 import com.marta.habittracker.data.remote.dto.HabitRecordDto
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Challenge
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria

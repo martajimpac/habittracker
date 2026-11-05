@@ -1,4 +1,4 @@
-package com.marta.habittracker.domain.model
+package com.marta.habittracker.domain.model.errors
 
 sealed interface LoginError : AppError {
 

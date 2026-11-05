@@ -8,7 +8,7 @@ import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.PasswordValidator
-import com.marta.habittracker.domain.model.RegisterError
+import com.marta.habittracker.domain.model.errors.RegisterError
 import com.marta.habittracker.domain.model.UsernameRules
 import com.marta.habittracker.domain.repository.UsernameAvailabilityRepository
 import com.marta.habittracker.domain.usecase.RegisterUseCase

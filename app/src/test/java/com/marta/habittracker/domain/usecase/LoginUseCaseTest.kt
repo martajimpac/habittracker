@@ -1,8 +1,8 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
-import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.errors.AppError
+import com.marta.habittracker.domain.model.errors.LoginError
 import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.UserMode
 import kotlinx.coroutines.test.runTest

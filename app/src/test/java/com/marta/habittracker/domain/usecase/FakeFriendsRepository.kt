@@ -1,7 +1,7 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeHabitDraft

@@ -4,7 +4,7 @@ import android.util.Log
 import com.marta.habittracker.data.remote.dto.UsernameAvailabilityDto
 import com.marta.habittracker.data.remote.dto.UsernameAvailabilityParams
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.UsernameAvailability
 import com.marta.habittracker.domain.repository.UsernameAvailabilityRepository
 import io.github.jan.supabase.SupabaseClient

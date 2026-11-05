@@ -89,6 +89,15 @@ import com.marta.habittracker.presentation.utils.dayLabel
 import com.marta.habittracker.presentation.utils.dayShortLabel
 import com.marta.habittracker.presentation.utils.greetingForHour
 import com.marta.habittracker.presentation.utils.habitAccentColor
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
+import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.presentation.utils.toUserMessageRes
+import com.marta.habittracker.presentation.widgets.WidgetRefresher
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -105,14 +114,29 @@ fun HomeScreen(
     val weekDays by viewModel.weekDays.collectAsStateWithLifecycle()
     val userDisplayName by viewModel.userDisplayName.collectAsStateWithLifecycle()
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
-    val actionErrorRes by viewModel.actionErrorRes.collectAsStateWithLifecycle()
     val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
     val protection by viewModel.protection.collectAsStateWithLifecycle()
     var showProtectionEarned by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     ObserveAsEvents(viewModel.events) { event ->
-        if (event is HomeEvent.ProtectionEarned) showProtectionEarned = true
+        when (event) {
+            HomeEvent.ProtectionEarned -> showProtectionEarned = true
+            is HomeEvent.HabitToggle -> {
+                if (event.result is DataResult.Error) {
+
+
+                    val message = context.getString(event.result.error.toUserMessageRes())
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message)
+                    }
+                }
+            }
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -138,22 +162,30 @@ fun HomeScreen(
         viewModel.refreshDisplayName()
     }
 
-    HomeContent(
-        habits = habits,
-        allHabits = allHabits,
-        selectedDate = selectedDate,
-        today = today,
-        userDisplayName = userDisplayName,
-        avatarUrl = avatarUrl,
-        actionErrorRes = actionErrorRes,
-        weekDays = weekDays,
-        onDateSelected = viewModel::onDateSelected,
-        onToggleHabit = viewModel::toggleComplete,
-        onClearActionError = viewModel::clearActionError,
-        challengeHabitIds = challengeHabitIds,
-        protectionBalance = protection.balance,
-        protectionByHabit = protection.habits.associateBy { it.habitId },
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        HomeContent(
+            habits = habits,
+            allHabits = allHabits,
+            selectedDate = selectedDate,
+            today = today,
+            userDisplayName = userDisplayName,
+            avatarUrl = avatarUrl,
+            weekDays = weekDays,
+            onDateSelected = viewModel::onDateSelected,
+            onToggleHabit = viewModel::toggleComplete,
+            challengeHabitIds = challengeHabitIds,
+            protectionBalance = protection.balance,
+            protectionByHabit = protection.habits.associateBy { it.habitId },
+        )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+    }
     if (showProtectionEarned) {
         HabitDialog(
             onDismissRequest = { showProtectionEarned = false },
@@ -174,11 +206,9 @@ fun HomeContent(
     today: LocalDate,
     userDisplayName: String,
     avatarUrl: String?,
-    actionErrorRes: Int?,
     weekDays: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
     onToggleHabit: (Habit) -> Unit,
-    onClearActionError: () -> Unit,
     challengeHabitIds: Set<String> = emptySet(),
     protectionBalance: Int = 0,
     protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
@@ -247,19 +277,6 @@ fun HomeContent(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            actionErrorRes?.let { errorRes ->
-                item {
-                    Text(
-                        text = stringResource(errorRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onClearActionError),
-                    )
-                }
-            }
-
             item {
                 HomeProgressCard(
                     pct = pct,
@@ -781,20 +798,18 @@ private fun HomeDayInfoCard(
     }
 }
 
- @Preview(showBackground = true, showSystemUi = true)
- @Composable
- private fun HomeContentPreview() {
-     HomeContent(
-         habits = emptyList(),
-         allHabits = emptyList(),
-         selectedDate = LocalDate.now(),
-         today = LocalDate.now(),
-         userDisplayName = "John",
-         avatarUrl = null,
-         actionErrorRes = null,
-         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
-         onDateSelected = {},
-         onToggleHabit = {},
-         onClearActionError = {},
-     )
- }
+// @Preview(showBackground = true, showSystemUi = true)
+// @Composable
+// private fun HomeContentPreview() {
+//     HomeContent(
+//         habits = emptyList(),
+//         allHabits = emptyList(),
+//         selectedDate = LocalDate.now(),
+//         today = LocalDate.now(),
+//         userDisplayName = "John",
+//         avatarUrl = null,
+//         weekDays = (0..6).map { LocalDate.now().plusDays(it.toLong()) },
+//         onDateSelected = {},
+//         onToggleHabit = {},
+//     )
+// }

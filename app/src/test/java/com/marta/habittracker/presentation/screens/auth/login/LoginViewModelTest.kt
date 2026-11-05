@@ -3,8 +3,8 @@ package com.marta.habittracker.presentation.screens.auth.login
 import android.app.Application
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
-import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.errors.AppError
+import com.marta.habittracker.domain.model.errors.LoginError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.LoginUseCase

@@ -20,6 +20,7 @@ class ToggleTodayHabitAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
+        Log.w(TAG, "ToggleEEEEEEEEEE")
         val habitId = parameters[habitIdKey]
         if (habitId.isNullOrBlank()) {
             Log.w(TAG, "Toggle ignored because the habit id was missing")

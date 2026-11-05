@@ -1,7 +1,7 @@
 package com.marta.habittracker.domain.repository
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Profile
 
 interface ProfileRepository {

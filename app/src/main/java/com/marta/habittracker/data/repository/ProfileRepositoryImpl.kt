@@ -5,7 +5,7 @@ import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.data.mapper.SocialMapper
 import com.marta.habittracker.data.remote.ProfileRemote
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.ProfileRepository

@@ -1,7 +1,7 @@
 package com.marta.habittracker.presentation.widgets
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.widget.ChallengeWidgetLookup
 import com.marta.habittracker.domain.widget.onHabitSyncFinished
 import com.marta.habittracker.domain.widget.onSignedOut

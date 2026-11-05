@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
+import com.marta.habittracker.presentation.widgets.challenge.ChallengeWidgetReceiver
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,14 +23,17 @@ class HabitWidgetReceiver : GlanceAppWidgetReceiver() {
                 val preferences = EntryPointAccessors
                     .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                     .widgetPreferencesDataSource()
+
                 appWidgetIds.forEach { appWidgetId ->
-                    preferences.clearWidget(appWidgetId)
-                    Log.d(TAG, "Cleared preferences for deleted widget $appWidgetId")
+                    try {
+                        preferences.clearWidget(appWidgetId)
+                        Log.d(TAG, "Cleared preferences for deleted widget $appWidgetId")
+                    } catch (exception: Exception) {
+                        Log.e(TAG, "Failed to clear widget $appWidgetId", exception)
+                    }
                 }
-            } catch (exception: Exception) {
-                Log.e(TAG, "Failed to clear preferences for deleted habit widget", exception)
             } finally {
-                pendingResult.finish()
+                pendingResult?.finish()
             }
         }
     }

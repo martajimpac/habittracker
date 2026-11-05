@@ -1,6 +1,7 @@
 package com.marta.habittracker.presentation.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.glance.unit.ColorProvider
 
 // Habit Tracker — Custom palette
 

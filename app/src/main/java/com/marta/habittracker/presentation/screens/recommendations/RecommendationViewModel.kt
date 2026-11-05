@@ -8,7 +8,7 @@ import com.marta.habittracker.core.toKotlin
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
-import com.marta.habittracker.domain.model.RecommendationError
+import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.RecommendationRepository
 import com.marta.habittracker.domain.usecase.HabitWeekStat

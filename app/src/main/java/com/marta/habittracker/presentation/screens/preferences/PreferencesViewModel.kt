@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.coroutines.DispatchersProvider
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.usecase.UpdateDisplayName

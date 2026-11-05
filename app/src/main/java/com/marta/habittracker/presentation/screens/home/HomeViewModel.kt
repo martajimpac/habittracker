@@ -3,6 +3,7 @@ package com.marta.habittracker.presentation.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.FriendsRepository
@@ -11,8 +12,8 @@ import com.marta.habittracker.domain.repository.ProfileRepository
 import com.marta.habittracker.domain.repository.StreakProtectionRepository
 import com.marta.habittracker.domain.usecase.ProtectionEventType
 import com.marta.habittracker.domain.usecase.ProtectionReconcileResult
+import com.marta.habittracker.domain.widget.AppWidgetRefresher
 import com.marta.habittracker.presentation.utils.getCurrentWeekDays
-import com.marta.habittracker.presentation.utils.toUserMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -34,6 +35,7 @@ class HomeViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val friendsRepository: FriendsRepository,
     private val streakProtectionRepository: StreakProtectionRepository,
+    private val widgetRefresher: AppWidgetRefresher,
 ) : ViewModel() {
 
     internal var currentDate: () -> LocalDate = { LocalDate.now() }
@@ -55,9 +57,6 @@ class HomeViewModel @Inject constructor(
 
     private val _avatarColor = MutableStateFlow("")
     val avatarColor: StateFlow<String> = _avatarColor.asStateFlow()
-
-    private val _actionErrorRes = MutableStateFlow<Int?>(null)
-    val actionErrorRes: StateFlow<Int?> = _actionErrorRes.asStateFlow()
 
     private val _challengeHabitIds = MutableStateFlow<Set<String>>(emptySet())
     val challengeHabitIds: StateFlow<Set<String>> = _challengeHabitIds.asStateFlow()
@@ -141,22 +140,19 @@ class HomeViewModel @Inject constructor(
         _selectedDate.value = date
     }
 
-    fun clearActionError() {
-        _actionErrorRes.value = null
-    }
-
     fun toggleComplete(habit: Habit) {
         if (_selectedDate.value != _today.value) return
         viewModelScope.launch {
-            when (val result = repository.toggleHabitCompletion(habit, _selectedDate.value)) {
-                is DataResult.Success -> _actionErrorRes.value = null
-                is DataResult.Error -> _actionErrorRes.value = result.error.toUserMessageRes()
-            }
+            val result = repository.toggleHabitCompletion(habit, _selectedDate.value)
+            widgetRefresher.refreshAll()
+            _events.send(HomeEvent.HabitToggle(result))
         }
     }
-
 }
 
 sealed interface HomeEvent {
     data object ProtectionEarned : HomeEvent
+    data class HabitToggle(
+        val result: DataResult<Unit, AppError>,
+    ) : HomeEvent
 }

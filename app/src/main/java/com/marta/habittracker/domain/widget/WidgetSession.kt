@@ -1,7 +1,7 @@
 package com.marta.habittracker.domain.widget
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 
 sealed interface ChallengeWidgetLookup {
     data object Unavailable : ChallengeWidgetLookup

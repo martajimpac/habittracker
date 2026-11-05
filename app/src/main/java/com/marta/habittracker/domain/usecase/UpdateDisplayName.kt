@@ -1,9 +1,9 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Profile
-import com.marta.habittracker.domain.model.ProfileError
+import com.marta.habittracker.domain.model.errors.ProfileError
 import com.marta.habittracker.domain.repository.ProfileRepository
 import javax.inject.Inject
 

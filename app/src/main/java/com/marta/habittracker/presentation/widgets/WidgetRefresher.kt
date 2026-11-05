@@ -7,19 +7,45 @@ import com.marta.habittracker.presentation.widgets.challenge.ChallengeGlanceWidg
 import com.marta.habittracker.presentation.widgets.habit.HabitGlanceWidget
 import com.marta.habittracker.presentation.widgets.today.TodayGlanceWidget
 import com.marta.habittracker.presentation.widgets.weekly.WeeklyGlanceWidget
+import kotlin.coroutines.cancellation.CancellationException
 
 object WidgetRefresher {
 
     suspend fun refreshAll(context: Context) {
-        try {
-            Log.d(TAG, "Refreshing all Glance widgets")
+        Log.d(TAG, "Starting widget refresh")
+
+        refreshWidget("HabitGlanceWidget") {
             HabitGlanceWidget().updateAll(context)
+        }
+
+        refreshWidget("ChallengeGlanceWidget") {
             ChallengeGlanceWidget().updateAll(context)
+        }
+
+        refreshWidget("WeeklyGlanceWidget") {
             WeeklyGlanceWidget().updateAll(context)
+        }
+
+        refreshWidget("TodayGlanceWidget") {
+            Log.d("AAAAAA", "REFRESHING TODAY WIDGET")
             TodayGlanceWidget().updateAll(context)
-            Log.d(TAG, "Finished refreshing all Glance widgets")
+        }
+
+        Log.d(TAG, "Widget refresh requests completed")
+    }
+
+    private suspend fun refreshWidget(
+        name: String,
+        action: suspend () -> Unit
+    ) {
+        try {
+            Log.d(TAG, "Updating $name")
+            action()
+            Log.d(TAG, "$name update request completed")
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
-            Log.e(TAG, "Failed to refresh Glance widgets", exception)
+            Log.e(TAG, "Failed to update $name", exception)
         }
     }
 

@@ -1,7 +1,7 @@
 package com.marta.habittracker.presentation.widgets.habit
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.domain.usecase.FakeHabitRepository

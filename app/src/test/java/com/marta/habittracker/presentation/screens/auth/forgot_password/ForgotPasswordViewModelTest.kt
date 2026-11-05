@@ -3,7 +3,7 @@ package com.marta.habittracker.presentation.screens.auth.forgot_password
 import android.app.Application
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.RequestPasswordReset
 import kotlinx.coroutines.Dispatchers

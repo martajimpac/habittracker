@@ -2,11 +2,11 @@ package com.marta.habittracker.presentation.utils
 
 import androidx.annotation.StringRes
 import com.marta.habittracker.R
-import com.marta.habittracker.domain.model.AppError
-import com.marta.habittracker.domain.model.LoginError
-import com.marta.habittracker.domain.model.ProfileError
-import com.marta.habittracker.domain.model.RecommendationError
-import com.marta.habittracker.domain.model.RegisterError
+import com.marta.habittracker.domain.model.errors.AppError
+import com.marta.habittracker.domain.model.errors.LoginError
+import com.marta.habittracker.domain.model.errors.ProfileError
+import com.marta.habittracker.domain.model.errors.RecommendationError
+import com.marta.habittracker.domain.model.errors.RegisterError
 
 @StringRes
 fun AppError.toUserMessageRes(): Int = when (this) {
@@ -22,8 +22,7 @@ fun AppError.toUserMessageRes(): Int = when (this) {
     RecommendationError.TimedOut -> R.string.recommendation_error_timeout
     RecommendationError.EmptyResponse -> R.string.recommendation_error_empty
     RecommendationError.Unavailable,
-    RecommendationError.MissingBaseUrl,
-    -> R.string.recommendation_error_unavailable
+    RecommendationError.MissingBaseUrl, -> R.string.recommendation_error_unavailable
     AppError.Common.Network -> R.string.error_no_internet
     AppError.Common.Unauthorized -> R.string.error_common_unauthorized
     AppError.Common.Unknown -> R.string.error_common_unknown

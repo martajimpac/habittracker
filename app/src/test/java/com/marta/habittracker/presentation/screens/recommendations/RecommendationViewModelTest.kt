@@ -5,7 +5,7 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
 import com.marta.habittracker.domain.model.Habit
-import com.marta.habittracker.domain.model.RecommendationError
+import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.repository.RecommendationRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.usecase.HabitWeekStat

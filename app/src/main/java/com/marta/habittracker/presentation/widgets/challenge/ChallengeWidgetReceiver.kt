@@ -22,14 +22,18 @@ class ChallengeWidgetReceiver : GlanceAppWidgetReceiver() {
                 val preferences = EntryPointAccessors
                     .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
                     .widgetPreferencesDataSource()
+
+
                 appWidgetIds.forEach { appWidgetId ->
-                    preferences.clearWidget(appWidgetId)
-                    Log.d(TAG, "Cleared preferences for deleted widget $appWidgetId")
+                    try {
+                        preferences.clearWidget(appWidgetId)
+                        Log.d(TAG, "Cleared preferences for deleted widget $appWidgetId")
+                    } catch (exception: Exception) {
+                        Log.e(TAG, "Failed to clear widget $appWidgetId", exception)
+                    }
                 }
-            } catch (exception: Exception) {
-                Log.e(TAG, "Failed to clear preferences for deleted challenge widget", exception)
             } finally {
-                pendingResult.finish()
+                pendingResult?.finish()
             }
         }
     }

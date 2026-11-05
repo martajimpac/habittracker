@@ -12,7 +12,7 @@ import com.marta.habittracker.data.remote.HabitRemoteMapper
 import com.marta.habittracker.data.remote.HabitRemoteMapper.toDto
 import com.marta.habittracker.data.remote.HabitRemoteMapper.toEntity
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
 import com.marta.habittracker.core.toKotlin
@@ -22,8 +22,8 @@ import com.marta.habittracker.domain.reminder.HabitReminderScheduler
 import com.marta.habittracker.domain.reminder.afterHabitDeleted
 import com.marta.habittracker.domain.reminder.afterHabitPersisted
 import com.marta.habittracker.domain.reminder.afterHabitsSynced
-import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import com.marta.habittracker.domain.widget.AppWidgetRefresher
+import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
 import com.marta.habittracker.domain.widget.onHabitSyncFinished
 import java.time.Instant
 import java.time.LocalDate
@@ -91,6 +91,8 @@ class HabitRepositoryImpl @Inject constructor(
             val userId = remote.requireUserId()
             remote.upsertRecord(recordEntity.toDto(userId))
             habitDao.upsertHabitRecord(recordEntity)
+            widgetRefresher.refreshAll()
+
             DataResult.Success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "toggleHabitCompletion failed habitId=${habit.id}", e)

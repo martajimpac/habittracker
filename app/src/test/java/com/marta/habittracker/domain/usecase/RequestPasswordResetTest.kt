@@ -1,8 +1,8 @@
 package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
-import com.marta.habittracker.domain.model.RegisterError
+import com.marta.habittracker.domain.model.errors.AppError
+import com.marta.habittracker.domain.model.errors.RegisterError
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

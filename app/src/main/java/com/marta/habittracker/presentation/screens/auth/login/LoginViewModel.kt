@@ -8,7 +8,7 @@ import com.google.firebase.BuildConfig
 import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.LoginError
+import com.marta.habittracker.domain.model.errors.LoginError
 import com.marta.habittracker.domain.usecase.LoginUseCase
 import com.marta.habittracker.domain.usecase.SyncHabits
 import com.marta.habittracker.presentation.navigation.LoginArrival

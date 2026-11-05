@@ -4,8 +4,9 @@ import android.app.Application
 import com.marta.habittracker.R
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.RegisterError
+import com.marta.habittracker.domain.model.errors.RegisterError
 import com.marta.habittracker.domain.model.UsernameAvailability
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.repository.UsernameAvailabilityRepository
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.RegisterUseCase
@@ -193,14 +194,14 @@ class RegisterViewModelTest {
 }
 
 private class AvailableUsernames : UsernameAvailabilityRepository {
-    override suspend fun check(raw: String): DataResult<UsernameAvailability, com.marta.habittracker.domain.model.AppError> =
+    override suspend fun check(raw: String): DataResult<UsernameAvailability, AppError> =
         DataResult.Success(UsernameAvailability(normalized = raw, available = true))
 }
 
 private class TakenThenFreeUsernames(
     private val taken: String,
 ) : UsernameAvailabilityRepository {
-    override suspend fun check(raw: String): DataResult<UsernameAvailability, com.marta.habittracker.domain.model.AppError> {
+    override suspend fun check(raw: String): DataResult<UsernameAvailability, AppError> {
         return if (raw == taken) {
             DataResult.Success(
                 UsernameAvailability(

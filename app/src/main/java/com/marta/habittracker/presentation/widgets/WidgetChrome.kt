@@ -103,6 +103,7 @@ internal fun WidgetScrollingScreen(
     headerTitle: String,
     headerSubtitle: String?,
     openAppAction: Action,
+    openAppButtonText: String? = null,
     listContent: LazyListScope.() -> Unit,
 ) {
     Column(
@@ -139,6 +140,33 @@ internal fun WidgetScrollingScreen(
             modifier = GlanceModifier.defaultWeight().padding(horizontal = 10.dp, vertical = 10.dp),
             content = listContent,
         )
+        if (!openAppButtonText.isNullOrBlank()) {
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .cornerRadius(12.dp)
+                        .background(ColorProvider(HabitPrimary))
+                        .clickable(openAppAction)
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = openAppButtonText,
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = ColorProvider(HabitCream),
+                            textAlign = TextAlign.Center,
+                        ),
+                    )
+                }
+            }
+        }
     }
 }
 

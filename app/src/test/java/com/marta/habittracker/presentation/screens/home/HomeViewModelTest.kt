@@ -1,7 +1,7 @@
 package com.marta.habittracker.presentation.screens.home
 
 import com.marta.habittracker.domain.DataResult
-import com.marta.habittracker.domain.model.AppError
+import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository
 import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
@@ -55,6 +55,7 @@ class HomeViewModelTest {
             ),
             friendsRepository = FakeFriendsRepository(),
             streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
         )
 
         advanceUntilIdle()
@@ -77,6 +78,7 @@ class HomeViewModelTest {
             ),
             friendsRepository = FakeFriendsRepository(),
             streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
         )
 
         advanceUntilIdle()
@@ -96,6 +98,7 @@ class HomeViewModelTest {
             profileRepository = FakeProfileRepository(),
             friendsRepository = FakeFriendsRepository(),
             streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
         )
         viewModel.currentDate = { monday }
         viewModel.refreshDay()
@@ -119,6 +122,7 @@ class HomeViewModelTest {
             profileRepository = FakeProfileRepository(),
             friendsRepository = FakeFriendsRepository(),
             streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
         )
         viewModel.currentDate = { monday }
         viewModel.refreshDay()
@@ -141,6 +145,7 @@ class HomeViewModelTest {
             profileRepository = FakeProfileRepository(),
             friendsRepository = friends,
             streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
         )
         advanceUntilIdle()
         assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
@@ -158,4 +163,8 @@ private class FakeStreakProtectionRepository : StreakProtectionRepository {
         habits: List<com.marta.habittracker.domain.model.Habit>,
         today: LocalDate,
     ) = ProtectionReconcileResult(balance = 0, habits = emptyList(), newEvents = emptyList())
+}
+
+private class FakeAppWidgetRefresher : AppWidgetRefresher {
+    override suspend fun refreshAll() {}
 }

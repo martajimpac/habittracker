@@ -32,7 +32,7 @@ android {
         applicationId = "com.marta.habittracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20251105
+        versionCode = 20251106
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -148,7 +148,6 @@ dependencies {
     //Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
-    implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
     //Glance widgets

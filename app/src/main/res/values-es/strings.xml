@@ -434,6 +434,7 @@
     <string name="today_widget_count">%1$d/%2$d</string>
     <string name="today_widget_preview_pending">Agua</string>
     <string name="today_widget_preview_done">Hecho · Leer</string>
+    <string name="widget_open_app">Abrir app</string>
 
     <!-- Recommendations -->
     <string name="recommendation_open">Escribir al asistente</string>

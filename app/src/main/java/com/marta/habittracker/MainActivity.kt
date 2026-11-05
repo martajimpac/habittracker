@@ -17,7 +17,6 @@ import com.marta.habittracker.presentation.theme.HabitAppTheme
 import com.marta.habittracker.presentation.navigation.NavigationWrapper
 import com.marta.habittracker.presentation.auth.AuthDeeplinkCoordinator
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
-import com.marta.habittracker.presentation.widgets.WidgetRefresher
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -109,12 +108,7 @@ class MainActivity : ComponentActivity() {
         intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
     }
 
-    override fun onResume() {
-        super.onResume()
-        lifecycleScope.launch {
-            WidgetRefresher.refreshAll(this@MainActivity)
-        }
-    }
+
 
     private fun handleAuthDeeplink(intent: Intent) {
         val uri = intent.data ?: return
