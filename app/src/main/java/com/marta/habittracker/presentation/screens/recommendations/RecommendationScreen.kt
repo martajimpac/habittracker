@@ -24,6 +24,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -33,7 +35,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -136,16 +137,27 @@ fun RecommendationContent(
                 ChatPhase.Sending,
                 -> ChatTranscript(
                     uiState = uiState,
-                    onRetry = onRetry,
                     modifier = Modifier.weight(1f),
+                )
+            }
+            val errorMessage = uiState.errorRes?.takeIf {
+                uiState.phase == ChatPhase.Ready &&
+                    uiState.messages.lastOrNull()?.role == AssistantRole.User
+            }
+            if (errorMessage != null) {
+                RetryBar(
+                    message = stringResource(errorMessage),
+                    onRetry = onRetry,
                 )
             }
             if (uiState.phase == ChatPhase.Ready || uiState.phase == ChatPhase.Sending) {
                 Composer(
                     draft = uiState.draft,
                     sending = uiState.phase == ChatPhase.Sending,
+                    retryAvailable = errorMessage != null,
                     onDraftChange = onDraftChange,
                     onSend = onSend,
+                    onRetry = onRetry,
                 )
             }
         }
@@ -186,7 +198,6 @@ private fun EmptyCopy() {
 @Composable
 private fun ChatTranscript(
     uiState: ChatUiState,
-    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -214,12 +225,6 @@ private fun ChatTranscript(
         }
         if (sending) {
             item { TypingBubble() }
-        }
-        val errorRes = uiState.errorRes
-        if (errorRes != null) {
-            item {
-                ErrorBubble(message = stringResource(errorRes), onRetry = onRetry)
-            }
         }
     }
 }
@@ -312,9 +317,16 @@ private fun TypingBubble() {
 }
 
 @Composable
-private fun ErrorBubble(message: String, onRetry: () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+private fun RetryBar(message: String, onRetry: () -> Unit) {
+    val retryLabel = stringResource(R.string.recommendation_retry)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 4.dp),
+    ) {
         Surface(
+            modifier = Modifier.fillMaxWidth(),
             shape = AssistantBubbleShape,
             color = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -325,8 +337,21 @@ private fun ErrorBubble(message: String, onRetry: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-        TextButton(onClick = onRetry) {
-            Text(text = stringResource(R.string.recommendation_retry))
+        Button(
+            onClick = onRetry,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .fillMaxWidth()
+                .semantics { contentDescription = retryLabel },
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Refresh,
+                contentDescription = null,
+            )
+            Text(
+                text = retryLabel,
+                modifier = Modifier.padding(start = 8.dp),
+            )
         }
     }
 }
@@ -335,12 +360,17 @@ private fun ErrorBubble(message: String, onRetry: () -> Unit) {
 private fun Composer(
     draft: String,
     sending: Boolean,
+    retryAvailable: Boolean,
     onDraftChange: (String) -> Unit,
     onSend: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     val canSend = !sending && draft.isNotBlank()
+    val canRetry = retryAvailable && !sending && draft.isBlank()
     val sendLabel = stringResource(R.string.recommendation_send)
+    val retryLabel = stringResource(R.string.recommendation_retry)
+    val actionLabel = if (canRetry) retryLabel else sendLabel
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -368,7 +398,12 @@ private fun Composer(
                 maxLines = 5,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(
-                    onSend = { if (canSend) onSend() },
+                    onSend = {
+                        when {
+                            canSend -> onSend()
+                            canRetry -> onRetry()
+                        }
+                    },
                 ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -381,13 +416,18 @@ private fun Composer(
                 ),
             )
             FilledIconButton(
-                onClick = onSend,
-                enabled = canSend,
+                onClick = {
+                    when {
+                        canSend -> onSend()
+                        canRetry -> onRetry()
+                    }
+                },
+                enabled = canSend || canRetry,
                 modifier = Modifier
                     .padding(bottom = 6.dp)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .semantics { contentDescription = sendLabel },
+                    .semantics { contentDescription = actionLabel },
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = scheme.primary,
                     contentColor = scheme.onPrimary,
@@ -396,7 +436,7 @@ private fun Composer(
                 ),
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.Send,
+                    imageVector = if (canRetry) Icons.Rounded.Refresh else Icons.AutoMirrored.Rounded.Send,
                     contentDescription = null,
                 )
             }

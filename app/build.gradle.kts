@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.pitest)
 }
 
 val localProperties = Properties()
@@ -27,14 +28,11 @@ android {
     compileSdk = 37
 
 
-    flavorDimensions += "environment"
-
-
     defaultConfig {
         applicationId = "com.marta.habittracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        versionCode = 20251105
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -175,3 +173,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+
+
+

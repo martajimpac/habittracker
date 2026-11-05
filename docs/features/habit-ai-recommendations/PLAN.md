@@ -37,7 +37,7 @@ La misma instrucción del 2026-10-30 que aprobó la spec aprueba este plan y aut
 | Contadores | `domain/usecase/HabitWeekRecommendationStats.kt` | Reutilizar `habitWeekRecommendationStats`. No cambia el cálculo. |
 | Contrato remoto | `domain/repository/RecommendationRepository.kt` | Añadir el envío del hilo. Conservar `request` para no borrar `POST /api/recommendations`. La pantalla no lo usa. |
 | Cliente | `data/remote/BloomRecommendationDataSource.kt` | Añadir `POST /api/chat` sobre el mismo transporte y la misma URL base. |
-| Transporte | `data/remote/KtorRecommendationTransport.kt` | Reutilizar. Timeout de llamada ya es 100 s, por encima de los 90 s del servicio. |
+| Transporte | `data/remote/KtorRecommendationTransport.kt` | Reutilizar. Timeout de conexión, lectura y petición: 180 s, para el despertar de Render (más de 50 s) y la respuesta de Gemini. |
 | Inyección | `di/BloomApiModule.kt` | Sin cambios de grafo: el repositorio sigue recibiendo el data source. |
 | Navegación | `presentation/navigation/NavigationBottomWrapper.kt` | Estadísticas sigue abriendo `TabRecommendations`. |
 | Actividad | `MainActivity.kt` ya llama a `enableEdgeToEdge`. El manifiesto no declara `windowSoftInputMode`. | Añadir `adjustResize` en `MainActivity`. |

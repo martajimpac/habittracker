@@ -105,7 +105,7 @@ El hilo no se guarda. Salir de la pantalla lo abandona.
 | Carga o acción en curso | Se indica que la respuesta está en curso. No sale otra llamada hasta que termine o falle. El resto de la app sigue respondiendo. |
 | Sin datos | Sin hábitos, o si ninguno tiene nombre, hay explicación y ninguna llamada. Con hábitos y sin mensajes, el hilo está vacío y se puede escribir. |
 | Entrada inválida | Un texto vacío o solo con espacios no se envía. |
-| Error o espera excesiva | Error visible y reintento de ese envío. No aparece un mensaje vacío ni inventado del asistente. El servicio espera como máximo 90 segundos. |
+| Error o espera excesiva | Error visible y reintento de ese envío. No aparece un mensaje vacío ni inventado del asistente. La app espera hasta 180 segundos, para que una instancia gratuita de Render pueda despertar (más de 50 segundos) y Gemini pueda responder. |
 | Sin conexión o conexión interrumpida | Leer los hábitos no exige internet. Si `bloom-api` no responde o se corta el envío, el resultado es el error recuperable. No se muestra el aviso de «sin internet» que usa guardar un hábito. |
 | Cancelar o volver atrás | Salir abandona la petición de esta visita y no publica una notificación. La próxima apertura está vacía. |
 | Pasar a segundo plano y regresar | Si el proceso sigue vivo, el hilo permanece. Si la petición termina fuera de la pantalla, al volver se ve la respuesta o el error. No se lanza otra petición sola. |
@@ -122,7 +122,7 @@ El hilo no se guarda. Salir de la pantalla lo abandona.
 
 - Jetpack Compose y los hábitos ya guardados. Reutilizar el cálculo de contadores; no crear otro criterio de racha o de meta.
 - La app llama al endpoint nuevo de chat en `bloom-api`. No llama a Ollama ni usa `POST /api/recommendations` para este hilo.
-- El modelo sigue siendo `qwen2.5-coder:7b`. `bloom-api` llama a `{OLLAMA_URL}/api/chat` con `stream: false`. La espera máxima sigue siendo 90 segundos.
+- El teléfono no llama a Gemini. Espera hasta 180 segundos la respuesta de `bloom-api`, para cubrir el despertar de Render y la generación.
 - La dirección base de `bloom-api` es configuración de entorno y no se versiona como secreto. Emulador, móvil y release usan `https://bloom-api-oe9g.onrender.com`.
 - El hilo vive solo en la visita a esta pantalla.
 

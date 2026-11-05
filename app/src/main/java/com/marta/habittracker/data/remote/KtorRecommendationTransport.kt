@@ -16,6 +16,7 @@ class KtorRecommendationTransport : RecommendationTransport {
 
     private val client = HttpClient(Android) {
         install(HttpTimeout) {
+            connectTimeoutMillis = REQUEST_TIMEOUT_MS
             requestTimeoutMillis = REQUEST_TIMEOUT_MS
             socketTimeoutMillis = REQUEST_TIMEOUT_MS
         }
@@ -41,6 +42,7 @@ class KtorRecommendationTransport : RecommendationTransport {
 
     private companion object {
         const val TAG = "BloomRecommendations"
-        const val REQUEST_TIMEOUT_MS = 100_000L
+        // Render free tier can sleep and take more than 50s to wake; Gemini still has to answer.
+        const val REQUEST_TIMEOUT_MS = 180_000L
     }
 }
