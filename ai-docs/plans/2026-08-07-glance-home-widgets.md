@@ -227,7 +227,7 @@ Completing from challenge/weekly widgets; Profile-based widget config; offline m
 
 ## Execution handoff
 
-Plan saved to `docs/plans/2026-08-07-glance-home-widgets.md`.
+Plan saved to `ai-docs/plans/2026-08-07-glance-home-widgets.md`.
 
 **Two execution options:**
 

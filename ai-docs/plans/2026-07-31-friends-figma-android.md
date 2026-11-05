@@ -314,7 +314,7 @@ Task5 isPublic ──────────┘ (needed before meaningful View 
 
 ## Execution handoff
 
-Plan saved to `docs/plans/2026-07-31-friends-figma-android.md`.
+Plan saved to `ai-docs/plans/2026-07-31-friends-figma-android.md`.
 
 **Two execution options:**
 

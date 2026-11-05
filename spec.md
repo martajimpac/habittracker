@@ -23,7 +23,7 @@ La app se llama Bloom. Sirve para crear, consultar y completar habitos personale
   - Android usa el contrato de dominio `FriendsRepository` y `SocialRemoteDataSource` (Supabase); el `FriendsViewModel` expone el estado de la UI y recarga los datos al volver a primer plano.
   - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
   - La privacidad se persiste extremo a extremo mediante `Habit.isPublic`, `HabitEntity.isPublic` y `HabitDto.is_public`; por defecto cada hábito es privado.
-  - Plan de implementación: `docs/plans/2026-07-31-friends-figma-android.md`.
+  - Plan de implementación: `ai-docs/plans/2026-07-31-friends-figma-android.md`.
   - Fuera de alcance inmediato: Realtime y cache offline de amigos. El push al crear un reto está en § Challenge push + detail. El push al enviar una solicitud de amistad está en § Friend request push.
 
 ### Material 3 chrome (NavigationBar + theme)
@@ -124,7 +124,7 @@ Aprobado 2026-08-08.
 - Generación centralizada vía helper (`newId()` / equivalente) usando `kotlin.uuid.Uuid.generateV7()` (opt-in `ExperimentalUuidApi`); no usar `UUID.randomUUID()` (v4) para IDs nuevos.
 - IDs ya persistidos (p. ej. v4 históricos) **no se migran**; solo los IDs creados a partir de este cambio usan v7.
 - Schema Postgres `uuid` sin cambios; v7 es un UUID de 128 bits válido.
-- Detalle de diseno: `docs/designs/2026-07-21-add-habit-figma-design.md`.
+- Detalle de diseno: `ai-docs/designs/2026-07-21-add-habit-figma-design.md`.
 
 ### Sync de habitos (Supabase)
 

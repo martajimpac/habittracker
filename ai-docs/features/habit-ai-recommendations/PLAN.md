@@ -1,6 +1,6 @@
 # PLAN: Chat de hábitos con bloom-api
 
-**SPEC de referencia:** `docs/features/habit-ai-recommendations/SPEC.md`
+**SPEC de referencia:** `ai-docs/features/habit-ai-recommendations/SPEC.md`
 **Versión de la spec revisada:** Aprobada el 2026-10-30 en el árbol de trabajo, al pedir cerrar el flujo con las acciones recomendadas.
 **Estado:** Aprobado <!-- Borrador | En revisión | Aprobado -->
 

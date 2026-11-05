@@ -1,7 +1,7 @@
 # Tareas: Chat de hábitos con bloom-api
 
-**SPEC:** `docs/features/habit-ai-recommendations/SPEC.md` (Aprobada, 2026-10-30)
-**PLAN:** `docs/features/habit-ai-recommendations/PLAN.md` (Aprobado, 2026-10-30)
+**SPEC:** `ai-docs/features/habit-ai-recommendations/SPEC.md` (Aprobada, 2026-10-30)
+**PLAN:** `ai-docs/features/habit-ai-recommendations/PLAN.md` (Aprobado, 2026-10-30)
 
 Implementación autorizada el 2026-10-30 al pedir cerrar el flujo. Las tareas T1 y T2 de la recomendación de un solo uso siguen vigentes. Desde el 2026-11-03 la dirección base, en emulador, móvil y release, es `https://bloom-api-oe9g.onrender.com`.
 

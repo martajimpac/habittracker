@@ -120,7 +120,7 @@ Per AGENTS: *ViewModel, use case, and repository must not access DataStore direc
 ### Task 7: Verify + stage
 
 - [ ] **Step 1:** `./gradlew.bat compileDebugKotlin testDebugUnitTest`
-- [ ] **Step 2:** Stage all task files including `docs/plans/`, `AGENTS.md`, manifest, sources, tests (per git-staging rule)
+- [ ] **Step 2:** Stage all task files including `ai-docs/plans/`, `AGENTS.md`, manifest, sources, tests (per git-staging rule)
 - [ ] **Step 3:** Confirm no remaining imports of `data.local.database`, `data.network`, `data.local.preferences`, `data.service`, or `view.`
 
 ---
