@@ -1,8 +1,10 @@
 package com.marta.habittracker.presentation.widgets
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -170,6 +172,7 @@ internal fun WidgetScrollingScreen(
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
 internal fun WidgetHabitRow(
     name: String,
@@ -228,13 +231,26 @@ internal fun WidgetHabitRow(
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
-internal fun WidgetCheck(completed: Boolean, accent: Color, onToggle: Action? = null) {
+internal fun WidgetCheck(
+    completed: Boolean,
+    accent: Color,
+    onToggle: Action? = null,
+) {
     val mark = GlanceModifier
-        .size(22.dp)
-        .cornerRadius(11.dp)
-        .background(ColorProvider(if (completed) accent else HabitOutline.copy(alpha = 0.35f)))
-        .let { base -> if (onToggle == null) base else base.clickable(onToggle) }
+        .size(24.dp)
+        .cornerRadius(12.dp)
+        .background(
+            ColorProvider(
+                if (completed) accent
+                else HabitOutline.copy(alpha = 0.35f)
+            )
+        )
+        .let { base ->
+            if (onToggle == null) base else base.clickable(onToggle)
+        }
+
     Box(
         modifier = mark,
         contentAlignment = Alignment.Center,
@@ -243,6 +259,7 @@ internal fun WidgetCheck(completed: Boolean, accent: Color, onToggle: Action? = 
             Text(
                 text = "✓",
                 style = TextStyle(
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = ColorProvider(HabitCream),
                 ),
@@ -251,6 +268,7 @@ internal fun WidgetCheck(completed: Boolean, accent: Color, onToggle: Action? = 
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
 internal fun WidgetLoading(text: String) {
     Column(
@@ -277,6 +295,7 @@ internal fun WidgetLoading(text: String) {
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
 internal fun WidgetProgressBar(progress: Int, accent: Color) {
     val filled = (progress.coerceIn(0, 100) / 10)

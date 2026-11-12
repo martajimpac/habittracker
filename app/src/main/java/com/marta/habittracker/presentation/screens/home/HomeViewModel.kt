@@ -143,8 +143,7 @@ class HomeViewModel @Inject constructor(
     fun toggleComplete(habit: Habit) {
         if (_selectedDate.value != _today.value) return
         viewModelScope.launch {
-            val result = repository.toggleHabitCompletion(habit, _selectedDate.value)
-            widgetRefresher.refreshAll()
+            val result = repository.toggleHabitCompletion(habit.id, habit.isCompleted, _selectedDate.value)
             _events.send(HomeEvent.HabitToggle(result))
         }
     }

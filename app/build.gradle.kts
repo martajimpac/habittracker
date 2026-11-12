@@ -27,6 +27,50 @@ android {
     namespace = "com.marta.habittracker"
     compileSdk = 37
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("keys/habittracker.jks")
+            storePassword = System.getenv("STORE_PASSWORD")
+                ?: localProperties.getProperty("STORE_PASSWORD", "")
+
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: localProperties.getProperty("KEY_ALIAS", "")
+
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: localProperties.getProperty("KEY_PASSWORD", "")
+        }
+    }
+    buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEBUG", "")}\"",
+            )
+        }
+
+        release {
+
+            signingConfig = signingConfigs.getByName("release")
+
+            isMinifyEnabled = true
+            isShrinkResources = true //requiere minify enabled
+
+            buildConfigField(
+                "String",
+                "BLOOM_API_BASE_URL",
+                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_PRODUCTION", "")}\"",
+            )
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+
+
+
 
     defaultConfig {
         applicationId = "com.marta.habittracker"
@@ -49,30 +93,6 @@ android {
         )
     }
 
-    buildTypes {
-        debug {
-            buildConfigField(
-                "String",
-                "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEBUG", "")}\"",
-            )
-        }
-
-        release {
-            isMinifyEnabled = false
-
-            buildConfigField(
-                "String",
-                "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_PRODUCTION", "")}\"",
-            )
-
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -93,6 +113,7 @@ android {
         unitTests.isIncludeAndroidResources = true
         unitTests.isReturnDefaultValues = true
     }
+
 
 }
 

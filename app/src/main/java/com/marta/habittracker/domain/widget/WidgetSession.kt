@@ -24,16 +24,3 @@ fun resolveChallengeWidgetSnapshot(
     }
 }
 
-suspend fun onHabitSyncFinished(
-    result: DataResult<Unit, AppError>,
-    refreshAll: suspend () -> Unit,
-) {
-    if (result is DataResult.Success) refreshAll()
-}
-
-suspend fun onSignedOut(
-    result: DataResult<Unit, AppError>,
-    clearLocalAccount: suspend () -> Unit,
-) {
-    if (result is DataResult.Success) clearLocalAccount()
-}

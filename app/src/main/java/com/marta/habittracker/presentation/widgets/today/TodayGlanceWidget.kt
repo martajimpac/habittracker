@@ -2,13 +2,9 @@ package com.marta.habittracker.presentation.widgets.today
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.action.Action
@@ -19,87 +15,61 @@ import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.action.clickable
+import androidx.glance.currentState
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.marta.habittracker.R
-import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import com.marta.habittracker.presentation.widgets.WidgetCheck
-import com.marta.habittracker.presentation.widgets.WidgetEntryPoint
 import com.marta.habittracker.presentation.widgets.WidgetHabitRow
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
-import com.marta.habittracker.presentation.widgets.WidgetLoad
-import com.marta.habittracker.presentation.widgets.WidgetLoading
 import com.marta.habittracker.presentation.widgets.WidgetScrollingScreen
 import com.marta.habittracker.presentation.widgets.widgetDateLabel
 import com.marta.habittracker.presentation.widgets.widgetDayName
-import dagger.hilt.android.EntryPointAccessors
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
-import kotlinx.coroutines.flow.first
-import kotlin.coroutines.cancellation.CancellationException
+import androidx.datastore.preferences.core.Preferences
+
+
+object TodayWidgetPrefs {
+    val habitsJson = stringPreferencesKey("today_habits")
+    val loadingHabitId = stringPreferencesKey("loading_habit_id")
+}
 
 class TodayGlanceWidget : GlanceAppWidget() {
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        Log.d("AAAAAA", "STARTED")
-
-
-        val entryPoint = EntryPointAccessors.fromApplication(
-            context,
-            WidgetEntryPoint::class.java
-        )
-
-        Log.d(TAG, "2. EntryPoint obtained")
-
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId,
+    ) {
         provideContent {
-            Log.d("AAAAAA", "EXECUTED")
-            Log.d(TAG, "provideContent composition started")
+            val state = currentState<Preferences>()
 
-            val habits by entryPoint.habitRepository()
-                .getAllHabitsWithRecords()
-                .collectAsState(initial = emptyList())
+            val habitsJson = state[TodayWidgetPrefs.habitsJson]
+            val loadingHabitId = state[TodayWidgetPrefs.loadingHabitId]
 
-            Log.d(TAG, "Habits received: ${habits.size}")
+            val habits = habitsJson?.let {
+                runCatching {
+                    Json.decodeFromString<List<TodayWidgetItem>>(it)
+                }.getOrNull()
+            } ?: emptyList()
+
+
 
             val today = LocalDate.now()
-
-            val snapshot = todayWidgetSnapshot(
-                habits = habits,
-                today = today
-            )
-
-            Log.d(TAG, "Snapshot created")
-            Log.d(TAG, "Items count: ${snapshot.items.size}")
-            Log.d(TAG, "First pending ID: ${snapshot.firstPendingId}")
-
-            snapshot.items.forEachIndexed { index, item ->
-                Log.d(
-                    TAG,
-                    """
-            Item [$index]
-            ID: ${item.id}
-            Name: ${item.name}
-            Completed: ${item.completed}
-            Color: ${item.colorHex}
-            Icon: ${item.iconKey}
-            """.trimIndent()
-                )
-            }
-
-            val countText = if (snapshot.items.isEmpty()) {
+            val countText = if (habits.isEmpty()) {
                 null
             } else {
                 context.getString(
                     R.string.today_widget_count,
-                    snapshot.items.count { it.completed },
-                    snapshot.items.size
+                    habits.count { it.isCompleted },
+                    habits.size
                 )
             }
-
-            Log.d(TAG, "Count text: $countText")
 
             TodayWidgetContent(
                 dayName = widgetDayName(today),
@@ -108,31 +78,29 @@ class TodayGlanceWidget : GlanceAppWidget() {
                     widgetDateLabel(today)
                 ),
                 countText = countText,
-                rows = snapshot.items,
+                rows = habits,
+                loadingHabitId = loadingHabitId,
                 emptyText = context.getString(R.string.today_widget_empty),
                 openAppText = context.getString(R.string.widget_open_app),
-                openAppAction = todayWidgetOpenAction(
-                    context,
-                    snapshot.firstPendingId
+                openAppAction = actionStartActivity(
+                    WidgetLaunchExtras.openHomeIntent(context),
                 )
             )
-
-            Log.d(TAG, "TodayWidgetContent invoked")
         }
     }
 
 
-    private companion object {
-        const val TAG = "WidgetRefresher TodayWidget"
 
-
-    }
 }
 
-internal fun todayWidgetOpenAction(context: Context, firstPendingId: String?): Action =
-    actionStartActivity(
-        WidgetLaunchExtras.openHomeIntent(context, firstPendingId),
-    )
+@Serializable
+data class TodayWidgetItem(
+    val id: String,
+    val name: String,
+    val colorHex: String,
+    val icon: String,
+    val isCompleted: Boolean,
+)
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -144,32 +112,8 @@ internal fun TodayWidgetContent(
     emptyText: String,
     openAppText: String,
     openAppAction: Action,
+    loadingHabitId: String?,
 ) {
-    Log.d(
-        "WidgetRefresher TodayWidgetContent",
-        """
-        ========== TODAY WIDGET DATA ==========
-        dayName: $dayName
-        dateLabel: $dateLabel
-        countText: $countText
-        emptyText: $emptyText
-        openAppText: $openAppText
-        rows.size: ${rows.size}
-        
-        ROWS:
-        ${rows.mapIndexed { index, row ->
-            """
-            [$index]
-              id: ${row.id}
-              name: ${row.name}
-              iconKey: ${row.iconKey}
-              colorHex: ${row.colorHex}
-              completed: ${row.completed}
-            """.trimIndent()
-        }.joinToString("\n")}
-        =======================================
-        """.trimIndent()
-    )
 
 
     val subtitle = listOfNotNull(dateLabel, countText).joinToString("  ")
@@ -190,27 +134,48 @@ internal fun TodayWidgetContent(
                 )
             }
         } else {
-            items(rows) { row ->
+            items(
+                items = rows,
+                itemId = { it.id.hashCode().toLong() }
+            ) { row ->
+
                 val accent = parseHabitColor(row.colorHex)
+                val isLoading = loadingHabitId == row.id
+
                 val toggleAction = actionRunCallback<ToggleTodayHabitAction>(
-                    actionParametersOf(ToggleTodayHabitAction.habitIdKey to row.id),
+                    actionParametersOf(
+                        ToggleTodayHabitAction.habitIdKey to row.id,
+                        ToggleTodayHabitAction.habitCompletedKey to row.isCompleted,
+                    )
                 )
+
                 WidgetHabitRow(
                     name = row.name,
-                    iconKey = row.iconKey,
                     accent = accent,
-                    completed = row.completed,
+                    completed = row.isCompleted,
                     detail = null,
-                    onClick = openAppAction,
+                    onClick = toggleAction,
                     trailing = {
-                        WidgetCheck(
-                            completed = row.completed,
-                            accent = accent,
-                            onToggle = toggleAction,
-                        )
+                        if (isLoading) {
+                            Text(
+                                text = "…",
+                                style = TextStyle(
+                                    color = ColorProvider(HabitOnSurfaceVariant)
+                                )
+                            )
+                        } else {
+                            WidgetCheck(
+                                completed = row.isCompleted,
+                                accent = accent,
+                                onToggle = toggleAction,
+                            )
+                        }
                     },
+                    iconKey = row.icon,
                 )
             }
         }
     }
 }
+
+

@@ -15,9 +15,12 @@ class HabitRemoteDataSource @Inject constructor(
     private val supabase: SupabaseClient,
 ) {
 
-    fun requireUserId(): String =
-        supabase.auth.currentUserOrNull()?.id
-            ?: error("No authenticated user for habit sync")
+    suspend fun requireUserId(): String {
+        supabase.auth.awaitInitialization()
+
+        return supabase.auth.currentUserOrNull()?.id
+            ?: throw IllegalStateException("No authenticated user for habit sync")
+    }
 
     suspend fun upsertHabit(habit: HabitDto) {
         try {

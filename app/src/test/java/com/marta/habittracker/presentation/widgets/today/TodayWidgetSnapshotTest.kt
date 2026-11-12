@@ -40,7 +40,7 @@ class TodayWidgetSnapshotTest {
         val snapshot = todayWidgetSnapshot(habits, today)
 
         assertEquals(listOf("done", "pending"), snapshot.items.map { it.id })
-        assertEquals(true, snapshot.items.first().completed)
+        assertEquals(true, snapshot.items.first().isCompleted)
         assertEquals("pending", snapshot.firstPendingId)
     }
 

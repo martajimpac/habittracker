@@ -171,10 +171,9 @@ class HabitReminderReceiver : BroadcastReceiver() {
                     cancelNotification(appContext, notificationId)
                     return@launch
                 }
-                when (val result = repository.toggleHabitCompletion(habitWithRecords, today)) {
+                when (val result = repository.toggleHabitCompletion(habitWithRecords.id, habitWithRecords.isCompleted, today)) {
                     is DataResult.Success -> {
                         cancelNotification(appContext, notificationId)
-                        WidgetRefresher.refreshAll(appContext)
                         Log.d(TAG, "completed from notification habitId=$habitId")
                     }
                     is DataResult.Error ->

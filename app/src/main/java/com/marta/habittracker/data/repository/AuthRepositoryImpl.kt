@@ -11,7 +11,6 @@ import com.marta.habittracker.core.auth.AuthLinks
 import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
-import com.marta.habittracker.domain.widget.onSignedOut
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
@@ -170,9 +169,7 @@ class AuthRepositoryImpl @Inject constructor(
             }
             supabase.auth.signOut()
             try {
-                onSignedOut(DataResult.Success(Unit)) {
-                    habitRepository.clearLocal()
-                }
+                habitRepository.clearLocal()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -26,7 +26,6 @@ object WidgetLaunchExtras {
             putExtra(EXTRA_FRIEND_REQUEST_ID, friendshipId)
         }
 
-    fun openStatsIntent(context: Context): Intent = launchIntent(context, TAB_STATS)
 
     fun openChallengeIntent(context: Context, challengeId: String): Intent =
         Intent(context, MainActivity::class.java).apply {

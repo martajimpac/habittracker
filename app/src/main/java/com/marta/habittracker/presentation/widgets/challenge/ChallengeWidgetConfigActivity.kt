@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlin.coroutines.cancellation.CancellationException
 
 @AndroidEntryPoint
 class ChallengeWidgetConfigActivity : ComponentActivity() {
@@ -110,19 +112,39 @@ class ChallengeWidgetConfigActivity : ComponentActivity() {
 
     private fun configureWidget(challenge: ChallengeCard) {
         lifecycleScope.launch {
-            widgetPreferencesDataSource.setChallengeWidget(
-                appWidgetId = appWidgetId,
-                challengeId = challenge.challenge.id,
-                snapshotJson = encodeChallengeWidgetSnapshot(challenge, json),
-            )
-            val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigActivity)
-                .getGlanceIdBy(appWidgetId)
-            ChallengeGlanceWidget().update(this@ChallengeWidgetConfigActivity, glanceId)
-            setResult(
-                RESULT_OK,
-                Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId),
-            )
-            finish()
+            try {
+                widgetPreferencesDataSource.setChallengeWidget(
+                    appWidgetId = appWidgetId,
+                    challengeId = challenge.challenge.id,
+                    snapshotJson = encodeChallengeWidgetSnapshot(challenge, json),
+                )
+
+                val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigActivity)
+                    .getGlanceIdBy(appWidgetId)
+
+                ChallengeGlanceWidget().update(
+                    this@ChallengeWidgetConfigActivity,
+                    glanceId,
+                )
+
+                setResult(
+                    RESULT_OK,
+                    Intent().putExtra(
+                        AppWidgetManager.EXTRA_APPWIDGET_ID,
+                        appWidgetId,
+                    ),
+                )
+
+                finish()
+
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("ChallengeWidgetConfig", "Error configuring widget", e)
+
+                setResult(RESULT_CANCELED)
+                finish()
+            }
         }
     }
 
@@ -155,27 +177,32 @@ private fun ChallengeWidgetConfigContent(
             else -> LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(challenges, key = { it.challenge.id }) { challenge ->
                     ListItem(
-                        headlineContent = { Text(challenge.habitName) },
-                        supportingContent = {
-                            Column {
-                                Text(
-                                    stringResource(
-                                        R.string.challenge_widget_versus,
-                                        challenge.opponent.displayName,
-                                    ),
-                                )
-                                Text(
-                                    text = stringResource(
-                                        when (challenge.challenge.status) {
-                                            ChallengeStatus.Pending ->
-                                                R.string.challenge_widget_status_pending
-                                            else -> R.string.challenge_widget_status_active
-                                        },
-                                    ),
-                                )
-                            }
-                        },
                         modifier = Modifier.clickable { onChallengeSelected(challenge) },
+                        leadingContent = null,
+                        trailingContent = null,
+                        overlineContent = null,
+                        supportingContent = {
+                                                Column {
+                                                    Text(
+                                                        stringResource(
+                                                            R.string.challenge_widget_versus,
+                                                            challenge.opponent.displayName,
+                                                        ),
+                                                    )
+                                                    Text(
+                                                        text = stringResource(
+                                                            when (challenge.challenge.status) {
+                                                                ChallengeStatus.Pending ->
+                                                                    R.string.challenge_widget_status_pending
+                                                                else -> R.string.challenge_widget_status_active
+                                                            },
+                                                        ),
+                                                    )
+                                                }
+                                            },
+                        colors = ListItemDefaults.colors(),
+                        elevation = ListItemDefaults.elevation(ListItemDefaults.Elevation),
+                        content = { Text(challenge.habitName) },
                     )
                 }
             }

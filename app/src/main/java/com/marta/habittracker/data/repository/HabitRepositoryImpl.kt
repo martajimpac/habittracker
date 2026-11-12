@@ -24,7 +24,6 @@ import com.marta.habittracker.domain.reminder.afterHabitPersisted
 import com.marta.habittracker.domain.reminder.afterHabitsSynced
 import com.marta.habittracker.domain.widget.AppWidgetRefresher
 import com.marta.habittracker.domain.repository.HabitRepository as DomainHabitRepository
-import com.marta.habittracker.domain.widget.onHabitSyncFinished
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -44,21 +43,38 @@ class HabitRepositoryImpl @Inject constructor(
     private val widgetRefresher: AppWidgetRefresher,
 ) : DomainHabitRepository {
 
+    internal fun checkCompletedToday(
+        habit: Habit,
+        records: List<HabitRecordEntity>,
+        date: LocalDate,
+    ): Boolean {
+        return records.any { record ->
+            record.habitId == habit.id &&
+                    record.date == date &&
+                    record.isCompleted
+        }
+    }
     override fun getHabitsWithStatus(date: LocalDate): Flow<List<Habit>> {
         return habitDao.getHabitsWithRecords()
             .map { habitsList ->
                 habitsList
                     .map { habitWithRecords ->
                         val habit = habitMapper.map(habitWithRecords)
-                        val isCompleted = habitWithRecords.records.any {
-                            it.deletedAt == null && it.date == date && it.isCompleted
-                        }
-                        habit.copy(isCompleted = isCompleted)
+
+                        habit.copy(
+                            isCompleted = checkCompletedToday(
+                                habit = habit,
+                                records = habitWithRecords.records,
+                                date = date,
+                            )
+                        )
                     }
                     .filter { it.shownOn(date.toKotlin()) }
                     .sortedForSchedule()
             }
     }
+
+
 
     override fun getAllHabitsWithRecords(): Flow<List<Habit>> =
         habitDao.getHabitsWithRecords().map { habitsList ->
@@ -66,21 +82,22 @@ class HabitRepositoryImpl @Inject constructor(
         }
 
     override suspend fun toggleHabitCompletion(
-        habit: Habit,
+        habitId: String,
+        isCompleted: Boolean,
         date: LocalDate,
     ): DataResult<Unit, AppError> {
         if (!networkChecker.isOnline()) return DataResult.Error(AppError.Common.Network)
 
         val now = System.currentTimeMillis()
-        val newCompleted = !habit.isCompleted
-        val existing = habitDao.getRecordForHabitOnDate(habit.id, date)
+        val newCompleted = !isCompleted
+        val existing = habitDao.getRecordForHabitOnDate(habitId, date)
         val recordEntity = existing?.copy(
             isCompleted = newCompleted,
             updatedAt = now,
             deletedAt = null,
         ) ?: HabitRecordEntity(
             id = IdGenerator.newId(),
-            habitId = habit.id,
+            habitId = habitId,
             date = date,
             isCompleted = newCompleted,
             updatedAt = now,
@@ -89,13 +106,26 @@ class HabitRepositoryImpl @Inject constructor(
 
         return try {
             val userId = remote.requireUserId()
+
+            Log.d(
+                "MARTUKI",
+                "id = ${recordEntity.id} habitId = ${recordEntity.habitId} ID = ${recordEntity.id} date = ${recordEntity.date}"
+            )
+
+
             remote.upsertRecord(recordEntity.toDto(userId))
             habitDao.upsertHabitRecord(recordEntity)
-            widgetRefresher.refreshAll()
+
+
+            widgetRefresher.refreshTodayWidget(getHabitsWithStatus(date).first())
+
 
             DataResult.Success(Unit)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "toggleHabitCompletion failed habitId=${habitId}", e)
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "toggleHabitCompletion failed habitId=${habit.id}", e)
+            Log.e(TAG, "toggleHabitCompletion failed habitId=${habitId}", e)
             DataResult.Error(AppError.Common.Unknown)
         }
     }
@@ -126,6 +156,7 @@ class HabitRepositoryImpl @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+
             Log.e(TAG, "insertHabit failed id=${habit.id}", e)
             DataResult.Error(AppError.Common.Unknown)
         }
@@ -173,39 +204,63 @@ class HabitRepositoryImpl @Inject constructor(
             runReminderHook("afterHabitDeleted id=${habit.id}") {
                 afterHabitDeleted(habit.id, reminderScheduler)
             }
+
+
             DataResult.Success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+
             Log.e(TAG, "deleteHabit failed id=${habit.id}", e)
             DataResult.Error(AppError.Common.Unknown)
         }
     }
 
     override suspend fun syncFromRemote(): DataResult<Unit, AppError> {
-        if (!networkChecker.isOnline()) return DataResult.Error(AppError.Common.Network)
+        if (!networkChecker.isOnline()) {
+            return DataResult.Error(AppError.Common.Network)
+        }
+
         return try {
             val remoteHabits = remote.fetchHabits()
             val remoteRecords = remote.fetchRecords()
+
+            val records = remoteRecords.map { it.toEntity() }
+
             habitDao.clearHabitRecords()
             habitDao.clearHabits()
-            val inserted = remoteHabits.map { dto -> dto.toEntity() }
-            inserted.forEach { entity ->
-                habitDao.insertHabit(entity)
-            }
-            remoteRecords.forEach { dto ->
-                habitDao.upsertHabitRecord(dto.toEntity())
-            }
+
+            val inserted = remoteHabits.map { it.toEntity() }
+
+            inserted.forEach { habitDao.insertHabit(it) }
+            records.forEach { habitDao.upsertHabitRecord(it) }
+
+            val today = LocalDate.now()
+
             val syncedHabits = inserted
                 .filter { it.deletedAt == null }
                 .map { entity ->
                     with(habitMapper) { entity.toDomain() }
                 }
+
+
             runReminderHook("afterHabitsSynced") {
                 afterHabitsSynced(syncedHabits, reminderScheduler)
             }
+
             val success = DataResult.Success(Unit)
-            onHabitSyncFinished(success) { widgetRefresher.refreshAll() }
+
+            widgetRefresher.refreshTodayWidget(syncedHabits.map { habit ->
+                //COMPROBAR SI ESTAN COMPLETADOS HOY
+                habit.copy(
+                    isCompleted = checkCompletedToday(
+                        habit = habit,
+                        records = records,
+                        date = today,
+                    )
+                )
+            })
+
             success
         } catch (e: CancellationException) {
             throw e
@@ -214,6 +269,7 @@ class HabitRepositoryImpl @Inject constructor(
             DataResult.Error(AppError.Common.Unknown)
         }
     }
+
 
     override suspend fun clearLocal() {
         try {
@@ -226,7 +282,7 @@ class HabitRepositoryImpl @Inject constructor(
                     reminderScheduler.cancel(habitId)
                 }
             }
-            widgetRefresher.refreshAll()
+            widgetRefresher.refreshTodayWidget(listOf())
             Log.d(TAG, "Cleared local habits count=${habitIds.size}")
         } catch (e: CancellationException) {
             throw e

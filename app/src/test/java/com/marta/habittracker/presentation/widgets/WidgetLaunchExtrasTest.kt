@@ -22,10 +22,7 @@ class WidgetLaunchExtrasTest {
             WidgetLaunchExtras.TAB_FRIENDS,
             WidgetLaunchExtras.tabFromIntent(WidgetLaunchExtras.openFriendsIntent(context)),
         )
-        assertEquals(
-            WidgetLaunchExtras.TAB_STATS,
-            WidgetLaunchExtras.tabFromIntent(WidgetLaunchExtras.openStatsIntent(context)),
-        )
+
         assertEquals(
             WidgetLaunchExtras.TAB_HOME,
             WidgetLaunchExtras.tabFromIntent(WidgetLaunchExtras.openHomeIntent(context, "habit-1")),

@@ -56,14 +56,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".presentation.widgets.habit.HabitWidgetConfigActivity"
-            android:exported="true"
-            android:theme="@style/Theme.InstaDev">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
 
         <activity
             android:name=".presentation.widgets.challenge.ChallengeWidgetConfigActivity"
@@ -74,18 +66,7 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".presentation.widgets.habit.HabitWidgetReceiver"
-            android:exported="true"
-            android:label="@string/habit_widget_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
 
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/habit_widget_info" />
-        </receiver>
 
         <receiver
             android:name=".presentation.widgets.challenge.ChallengeWidgetReceiver"
@@ -100,18 +81,7 @@
                 android:resource="@xml/challenge_widget_info" />
         </receiver>
 
-        <receiver
-            android:name=".presentation.widgets.weekly.WeeklyWidgetReceiver"
-            android:exported="true"
-            android:label="@string/weekly_widget_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
 
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/weekly_widget_info" />
-        </receiver>
 
         <receiver
             android:name=".presentation.widgets.today.TodayWidgetReceiver"

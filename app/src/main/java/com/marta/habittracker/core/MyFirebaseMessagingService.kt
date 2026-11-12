@@ -69,7 +69,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             DeviceTokenRegistrarEntryPoint::class.java,
                         )
                         entryPoint.challengeDeclineNotifier().publish(challengeId)
-                        entryPoint.appWidgetRefresher().refreshAll()
                         Log.d(TAG, "Challenge declined follow-up finished challengeId=$challengeId")
                     } catch (e: CancellationException) {
                         throw e
