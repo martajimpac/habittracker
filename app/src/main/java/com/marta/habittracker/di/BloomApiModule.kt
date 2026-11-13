@@ -1,8 +1,8 @@
 package com.marta.habittracker.di
 
 import com.marta.habittracker.BuildConfig
-import com.marta.habittracker.data.remote.BloomRecommendationDataSource
-import com.marta.habittracker.data.remote.KtorRecommendationTransport
+import com.marta.habittracker.data.remote.ai.datasources.BloomRecommendationDataSource
+import com.marta.habittracker.data.remote.ai.KtorAITransport
 import com.marta.habittracker.data.repository.RecommendationRepositoryImpl
 import com.marta.habittracker.domain.repository.RecommendationRepository
 import dagger.Module
@@ -20,7 +20,7 @@ object BloomApiModule {
     fun provideBloomRecommendationDataSource(): BloomRecommendationDataSource {
         return BloomRecommendationDataSource(
             baseUrl = BuildConfig.BLOOM_API_BASE_URL,
-            transport = KtorRecommendationTransport(),
+            transport = KtorAITransport(),
         )
     }
 

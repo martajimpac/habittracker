@@ -131,11 +131,12 @@ Aprobado 2026-08-08.
 - Schema remoto: tablas `habits` y `habit_records` en `public`, con RLS (dueño + excepciones sociales abajo).
 - `habits`: `id` (uuid), `user_id`, `name`, `description`, `days_of_week` (smallint[] 1=Mon..7=Sun), `days_per_week` (smallint 1..7, not null default 7), `schedule_mode` (`daily`, `weekdays` o `weekly_count`; vacío en filas antiguas y se infiere), `icon`, `color_hex`, `reminder_time`, `reminder_enabled` (boolean not null default false), `is_public` (boolean not null default false), `created_at`, `updated_at`, `deleted_at` (soft delete).
 - `streak_protection_events`: `id`, `user_id`, `habit_id`, `occasion_key`, `event_type` (`GRANT` o `CONSUME`). Único por usuario, hábito, ocasión y tipo. Solo el dueño lee e inserta. Un trigger rechaza un `GRANT` que dejaría el inventario por encima de 3 y un `CONSUME` que lo dejaría por debajo de 0.
-- **Frecuencia:** cada hábito y cada reto elige una modalidad. Diaria: todos los días. Días concretos: solo esos días de la semana. Objetivo semanal: un número de veces entre 1 y 7, cualquier día. Ese número se elige con flechas arriba y abajo, y al lado dice «día por semana» o «días por semana». Si `schedule_mode` está vacío, un subconjunto de días se trata como días concretos y un `days_per_week` de 1 a 6 con la semana completa se trata como objetivo semanal. En Inicio y en el widget, un hábito diario aparece cada día, uno de días concretos solo en esos días, y uno semanal cualquier día hasta completar la cuota. La semana empieza el lunes. El recordatorio de un hábito diario o semanal puede sonar cualquier día (el semanal deja de sonar al llegar a la cuota); el de días concretos solo suena en los días elegidos.
+- **Frecuencia:** cada hábito y cada reto elige una modalidad. Diaria: todos los días. Días concretos: solo esos días de la semana. Objetivo semanal: un número de veces entre 1 y 7, cualquier día. Ese número se elige con flechas arriba y abajo, y al lado dice «día por semana» o «días por semana». Si `schedule_mode` está vacío, un subconjunto de días se trata como días concretos y un `days_per_week` de 1 a 6 con la semana completa se trata como objetivo semanal. En Inicio y en el widget de hoy, un hábito diario aparece cada día, uno de días concretos solo en esos días, y uno semanal cualquier día hasta completar la cuota. La semana empieza el lunes. El recordatorio de un hábito diario o semanal puede sonar cualquier día (el semanal deja de sonar al llegar a la cuota); el de días concretos solo suena en los días elegidos.
 - **Protecciones de racha:** el inventario es del usuario y lo comparten todos sus hábitos, con un máximo de 3. El avance hacia la siguiente protección se muestra solo en el detalle del hábito, con una interrogación que lo explica. No aparece en las filas de Inicio ni de Estadísticas. Cada hábito tiene su racha y su progreso. Un hábito diario o de días concretos consigue una protección cada 7 ocasiones seguidas; uno semanal, cada 4 semanas seguidas en las que cumple el objetivo. Los días no programados no suman ni rompen. Una ocasión de hoy, o una semana que aún no ha terminado, no se considera incumplida. Si una ocasión ya cerrada se incumple y hay protección, se consume una y la racha se mantiene, pero esa ocasión no cuenta para la siguiente protección. Sin protecciones, la racha y el progreso de ese hábito vuelven a cero. Una protección que no cabe en el inventario se pierde. Volver a procesar la misma ocasión no duplica concesiones ni consumos. El primer arranque toma la racha ya existente como base y solo evalúa ocasiones desde ese día, para no gastar protecciones con fallos antiguos. Cambiar la frecuencia guarda la racha actual como nueva base y no reinterpreta el historial. Eliminar un hábito deja de generar eventos; los ya guardados siguen contando en el inventario.
 - `habit_records`: `id` (uuid), `habit_id`, `user_id`, `date`, `is_completed`, `updated_at`, `deleted_at`; UNIQUE(`habit_id`, `date`); FK a `habits` con CASCADE.
 - Estrategia: **online-first**. Mutaciones requieren red. Orden: check connectivity → Supabase → Room cache.
-- Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes).
+- Pull al login / arranque autenticado: descarga filas del usuario y reemplaza/actualiza la cache Room (remoto gana; no hay cola de cambios offline pendientes). El reemplazo de hábitos y registros es atómico (una sola transacción), para que la UI no vea estados intermedios.
+- Inicio: hasta recibir la primera lista de hábitos (del día y completa) se muestra `HabitLoadingIndicator` en lugar del progreso, la lista y el estado vacío. No se muestran contadores provisionales (p. ej. 0 completados).
 - Room almacena los mismos campos de sync (`updatedAt` / `deletedAt`) para alinear con el remoto.
 - Fuera de alcance: outbox, dual-write offline, WorkManager periodico, UI rica de sync, resolucion manual de conflictos.
 
@@ -338,47 +339,36 @@ Aprobado 2026-10-08.
 
 ### Home screen widgets (Jetpack Glance)
 
-Aprobado 2026-08-07. Cuatro widgets independientes (Approach A).
+Aprobado 2026-08-07. Actualizado 2026-11-13: quedan dos widgets independientes, **Hoy** y **Reto**. Los widgets de un hábito y de resumen semanal se retiraron.
 
 **Común**
 - Implementación con **Jetpack Glance** + App Widget.
 - Textos en ingles (`strings.xml`).
 - Colores alineados al theme Habit: `HabitPrimary`, `HabitSurface`, `HabitOnSurface`, `HabitField` y el color del hábito. Las previews del selector usan los mismos tokens en `colors.xml`.
-- El aspecto sigue la app: cabecera verde, página crema y piezas redondeadas. El de hoy es un inicio reducido (día en negrita, fecha, conteo y filas con icono y tic). El de un hábito es una ficha de inicio. El semanal usa pastillas de día, con la de hoy en verde. El de reto muestra el nombre en la cabecera, quién va ganando junto a una copa y barras de progreso. Si el progreso está empatado, dice empate.
-- Actualización: tras completar un hábito, al volver a primer plano la app, al cerrar sesión, tras sincronizar los hábitos de la cuenta que entra, y refresh periódico razonable (30–60 min). Al cerrar sesión se borra la caché local de hábitos. Sin sesión, o si el reto guardado no pertenece a la cuenta actual, el widget de reto no pinta el snapshot anterior.
+- El aspecto sigue la app: cabecera verde, página crema y piezas redondeadas. El de hoy es un inicio reducido (día en negrita, fecha, conteo y filas con icono y tic). El de reto muestra el nombre en la cabecera, quién va ganando junto a una copa y barras de progreso. Si el progreso está empatado, dice empate.
+- Actualización: tras completar, crear, editar o borrar un hábito, al volver a primer plano la app y al salir de ella, al cerrar sesión, tras sincronizar los hábitos de la cuenta que entra, y refresh periódico razonable (30–60 min). El widget de hoy no lee Room: la app (repositorio, receiver del widget o ciclo de vida de la app) calcula la lista y la guarda en el estado Glance del widget (preferencias: JSON de hábitos + fecha), y luego lo repinta. El widget solo pinta ese estado. Si no hay lista o es de otro día, muestra el texto de carga hasta el siguiente envío. Al cerrar sesión se borra la caché local de hábitos. Sin sesión, o si el reto guardado no pertenece a la cuenta actual, el widget de reto no pinta el snapshot anterior.
 - Al abrir o actualizar, el widget pinta enseguida el logo de Bloom y el texto de carga. Los datos se leen después. Así no aparece el error del sistema mientras Room o la red aún no han respondido.
-- Configuración: **activity de configuración al añadir** el widget (picker clásico), no ajustes dentro de Profile.
+- Configuración: el widget de reto usa una **activity de configuración** (picker clásico), no ajustes dentro de Profile. El de hoy no necesita configuración. Actualizado 2026-11-13: en Android 12+ la configuración es opcional al añadirlo (`configuration_optional`) y se puede volver a configurar (`reconfigurable`). Así el launcher coloca el widget aunque pierda su estado mientras se elige el reto (por ejemplo con «No mantener actividades»). En Android 8–11 el picker sigue abriéndose al añadirlo.
 - Mutaciones desde widget siguen **online-first** (igual que la app): sin red no se escribe Room ni Supabase.
-- **Previews (2026-10-08):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) y un `@Preview` de Glance (`androidx.glance.preview`, source set `debug`) en Android Studio. Datos de muestra; no cambian la lógica. El widget de hoy usa el mismo tratamiento.
+- **Previews (2026-10-08, actualizado 2026-11-13):** cada widget declara `android:previewLayout` (thumbnail del selector de pantalla de inicio) con datos de muestra; no cambia la lógica. No se exige un `@Preview` de Glance en Android Studio. La preview copia el layout real del widget: misma cabecera verde (título y subtítulo en crema), mismos paddings, filas redondeadas con icono sobre el color del hábito al 16 %, tic redondo, barras de 10 segmentos y botón «Abrir app». Las esquinas siguen el radio del sistema en Android 12+ (`@android:id/background`). Si falta altura, se recorta la lista y el botón sigue abajo. Cada widget tiene además `android:description` para el selector. En Android 8–11 el selector muestra el icono de la app (no hay `previewImage`).
 
-**1. Habit widget (configurable)**
-- Al añadirlo: picker de un hábito propio.
-- Muestra: nombre, icono/color, estado de hoy (y streak si cabe).
-- Acción: completar / descompletar el hábito de hoy vía `HabitRepository` (online-first).
-- Tap en el cuerpo (fuera del toggle): abre la app (Home o detalle del hábito).
-- Lectura de estado: Room (cache).
+**1. Today widget (sin picker)**
+- Lista los hábitos programados hoy, en el mismo orden que Home. Los hechos se marcan. La lista hace scroll y muestra todos, no solo los primeros.
+- Si no hay hábitos hoy, el texto es el estado vacío.
+- El círculo de cada fila completa o descompleta ese hábito de hoy vía `HabitRepository`, online-first. Sin red no cambia.
+- Tap en la fila, fuera del círculo: abre el detalle del primer hábito de esa lista que aún no está completado hoy. Si todos están hechos, o no hay ninguno, abre Home.
+- La lista se calcula desde Room con la misma consulta que Inicio (`getHabitsWithStatus(hoy)`): mismos hábitos, mismo filtro de programación y mismo orden. También se envía al añadir el widget y en su update periódico. Mientras haya al menos un widget de hoy, una alarma justo después de las 00:00 locales lo repinta con el día nuevo y se vuelve a programar; también se repinta si cambia la hora o la zona horaria. Con alarmas exactas desactivadas se usa una alarma inexacta (puede retrasarse unos minutos). Tras reiniciar, el update del sistema vuelve a programarla. Al quitar el último widget se cancela.
 
 **2. Challenge widget (configurable, solo lectura)**
-- Al añadirlo: picker de un reto (`pending` / `active`) del usuario.
+- Picker de un reto (`pending` / `active`) del usuario. En Android 12+ el widget se coloca sin elegir reto y muestra «Configurar desafío»; al pulsarlo se abre el picker para ese widget. Desde el menú del launcher también se puede reconfigurar. Al elegir un reto, el widget se repinta enseguida.
 - Persistencia local del `challengeId` + **snapshot** (nombres, progresos, días restantes, colores) para pintar sin red (los retos no tienen cache Room en el MVP social).
 - Refresh con red actualiza el snapshot; sin red muestra el último snapshot.
 - Sin toggle de completar en el widget.
-- Tap: abre la app (tab Friends).
-
-**3. Weekly summary widget (sin picker de hábito)**
-- Resumen Lun–Dom de todos los hábitos: por día, % o conteo de hábitos programados completados (misma idea que Stats agregado).
-- Solo lectura; tap abre Stats o Home.
-- Datos desde Room.
-
-**4. Today widget (sin picker)**
-- Lista los hábitos programados hoy, en el mismo orden que Home. Los hechos se marcan. La lista hace scroll y muestra todos, no solo los primeros.
-- Si no hay hábitos hoy, el texto es el estado vacío.
-- El círculo de cada fila completa o descompleta ese hábito de hoy, online-first, igual que el widget de un hábito. Sin red no cambia.
-- Tap en la fila, fuera del círculo: abre el detalle del primer hábito de esa lista que aún no está completado hoy. Si todos están hechos, o no hay ninguno, abre Home.
-- Datos desde Room.
+- Tap con reto configurado: abre la app (tab Friends). Tap sin reto (sin configurar, o el reto ya no es de la cuenta): abre el picker.
 
 **Fuera de alcance (widgets)**
-- Completar desde el widget de reto o del semanal.
+- Completar desde el widget de reto.
+- Widget de un solo hábito y widget de resumen semanal (retirados 2026-11-13).
 - Configurar widgets desde pantallas Profile/Detail.
 - Offline mutations / outbox desde el widget.
 - Un único widget multipágina.

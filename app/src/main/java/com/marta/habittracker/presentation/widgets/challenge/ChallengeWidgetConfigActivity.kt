@@ -1,7 +1,9 @@
 package com.marta.habittracker.presentation.widgets.challenge
 
 import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -26,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.lifecycle.lifecycleScope
 import com.marta.habittracker.R
 import com.marta.habittracker.core.network.NetworkChecker
@@ -122,6 +125,11 @@ class ChallengeWidgetConfigActivity : ComponentActivity() {
                 val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigActivity)
                     .getGlanceIdBy(appWidgetId)
 
+                // A running Glance session keeps its loaded state; bumping the revision
+                // restarts the load so a reconfigured widget shows the new challenge.
+                updateAppWidgetState(this@ChallengeWidgetConfigActivity, glanceId) { prefs ->
+                    prefs[ChallengeGlanceWidget.configRevisionKey] = System.currentTimeMillis()
+                }
                 ChallengeGlanceWidget().update(
                     this@ChallengeWidgetConfigActivity,
                     glanceId,
@@ -140,7 +148,7 @@ class ChallengeWidgetConfigActivity : ComponentActivity() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("ChallengeWidgetConfig", "Error configuring widget", e)
+                Log.e(TAG, "Error configuring widget $appWidgetId", e)
 
                 setResult(RESULT_CANCELED)
                 finish()
@@ -148,8 +156,20 @@ class ChallengeWidgetConfigActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
-        const val TAG = "ChallengeWidgetConfig"
+    companion object {
+        private const val TAG = "ChallengeWidgetConfig"
+
+        /**
+         * Opens the picker for an already placed widget (configuration is optional on
+         * Android 12+). The data URI keeps one PendingIntent per widget.
+         */
+        fun configureIntent(context: Context, appWidgetId: Int): Intent =
+            Intent(context, ChallengeWidgetConfigActivity::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_CONFIGURE
+                data = Uri.parse("habittracker://widget/challenge/configure/$appWidgetId")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            }
     }
 }
 

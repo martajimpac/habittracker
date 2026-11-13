@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="com.marta.habittracker.presentation.widgets.challenge.ChallengeWidgetConfigActivity"
+    android:description="@string/challenge_widget_description"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:previewLayout="@layout/challenge_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

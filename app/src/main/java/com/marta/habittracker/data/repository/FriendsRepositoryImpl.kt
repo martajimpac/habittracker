@@ -5,11 +5,15 @@ import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.data.mapper.HabitMapper
 import com.marta.habittracker.data.mapper.SocialMapper
-import com.marta.habittracker.data.remote.HabitRemoteMapper
-import com.marta.habittracker.data.remote.SocialRemoteDataSource
-import com.marta.habittracker.data.remote.dto.ChallengeDto
-import com.marta.habittracker.data.remote.dto.HabitDto
-import com.marta.habittracker.data.remote.dto.HabitRecordDto
+import com.marta.habittracker.data.mapper.HabitRemoteMapper
+import com.marta.habittracker.data.remote.supabase.datasources.ChallengeRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.datasources.FriendshipRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.datasources.HabitRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.datasources.ProfileRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.SupabaseSession
+import com.marta.habittracker.data.remote.supabase.dto.ChallengeDto
+import com.marta.habittracker.data.remote.supabase.dto.HabitDto
+import com.marta.habittracker.data.remote.supabase.dto.HabitRecordDto
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Challenge
@@ -40,7 +44,11 @@ import kotlinx.datetime.LocalDate
 @Singleton
 class FriendsRepositoryImpl @Inject constructor(
     private val networkChecker: NetworkChecker,
-    private val socialRemote: SocialRemoteDataSource,
+    private val session: SupabaseSession,
+    private val profileRemote: ProfileRemoteDataSource,
+    private val friendshipRemote: FriendshipRemoteDataSource,
+    private val challengeRemote: ChallengeRemoteDataSource,
+    private val habitRemote: HabitRemoteDataSource,
     private val habitRepository: HabitRepository,
     private val socialMapper: SocialMapper,
     private val habitMapper: HabitMapper,
@@ -49,14 +57,14 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun getAcceptedFriends(): DataResult<List<FriendListItem>, AppError> =
         runOnline(OP_ACCEPTED_FRIENDS) {
-            val userId = socialRemote.requireUserId()
-            val friendships = socialRemote.fetchFriendshipsForUser(userId, STATUS_ACCEPTED)
+            val userId = session.requireUserId()
+            val friendships = friendshipRemote.fetchFriendshipsForUser(userId, STATUS_ACCEPTED)
             val peerIds = friendships.map { friendship ->
                 if (friendship.requesterId == userId) friendship.addresseeId else friendship.requesterId
             }.distinct()
-            val profilesById = socialRemote.fetchProfilesByIds(peerIds)
+            val profilesById = profileRemote.fetchProfilesByIds(peerIds)
                 .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
-            val activeChallenges = socialRemote.fetchChallengesForUser(userId, listOf(STATUS_ACTIVE))
+            val activeChallenges = challengeRemote.fetchChallengesForUser(userId, listOf(STATUS_ACTIVE))
             val today = currentDate()
 
             peerIds.mapNotNull { peerId ->
@@ -65,8 +73,8 @@ class FriendsRepositoryImpl @Inject constructor(
                     Log.w(TAG, "getAcceptedFriends missing profile peerId=$peerId")
                     return@mapNotNull null
                 }
-                val habitDtos = socialRemote.fetchPublicHabitsForUser(peerId)
-                val records = socialRemote.fetchRecordsForHabits(habitDtos.map { it.id })
+                val habitDtos = habitRemote.fetchPublicHabitsForUser(peerId)
+                val records = habitRemote.fetchRecordsForHabits(habitDtos.map { it.id })
                 val habits = mapHabits(habitDtos, records)
                 FriendListItem(
                     profile = profile,
@@ -89,8 +97,8 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun getActiveChallenges(): DataResult<List<ChallengeCard>, AppError> =
         runOnline(OP_ACTIVE_CHALLENGES) {
-            val userId = socialRemote.requireUserId()
-            val challengeDtos = socialRemote.fetchChallengesForUser(
+            val userId = session.requireUserId()
+            val challengeDtos = challengeRemote.fetchChallengesForUser(
                 userId = userId,
                 statuses = listOf(STATUS_PENDING, STATUS_ACTIVE),
             )
@@ -98,14 +106,14 @@ class FriendsRepositoryImpl @Inject constructor(
             val opponentIds = challenges.map { challenge ->
                 if (challenge.challengerId == userId) challenge.challengedId else challenge.challengerId
             }.distinct()
-            val profilesById = socialRemote.fetchProfilesByIds(opponentIds)
+            val profilesById = profileRemote.fetchProfilesByIds(opponentIds)
                 .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
             val habitIds = challenges.flatMap {
                 listOfNotNull(it.challengerHabitId, it.challengedHabitId)
             }.distinct()
             val habits = mapHabits(
-                habitDtos = socialRemote.fetchHabitsByIds(habitIds),
-                recordDtos = socialRemote.fetchRecordsForHabits(habitIds),
+                habitDtos = habitRemote.fetchHabitsByIds(habitIds),
+                recordDtos = habitRemote.fetchRecordsForHabits(habitIds),
             ).associateBy { it.id }
             val today = currentDate()
 
@@ -119,8 +127,8 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun challengeHabitIds(): DataResult<Set<String>, AppError> =
         runOnline(OP_CHALLENGE_HABIT_IDS) {
-            val userId = socialRemote.requireUserId()
-            socialRemote.fetchChallengesForUser(
+            val userId = session.requireUserId()
+            challengeRemote.fetchChallengesForUser(
                 userId = userId,
                 statuses = listOf(STATUS_PENDING, STATUS_ACTIVE),
             ).mapNotNull { challenge ->
@@ -136,8 +144,8 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun getChallenge(challengeId: String): DataResult<ChallengeCard, AppError> =
         when (val result = runOnline(OP_GET_CHALLENGE) {
-            val userId = socialRemote.requireUserId()
-            val dto = socialRemote.fetchChallengeById(challengeId)
+            val userId = session.requireUserId()
+            val dto = challengeRemote.fetchChallengeById(challengeId)
                 ?: return@runOnline SingleChallengeOutcome.NotFound
             val card = buildChallengeCard(with(socialMapper) { dto.toDomain() }, userId)
             if (card == null) {
@@ -162,8 +170,8 @@ class FriendsRepositoryImpl @Inject constructor(
         accept: Boolean,
     ): DataResult<ChallengeCard, AppError> =
         when (val result = runOnline(OP_RESPOND_CHALLENGE) {
-            val userId = socialRemote.requireUserId()
-            val existing = socialRemote.fetchChallengeById(challengeId)
+            val userId = session.requireUserId()
+            val existing = challengeRemote.fetchChallengeById(challengeId)
             if (existing == null ||
                 existing.challengedId != userId ||
                 existing.status != STATUS_PENDING
@@ -173,7 +181,7 @@ class FriendsRepositoryImpl @Inject constructor(
             val updated = if (accept) {
                 acceptChallenge(existing)
             } else {
-                socialRemote.updateChallengeStatus(
+                challengeRemote.updateChallengeStatus(
                     id = challengeId,
                     status = STATUS_DECLINED,
                 )
@@ -198,15 +206,15 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun cancelChallenge(challengeId: String): DataResult<Unit, AppError> =
         when (val result = runOnline(OP_CANCEL_CHALLENGE) {
-            val userId = socialRemote.requireUserId()
-            val existing = socialRemote.fetchChallengeById(challengeId)
+            val userId = session.requireUserId()
+            val existing = challengeRemote.fetchChallengeById(challengeId)
             val allowed = existing != null &&
                 (existing.challengerId == userId || existing.challengedId == userId) &&
                 (existing.status == STATUS_PENDING || existing.status == STATUS_ACTIVE)
             if (!allowed) {
                 false
             } else {
-                socialRemote.updateChallengeStatus(challengeId, STATUS_CANCELLED)
+                challengeRemote.updateChallengeStatus(challengeId, STATUS_CANCELLED)
                 true
             }
         }) {
@@ -229,8 +237,8 @@ class FriendsRepositoryImpl @Inject constructor(
             return DataResult.Error(AppError.Common.Unknown)
         }
         return when (val result = runOnline(OP_RENAME_CHALLENGE) {
-            val userId = socialRemote.requireUserId()
-            val existing = socialRemote.fetchChallengeById(challengeId)
+            val userId = session.requireUserId()
+            val existing = challengeRemote.fetchChallengeById(challengeId)
                 ?: return@runOnline RenameChallengeOutcome.NotAllowed
             val habitId = ownChallengeHabitId(
                 userId = userId,
@@ -239,7 +247,7 @@ class FriendsRepositoryImpl @Inject constructor(
                 challengerHabitId = existing.challengerHabitId,
                 challengedHabitId = existing.challengedHabitId,
             ) ?: return@runOnline RenameChallengeOutcome.NotAllowed
-            val habitDto = socialRemote.fetchHabitsByIds(listOf(habitId)).firstOrNull()
+            val habitDto = habitRemote.fetchHabitsByIds(listOf(habitId)).firstOrNull()
                 ?: return@runOnline RenameChallengeOutcome.NotAllowed
             val habit = mapHabits(listOf(habitDto), emptyList()).first().copy(name = trimmed)
             when (val updated = habitRepository.updateHabit(habit)) {
@@ -268,10 +276,10 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun getPendingFriendRequests(): DataResult<List<PendingFriendRequest>, AppError> =
         runOnline(OP_PENDING_REQUESTS) {
-            val userId = socialRemote.requireUserId()
-            val pending = socialRemote.fetchFriendshipsForUser(userId, STATUS_PENDING)
+            val userId = session.requireUserId()
+            val pending = friendshipRemote.fetchFriendshipsForUser(userId, STATUS_PENDING)
                 .filter { it.addresseeId == userId }
-            val profilesById = socialRemote.fetchProfilesByIds(pending.map { it.requesterId }.distinct())
+            val profilesById = profileRemote.fetchProfilesByIds(pending.map { it.requesterId }.distinct())
                 .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
             pending.mapNotNull { friendship ->
                 val profile = profilesById[friendship.requesterId]
@@ -285,23 +293,23 @@ class FriendsRepositoryImpl @Inject constructor(
 
     override suspend fun searchProfiles(query: String): DataResult<List<Profile>, AppError> =
         runOnline(OP_SEARCH_PROFILES) {
-            val userId = socialRemote.requireUserId()
-            socialRemote.searchProfilesByUsername(query)
+            val userId = session.requireUserId()
+            profileRemote.searchProfilesByUsername(query)
                 .filterNot { it.id == userId }
                 .map { with(socialMapper) { it.toDomain() } }
         }
 
     override suspend fun sendFriendRequest(addresseeId: String): DataResult<Unit, AppError> =
         runOnline(OP_SEND_REQUEST) {
-            val userId = socialRemote.requireUserId()
-            socialRemote.insertFriendRequest(userId, addresseeId)
+            val userId = session.requireUserId()
+            friendshipRemote.insertFriendRequest(userId, addresseeId)
         }
 
     override suspend fun respondToFriendRequest(
         friendshipId: String,
         accept: Boolean,
     ): DataResult<Unit, AppError> = runOnline(OP_RESPOND_REQUEST) {
-        socialRemote.updateFriendshipStatus(
+        friendshipRemote.updateFriendshipStatus(
             id = friendshipId,
             status = if (accept) STATUS_ACCEPTED else STATUS_REJECTED,
         )
@@ -310,8 +318,8 @@ class FriendsRepositoryImpl @Inject constructor(
     override suspend fun getPublicHabitsForFriend(
         friendUserId: String,
     ): DataResult<List<Habit>, AppError> = runOnline(OP_PUBLIC_HABITS) {
-        val habitDtos = socialRemote.fetchPublicHabitsForUser(friendUserId)
-        val records = socialRemote.fetchRecordsForHabits(habitDtos.map { it.id })
+        val habitDtos = habitRemote.fetchPublicHabitsForUser(friendUserId)
+        val records = habitRemote.fetchRecordsForHabits(habitDtos.map { it.id })
         mapHabits(habitDtos, records)
     }
 
@@ -336,8 +344,8 @@ class FriendsRepositoryImpl @Inject constructor(
         }
         val created = runOnline(OP_CREATE_CHALLENGE) {
             val startsAt = Instant.now()
-            socialRemote.insertChallenge(
-                challengerId = socialRemote.requireUserId(),
+            challengeRemote.insertChallenge(
+                challengerId = session.requireUserId(),
                 challengedId = challengedId,
                 challengerHabitId = habit.id,
                 challengedHabitId = null,
@@ -355,7 +363,7 @@ class FriendsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun acceptChallenge(existing: ChallengeDto): ChallengeDto {
-        val sourceDto = socialRemote.fetchHabitsByIds(listOf(existing.challengerHabitId)).firstOrNull()
+        val sourceDto = habitRemote.fetchHabitsByIds(listOf(existing.challengerHabitId)).firstOrNull()
             ?: error("Challenge habit missing id=${existing.challengerHabitId}")
         val source = mapHabits(listOf(sourceDto), emptyList()).first()
         val copy = copyChallengeHabit(
@@ -368,7 +376,7 @@ class FriendsRepositoryImpl @Inject constructor(
             is DataResult.Success -> Unit
         }
         return try {
-            socialRemote.acceptChallenge(existing.id, copy.id)
+            challengeRemote.acceptChallenge(existing.id, copy.id)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -387,12 +395,12 @@ class FriendsRepositoryImpl @Inject constructor(
         } else {
             challenge.challengerId
         }
-        val profilesById = socialRemote.fetchProfilesByIds(listOf(opponentId))
+        val profilesById = profileRemote.fetchProfilesByIds(listOf(opponentId))
             .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
         val habitIds = listOfNotNull(challenge.challengerHabitId, challenge.challengedHabitId)
         val habits = mapHabits(
-            habitDtos = socialRemote.fetchHabitsByIds(habitIds),
-            recordDtos = socialRemote.fetchRecordsForHabits(habitIds),
+            habitDtos = habitRemote.fetchHabitsByIds(habitIds),
+            recordDtos = habitRemote.fetchRecordsForHabits(habitIds),
         ).associateBy { it.id }
         return toCard(challenge, userId, profilesById, habits, currentDate())
     }

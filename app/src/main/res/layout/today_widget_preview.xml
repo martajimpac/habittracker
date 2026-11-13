@@ -1,50 +1,217 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Widget picker preview for TodayGlanceWidget (Android 12+ previewLayout).
+    Mirrors WidgetScrollingScreen + WidgetHabitRow + WidgetCheck in WidgetChrome.kt:
+    green header, cream rows, round checks and the "Open app" button pinned to the bottom.
+    RemoteViews only allows framework layouts/views here (no plain View, no custom views).
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/habit_surface"
-    android:orientation="vertical">
+    android:background="@drawable/widget_preview_background"
+    android:clipToOutline="true"
+    android:orientation="vertical"
+    tools:targetApi="31">
 
-    <TextView
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/habit_primary"
-        android:padding="12dp"
-        android:text="@string/today_widget_title"
-        android:textColor="@color/habit_field"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="12dp">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/today_widget_preview_day"
+            android:textColor="@color/habit_cream"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/today_widget_preview_subtitle"
+            android:textColor="@color/habit_cream"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Habit list: takes the remaining height and clips extra rows on small sizes. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <!-- Row: completed -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/widget_preview_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp">
+
+            <FrameLayout
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/widget_preview_icon_box"
+                android:backgroundTint="@color/widget_preview_accent_orange_soft">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_habit_menu_book"
+                    android:tint="@color/widget_preview_accent_orange" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/today_widget_preview_done"
+                android:textColor="@color/habit_on_surface_variant"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@drawable/widget_check_circle"
+                android:backgroundTint="@color/widget_preview_accent_orange"
+                android:gravity="center"
+                android:text="@string/widget_preview_check"
+                android:textColor="@color/habit_cream"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Row: completed -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/widget_preview_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp">
+
+            <FrameLayout
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/widget_preview_icon_box"
+                android:backgroundTint="@color/widget_preview_accent_teal_soft">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_habit_self_improvement"
+                    android:tint="@color/widget_preview_accent_teal" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/today_widget_preview_done_second"
+                android:textColor="@color/habit_on_surface_variant"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@drawable/widget_check_circle"
+                android:backgroundTint="@color/widget_preview_accent_teal"
+                android:gravity="center"
+                android:text="@string/widget_preview_check"
+                android:textColor="@color/habit_cream"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Row: pending -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_preview_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp">
+
+            <FrameLayout
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/widget_preview_icon_box"
+                android:backgroundTint="@color/widget_preview_accent_blue_soft">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_habit_water_drop"
+                    android:tint="@color/widget_preview_accent_blue" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/today_widget_preview_pending"
+                android:textColor="@color/habit_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@drawable/widget_check_circle"
+                android:backgroundTint="@color/widget_preview_check_empty" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Open app button -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="@color/habit_field"
-        android:padding="10dp"
-        android:text="@string/today_widget_preview_done"
-        android:textColor="@color/habit_on_surface"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:background="@color/habit_field"
-        android:padding="10dp"
-        android:text="@string/today_widget_preview_pending"
-        android:textColor="@color/habit_on_surface"
-        android:textSize="13sp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="@color/habit_primary"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/widget_preview_button"
         android:gravity="center"
-        android:padding="10dp"
+        android:maxLines="1"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
         android:text="@string/widget_open_app"
-        android:textColor="@color/habit_field"
-        android:textSize="13sp"
+        android:textColor="@color/habit_cream"
+        android:textSize="14sp"
         android:textStyle="bold" />
 </LinearLayout>

@@ -64,8 +64,6 @@ class LoginSecurityTest {
 
         override suspend fun getCurrentUserId(): String? = "user-1"
 
-        override suspend fun getCurrentUserDisplayName(): String = "Secure User"
-
         override suspend fun getCurrentUserEmail(): String = "secure@example.com"
 
         override suspend fun signOut(): DataResult<Unit, AppError> = DataResult.Success(Unit)

@@ -17,20 +17,16 @@ import org.xmlpull.v1.XmlPullParser
 class WidgetPreviewLayoutTest {
 
     @Test
-    fun `habit challenge and weekly providers declare previewLayout`() {
+    fun `today and challenge providers declare previewLayout`() {
         val context = RuntimeEnvironment.getApplication()
 
         assertEquals(
-            R.layout.habit_widget_preview,
-            previewLayoutResId(context, R.xml.habit_widget_info),
+            R.layout.today_widget_preview,
+            previewLayoutResId(context, R.xml.today_widget_info),
         )
         assertEquals(
             R.layout.challenge_widget_preview,
             previewLayoutResId(context, R.xml.challenge_widget_info),
-        )
-        assertEquals(
-            R.layout.weekly_widget_preview,
-            previewLayoutResId(context, R.xml.weekly_widget_info),
         )
     }
 
@@ -38,9 +34,8 @@ class WidgetPreviewLayoutTest {
     fun `preview layouts inflate`() {
         val inflater = LayoutInflater.from(RuntimeEnvironment.getApplication())
 
-        assertNotNull(inflater.inflate(R.layout.habit_widget_preview, null))
+        assertNotNull(inflater.inflate(R.layout.today_widget_preview, null))
         assertNotNull(inflater.inflate(R.layout.challenge_widget_preview, null))
-        assertNotNull(inflater.inflate(R.layout.weekly_widget_preview, null))
     }
 
     private fun previewLayoutResId(context: android.content.Context, xmlRes: Int): Int {

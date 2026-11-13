@@ -193,8 +193,6 @@
     <string name="home_keep_it_up">Keep it up!</string>
     <string name="home_overall_streak">You\'re on a %1$d-day streak overall</string>
     <string name="home_overall_streak_weeks">You\'re on a %1$d-week streak overall</string>
-    <string name="home_past_record">Past record</string>
-    <string name="home_past_message">%1$d of %2$d habits completed · %3$d%%</string>
     <string name="home_all_day">All day</string>
     <string name="home_greeting_morning">Good morning</string>
     <string name="home_greeting_afternoon">Good afternoon</string>
@@ -385,17 +383,9 @@
     <string name="widget_loading">Loading</string>
 
     <!-- Habit widget -->
-    <string name="habit_widget_label">Habit glance</string>
-    <string name="habit_widget_config_title">Choose a habit</string>
-    <string name="habit_widget_empty_config">No habits available to add.</string>
-    <string name="habit_widget_configure">Configure</string>
-    <string name="habit_widget_completed">Completed today</string>
-    <string name="habit_widget_not_completed">Not completed today</string>
-    <string name="habit_widget_streak">%1$d day streak</string>
-    <string name="habit_widget_streak_weeks">%1$d week streak</string>
 
     <!-- Challenge widget -->
-    <string name="challenge_widget_label">Challenge glance</string>
+    <string name="challenge_widget_label">Challenge</string>
     <string name="challenge_widget_config_title">Choose a challenge</string>
     <string name="challenge_widget_empty_config">No pending or active challenges available to add.</string>
     <string name="challenge_widget_configure">Configure challenge</string>
@@ -407,33 +397,25 @@
     <string name="challenge_widget_status_active">Active</string>
 
     <!-- Weekly widget -->
-    <string name="weekly_widget_label">Weekly summary</string>
-    <string name="weekly_widget_title">This week</string>
-    <string name="weekly_widget_percent">%1$d%%</string>
-    <string name="weekly_widget_day_mon">Mon</string>
-    <string name="weekly_widget_day_tue">Tue</string>
-    <string name="weekly_widget_day_wed">Wed</string>
-    <string name="weekly_widget_day_thu">Thu</string>
-    <string name="weekly_widget_day_fri">Fri</string>
-    <string name="weekly_widget_day_sat">Sat</string>
-    <string name="weekly_widget_day_sun">Sun</string>
-    <string name="habit_widget_preview_name">Read</string>
     <string name="challenge_widget_preview_habit">Run</string>
     <string name="challenge_widget_preview_versus">vs Alex</string>
     <string name="challenge_widget_preview_progress">You 60% · Alex 40%</string>
     <string name="challenge_widget_preview_days_left">5 days left</string>
     <string name="challenge_widget_preview_leader">Me</string>
-    <string name="weekly_widget_preview_percent_high">80%</string>
-    <string name="weekly_widget_preview_percent_zero">0%</string>
 
     <!-- Today widget -->
     <string name="today_widget_label">Today</string>
-    <string name="today_widget_title">Today</string>
     <string name="today_widget_empty">Nothing scheduled today</string>
     <string name="today_widget_count">%1$d/%2$d</string>
     <string name="today_widget_preview_pending">Water</string>
-    <string name="today_widget_preview_done">Done · Read</string>
+    <string name="today_widget_preview_done"><strike>Read</strike></string>
+    <string name="today_widget_preview_done_second"><strike>Meditate</strike></string>
+    <string name="today_widget_preview_day">Wednesday</string>
+    <string name="today_widget_preview_subtitle">Today · November 13  2/3</string>
+    <string name="today_widget_description">Check off today\'s habits right from your home screen</string>
+    <string name="challenge_widget_description">Follow a challenge against a friend at a glance</string>
     <string name="widget_open_app">Open app</string>
+    <string name="widget_preview_check" translatable="false">✓</string>
 
     <!-- Recommendations -->
     <string name="recommendation_open">Message the assistant</string>

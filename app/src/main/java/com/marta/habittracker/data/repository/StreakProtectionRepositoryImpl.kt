@@ -3,11 +3,11 @@ package com.marta.habittracker.data.repository
 import android.util.Log
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.core.toKotlin
-import com.marta.habittracker.data.local.room.StreakProtectionDao
+import com.marta.habittracker.data.local.room.dao.StreakProtectionDao
 import com.marta.habittracker.data.local.room.entities.StreakBaselineEntity
 import com.marta.habittracker.data.local.room.entities.StreakProtectionEventEntity
-import com.marta.habittracker.data.remote.StreakProtectionRemoteDataSource
-import com.marta.habittracker.data.remote.dto.StreakProtectionEventDto
+import com.marta.habittracker.data.remote.supabase.datasources.StreakProtectionRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.dto.StreakProtectionEventDto
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.protectionMilestone
 import com.marta.habittracker.domain.model.resolvedSchedule

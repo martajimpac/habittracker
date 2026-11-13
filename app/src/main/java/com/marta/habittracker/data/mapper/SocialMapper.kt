@@ -1,8 +1,8 @@
 package com.marta.habittracker.data.mapper
 
-import com.marta.habittracker.data.remote.dto.ChallengeDto
-import com.marta.habittracker.data.remote.dto.FriendshipDto
-import com.marta.habittracker.data.remote.dto.ProfileDto
+import com.marta.habittracker.data.remote.supabase.dto.ChallengeDto
+import com.marta.habittracker.data.remote.supabase.dto.FriendshipDto
+import com.marta.habittracker.data.remote.supabase.dto.ProfileDto
 import com.marta.habittracker.domain.model.Challenge
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeStatus

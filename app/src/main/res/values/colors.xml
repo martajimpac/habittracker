@@ -5,4 +5,19 @@
     <color name="habit_surface">#FFEFEBE3</color>
     <color name="habit_on_surface">#FF1A1D1F</color>
     <color name="habit_field">#FFFDF9F1</color>
+    <color name="habit_cream">#FFFDF9F1</color>
+    <color name="habit_on_surface_variant">#FF5D5D60</color>
+
+    <!-- Widget picker previews: same tokens the Glance widgets compute in code. -->
+    <!-- HabitOutline at 35 % (empty check) and 28 % (empty progress segment). -->
+    <color name="widget_preview_check_empty">#597D828A</color>
+    <color name="widget_preview_track">#477D828A</color>
+    <!-- Sample habit colours (HabitColor2/6/8) and their 16 % icon backgrounds. -->
+    <color name="widget_preview_accent_orange">#FFF27A24</color>
+    <color name="widget_preview_accent_orange_soft">#29F27A24</color>
+    <color name="widget_preview_accent_orange_rival">#8CF27A24</color>
+    <color name="widget_preview_accent_teal">#FF12CEA8</color>
+    <color name="widget_preview_accent_teal_soft">#2912CEA8</color>
+    <color name="widget_preview_accent_blue">#FF3A98EA</color>
+    <color name="widget_preview_accent_blue_soft">#293A98EA</color>
 </resources>

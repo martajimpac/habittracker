@@ -3,6 +3,8 @@ package com.marta.habittracker.data.local.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.marta.habittracker.data.local.room.dao.HabitDao
+import com.marta.habittracker.data.local.room.dao.StreakProtectionDao
 import com.marta.habittracker.data.local.room.entities.HabitEntity
 import com.marta.habittracker.data.local.room.entities.HabitRecordEntity
 import com.marta.habittracker.data.local.room.entities.StreakBaselineEntity

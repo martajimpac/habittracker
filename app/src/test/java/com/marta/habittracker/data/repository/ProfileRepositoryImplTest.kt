@@ -3,7 +3,7 @@ package com.marta.habittracker.data.repository
 import android.app.Application
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.data.mapper.SocialMapper
-import com.marta.habittracker.data.remote.FakeProfileRemote
+import com.marta.habittracker.data.remote.supabase.FakeProfileRemote
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.usecase.FakeAuthRepository

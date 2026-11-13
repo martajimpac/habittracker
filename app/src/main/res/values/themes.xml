@@ -8,4 +8,13 @@
         <item name="android:enforceStatusBarContrast">false</item>
         <item name="android:enforceNavigationBarContrast">false</item>
     </style>
+
+    <!-- One segment of WidgetProgressBar in widget picker previews (6dp tall, 1dp gap each side). -->
+    <style name="WidgetPreviewSegment">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">6dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginHorizontal">1dp</item>
+        <item name="android:background">@drawable/widget_preview_segment</item>
+    </style>
 </resources>

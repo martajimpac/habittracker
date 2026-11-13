@@ -1,7 +1,6 @@
 package com.marta.habittracker.presentation.screens.detail
 
 import androidx.lifecycle.SavedStateHandle
-import com.marta.habittracker.R
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Habit
@@ -23,7 +22,6 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -73,66 +71,6 @@ class HabitDetailViewModelTest {
     }
 
     @Test
-    fun `load with reminder enabled shows the saved time`() = runTest {
-        val viewModel = createViewModel(sampleHabit(reminderTime = "08:00", reminderEnabled = true))
-        advanceUntilIdle()
-
-        assertTrue(viewModel.reminderEnabled.value)
-        assertEquals("08:00", viewModel.reminderTime.value)
-    }
-
-    @Test
-    fun `load with null reminderTime disables reminder and drafts 08 00`() = runTest {
-        val viewModel = createViewModel(sampleHabit(reminderTime = null))
-        advanceUntilIdle()
-
-        assertFalse(viewModel.reminderEnabled.value)
-        assertEquals("08:00", viewModel.reminderTime.value)
-    }
-
-    @Test
-    fun `save with reminder disabled keeps the time`() = runTest {
-        val habit = sampleHabit(reminderTime = "08:00", reminderEnabled = true)
-        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
-        val viewModel = HabitDetailViewModel(
-            repository = repository,
-            savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
-            friendsRepository = FakeFriendsRepository(),
-            streakProtectionRepository = FakeStreakProtectionRepository(),
-        )
-        advanceUntilIdle()
-
-        viewModel.onReminderEnabled(false)
-        viewModel.saveReminder()
-        advanceUntilIdle()
-
-        assertEquals("08:00", repository.updatedHabits.single().reminderTime)
-        assertFalse(repository.updatedHabits.single().reminderEnabled)
-        assertEquals(habit.id, repository.updatedHabits.single().id)
-    }
-
-    @Test
-    fun `save with reminder enabled persists 07 30`() = runTest {
-        val habit = sampleHabit(reminderTime = null)
-        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
-        val viewModel = HabitDetailViewModel(
-            repository = repository,
-            savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
-            friendsRepository = FakeFriendsRepository(),
-            streakProtectionRepository = FakeStreakProtectionRepository(),
-        )
-        advanceUntilIdle()
-
-        viewModel.onReminderEnabled(true)
-        viewModel.onReminderTimeChanged("07:30")
-        viewModel.saveReminder()
-        advanceUntilIdle()
-
-        assertEquals("07:30", repository.updatedHabits.single().reminderTime)
-        assertTrue(repository.updatedHabits.single().reminderEnabled)
-    }
-
-    @Test
     fun `deleteHabit emits habitDeleted`() = runTest {
         val habit = sampleHabit(reminderTime = null)
         val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
@@ -153,21 +91,6 @@ class HabitDetailViewModelTest {
 
         assertTrue(deleted)
         collectJob.cancel()
-    }
-
-    @Test
-    fun `reminder denied turns toggle off and sets actionErrorRes`() = runTest {
-        val viewModel = createViewModel(sampleHabit(reminderTime = "08:00"))
-        advanceUntilIdle()
-
-        viewModel.onReminderEnabled(true)
-        viewModel.onReminderDenied(R.string.habit_reminder_permission_denied)
-
-        assertFalse(viewModel.reminderEnabled.value)
-        assertEquals(
-            R.string.habit_reminder_permission_denied,
-            viewModel.actionErrorRes.value,
-        )
     }
 
     @Test

@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -196,15 +195,5 @@ private fun HeatmapLegend(emptyColor: Color, filledColor: Color) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-    }
-}
-
-@Composable
-fun rememberActivityWeeks(
-    today: LocalDate = LocalDate.now(),
-    intensityForDate: (LocalDate) -> Float,
-): List<ActivityHeatmapWeek> {
-    return remember(today) {
-        toHeatmapWeeks(buildRollingFourWeeks(today), intensityForDate)
     }
 }

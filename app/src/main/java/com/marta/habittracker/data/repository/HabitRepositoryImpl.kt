@@ -4,13 +4,13 @@ import android.util.Log
 import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.core.toEpochMillis
-import com.marta.habittracker.data.local.room.HabitDao
+import com.marta.habittracker.data.local.room.dao.HabitDao
 import com.marta.habittracker.data.local.room.entities.HabitRecordEntity
 import com.marta.habittracker.data.mapper.HabitMapper
-import com.marta.habittracker.data.remote.HabitRemoteDataSource
-import com.marta.habittracker.data.remote.HabitRemoteMapper
-import com.marta.habittracker.data.remote.HabitRemoteMapper.toDto
-import com.marta.habittracker.data.remote.HabitRemoteMapper.toEntity
+import com.marta.habittracker.data.remote.supabase.datasources.HabitRemoteDataSource
+import com.marta.habittracker.data.mapper.HabitRemoteMapper
+import com.marta.habittracker.data.mapper.HabitRemoteMapper.toDto
+import com.marta.habittracker.data.mapper.HabitRemoteMapper.toEntity
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.Habit
@@ -107,19 +107,9 @@ class HabitRepositoryImpl @Inject constructor(
         return try {
             val userId = remote.requireUserId()
 
-            Log.d(
-                "MARTUKI",
-                "id = ${recordEntity.id} habitId = ${recordEntity.habitId} ID = ${recordEntity.id} date = ${recordEntity.date}"
-            )
-
-
             remote.upsertRecord(recordEntity.toDto(userId))
             habitDao.upsertHabitRecord(recordEntity)
-
-
-            widgetRefresher.refreshTodayWidget(getHabitsWithStatus(date).first())
-
-
+            refreshTodayWidget()
             DataResult.Success(Unit)
         } catch (e: CancellationException) {
             Log.e(TAG, "toggleHabitCompletion failed habitId=${habitId}", e)
@@ -152,6 +142,7 @@ class HabitRepositoryImpl @Inject constructor(
             runReminderHook("afterHabitPersisted insert id=${habit.id}") {
                 afterHabitPersisted(habit, reminderScheduler)
             }
+            refreshTodayWidget()
             DataResult.Success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -174,6 +165,7 @@ class HabitRepositoryImpl @Inject constructor(
             runReminderHook("afterHabitPersisted update id=${habit.id}") {
                 afterHabitPersisted(habit, reminderScheduler)
             }
+            refreshTodayWidget()
             DataResult.Success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -204,8 +196,7 @@ class HabitRepositoryImpl @Inject constructor(
             runReminderHook("afterHabitDeleted id=${habit.id}") {
                 afterHabitDeleted(habit.id, reminderScheduler)
             }
-
-
+            refreshTodayWidget()
             DataResult.Success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -227,15 +218,9 @@ class HabitRepositoryImpl @Inject constructor(
 
             val records = remoteRecords.map { it.toEntity() }
 
-            habitDao.clearHabitRecords()
-            habitDao.clearHabits()
-
             val inserted = remoteHabits.map { it.toEntity() }
 
-            inserted.forEach { habitDao.insertHabit(it) }
-            records.forEach { habitDao.upsertHabitRecord(it) }
-
-            val today = LocalDate.now()
+            habitDao.replaceAll(inserted, records)
 
             val syncedHabits = inserted
                 .filter { it.deletedAt == null }
@@ -248,20 +233,9 @@ class HabitRepositoryImpl @Inject constructor(
                 afterHabitsSynced(syncedHabits, reminderScheduler)
             }
 
-            val success = DataResult.Success(Unit)
+            refreshTodayWidget()
 
-            widgetRefresher.refreshTodayWidget(syncedHabits.map { habit ->
-                //COMPROBAR SI ESTAN COMPLETADOS HOY
-                habit.copy(
-                    isCompleted = checkCompletedToday(
-                        habit = habit,
-                        records = records,
-                        date = today,
-                    )
-                )
-            })
-
-            success
+            DataResult.Success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -282,13 +256,24 @@ class HabitRepositoryImpl @Inject constructor(
                     reminderScheduler.cancel(habitId)
                 }
             }
-            widgetRefresher.refreshTodayWidget(listOf())
+            refreshTodayWidget()
             Log.d(TAG, "Cleared local habits count=${habitIds.size}")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "clearLocal failed", e)
             throw e
+        }
+    }
+
+    /** Pushes today's list to the widget, built exactly as Home builds it. */
+    private suspend fun refreshTodayWidget() {
+        try {
+            widgetRefresher.refreshTodayWidget(getHabitsWithStatus(LocalDate.now()).first())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "refreshTodayWidget failed", e)
         }
     }
 

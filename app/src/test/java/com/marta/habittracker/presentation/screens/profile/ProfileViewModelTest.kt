@@ -77,7 +77,6 @@ class ProfileViewModelTest {
     @Test
     fun `loads display name from profile repository and email from auth`() = runTest {
         val authRepository = FakeAuthRepository(
-            displayName = "Should Not Appear",
             email = "alex@example.com",
         )
         val profileRepository = FakeProfileRepository(

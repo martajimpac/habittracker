@@ -1,15 +1,11 @@
 package com.marta.habittracker.data.repository
 
 import android.util.Log
-import com.marta.habittracker.data.remote.dto.UsernameAvailabilityDto
-import com.marta.habittracker.data.remote.dto.UsernameAvailabilityParams
+import com.marta.habittracker.data.remote.supabase.datasources.UsernameRemoteDataSource
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.UsernameAvailability
 import com.marta.habittracker.domain.repository.UsernameAvailabilityRepository
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.rpc
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,16 +13,13 @@ import kotlinx.coroutines.CancellationException
 
 @Singleton
 class UsernameAvailabilityRepositoryImpl @Inject constructor(
-    private val supabase: SupabaseClient,
+    private val remote: UsernameRemoteDataSource,
 ) : UsernameAvailabilityRepository {
 
     override suspend fun check(raw: String): DataResult<UsernameAvailability, AppError> {
         return try {
             Log.d(TAG, "Username availability check started")
-            val row = supabase.postgrest.rpc(
-                function = FUNCTION,
-                parameters = UsernameAvailabilityParams(requested = raw),
-            ).decodeSingle<UsernameAvailabilityDto>()
+            val row = remote.checkAvailability(requested = raw)
             Log.d(TAG, "Username availability check finished available=${row.available}")
             DataResult.Success(
                 UsernameAvailability(
@@ -48,6 +41,5 @@ class UsernameAvailabilityRepositoryImpl @Inject constructor(
 
     private companion object {
         const val TAG = "UsernameCheck"
-        const val FUNCTION = "username_availability"
     }
 }

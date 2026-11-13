@@ -158,18 +158,6 @@ class ComputeChallengeProgressTest {
     }
 
     @Test
-    fun `calendar streak counts consecutive completed days ending today`() {
-        val records = listOf(
-            HabitRecord("1", habitId, LocalDate(2026, 7, 28), true),
-            HabitRecord("2", habitId, LocalDate(2026, 7, 29), false),
-            HabitRecord("3", habitId, LocalDate(2026, 7, 30), true),
-            HabitRecord("4", habitId, LocalDate(2026, 7, 31), true),
-        )
-
-        assertEquals(2, calculateHabitStreak(records, LocalDate(2026, 7, 31)))
-    }
-
-    @Test
     fun `challengeDaysLeft counts remaining inclusive challenge days after today`() {
         val startsAt = Instant.parse("2026-07-01T00:00:00Z")
         val endsAt = Instant.parse("2026-07-08T00:00:00Z")

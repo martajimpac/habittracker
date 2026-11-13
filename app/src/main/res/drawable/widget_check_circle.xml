@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Round mark for widget checks. Tinted from code; a real oval avoids relying on
+     Glance cornerRadius (outline clipping), which is ignored before API 31 and can fail
+     on recycled list rows. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>

@@ -6,7 +6,6 @@ import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.usecase.HabitWeekStat
 
 interface RecommendationRepository {
-    suspend fun request(stats: List<HabitWeekStat>): DataResult<String, RecommendationError>
 
     suspend fun send(
         stats: List<HabitWeekStat>,

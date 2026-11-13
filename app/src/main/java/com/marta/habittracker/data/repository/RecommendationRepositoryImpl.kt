@@ -1,6 +1,6 @@
 package com.marta.habittracker.data.repository
 
-import com.marta.habittracker.data.remote.BloomRecommendationDataSource
+import com.marta.habittracker.data.remote.ai.datasources.BloomRecommendationDataSource
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantTurn
 import com.marta.habittracker.domain.model.errors.RecommendationError
@@ -11,9 +11,7 @@ import javax.inject.Inject
 class RecommendationRepositoryImpl @Inject constructor(
     private val dataSource: BloomRecommendationDataSource,
 ) : RecommendationRepository {
-    override suspend fun request(stats: List<HabitWeekStat>): DataResult<String, RecommendationError> {
-        return dataSource.request(stats)
-    }
+
 
     override suspend fun send(
         stats: List<HabitWeekStat>,

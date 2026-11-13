@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.marta.habittracker.data.local.room.HabitDao
+import com.marta.habittracker.data.local.room.dao.HabitDao
 import com.marta.habittracker.data.local.room.HabitDatabase
-import com.marta.habittracker.data.local.room.StreakProtectionDao
+import com.marta.habittracker.data.local.room.dao.StreakProtectionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

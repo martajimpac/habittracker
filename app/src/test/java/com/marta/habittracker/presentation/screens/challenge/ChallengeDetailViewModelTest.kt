@@ -384,8 +384,6 @@ class ChallengeDetailViewModelTest {
 
         override suspend fun getCurrentUserId(): String? = userId
 
-        override suspend fun getCurrentUserDisplayName(): String = "Test"
-
         override suspend fun getCurrentUserEmail(): String = "test@example.com"
 
         override suspend fun signOut() = error("not used")

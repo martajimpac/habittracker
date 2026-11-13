@@ -22,7 +22,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -67,27 +70,40 @@ class HomeViewModel @Inject constructor(
     private val _events = Channel<HomeEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    val allHabits: StateFlow<List<Habit>> = repository.getAllHabitsWithRecords()
+    // null until Room emits for the first time, so the UI can show a loader instead of "0 done".
+    private val allHabitsOrNull: StateFlow<List<Habit>?> = repository.getAllHabitsWithRecords()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
+            initialValue = null,
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val habits: StateFlow<List<Habit>> = _selectedDate
+    private val habitsOrNull: StateFlow<List<Habit>?> = _selectedDate
         .flatMapLatest { date -> repository.getHabitsWithStatus(date) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
+            initialValue = null,
         )
+
+    val allHabits: StateFlow<List<Habit>> = allHabitsOrNull
+        .map { it.orEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val habits: StateFlow<List<Habit>> = habitsOrNull
+        .map { it.orEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val isLoading: StateFlow<Boolean> = combine(habitsOrNull, allHabitsOrNull) { day, all ->
+        day == null || all == null
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
         refreshDisplayName()
         refreshChallengeHabits()
         viewModelScope.launch {
-            allHabits.collect { habits ->
+            allHabitsOrNull.filterNotNull().collect { habits ->
                 val result = streakProtectionRepository.reconcile(habits, currentDate())
                 _protection.value = result
                 if (result.newEvents.any { it.type == ProtectionEventType.GRANT }) {

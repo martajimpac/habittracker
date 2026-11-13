@@ -119,9 +119,22 @@ data/
 │   ├── room/
 │   └── datastore/
 ├── remote/
+│   ├── supabase/   # SupabaseSession, SupabaseTables
+│   │   ├── datasources/  # un DataSource por tabla/funcionalidad
+│   │   └── dto/
+│   └── ai/         # API HTTP del asistente Bloom (Ktor): transporte
+│       ├── datasources/
+│       └── dto/          # cuerpos de petición/respuesta, uno por archivo
 ├── repository/
 └── mapper/
 ```
+
+### Remote
+
+* Agrupar por backend (`supabase/`, `ai/`). Dentro, los DataSources van en `datasources/` (uno por tabla o funcionalidad; no crear DataSources "cajón de sastre") y los modelos de red en `dto/`, una clase por archivo, nunca definidos dentro del DataSource.
+* Los nombres de tablas, buckets, Edge Functions y RPC viven en `SupabaseTables.kt`.
+* El usuario autenticado se obtiene con `SupabaseSession`; no duplicar `requireUserId` en cada DataSource.
+* Los repositorios no usan `SupabaseClient` directamente; siempre a través de un DataSource. Los DataSources traducen las excepciones de Supabase a tipos propios de `data` (p. ej. `AuthRemoteException`).
 
 ### DataStore
 

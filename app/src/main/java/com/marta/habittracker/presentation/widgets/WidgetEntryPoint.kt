@@ -2,8 +2,6 @@ package com.marta.habittracker.presentation.widgets
 
 import com.marta.habittracker.data.local.datastore.WidgetPreferencesDataSource
 import com.marta.habittracker.core.network.NetworkChecker
-import com.marta.habittracker.data.local.room.HabitDao
-import com.marta.habittracker.data.remote.HabitRemoteDataSource
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository

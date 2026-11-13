@@ -68,6 +68,7 @@ import com.marta.habittracker.domain.usecase.HabitProtectionStatus
 import com.marta.habittracker.domain.usecase.StreakOutcome
 import com.marta.habittracker.presentation.components.HabitDialog
 import com.marta.habittracker.presentation.components.HabitDialogTone
+import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.StreakProtectionBadge
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.components.ChallengeHabitMark
@@ -109,6 +110,7 @@ fun HomeScreen(
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val allHabits by viewModel.allHabits.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val today by viewModel.today.collectAsStateWithLifecycle()
     val weekDays by viewModel.weekDays.collectAsStateWithLifecycle()
@@ -177,6 +179,7 @@ fun HomeScreen(
             challengeHabitIds = challengeHabitIds,
             protectionBalance = protection.balance,
             protectionByHabit = protection.habits.associateBy { it.habitId },
+            isLoading = isLoading,
         )
 
         SnackbarHost(
@@ -212,6 +215,7 @@ fun HomeContent(
     challengeHabitIds: Set<String> = emptySet(),
     protectionBalance: Int = 0,
     protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
+    isLoading: Boolean = false,
 ) {
     val isToday = selectedDate == today
     val isPast = selectedDate.isBefore(today)
@@ -265,7 +269,16 @@ fun HomeContent(
             allHabits = allHabits,
             onDateSelected = onDateSelected,
         )
-        LazyColumn(
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                HabitLoadingIndicator()
+            }
+        } else LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f),
@@ -349,18 +362,11 @@ fun HomeContent(
                 }
             }
 
-            when {
-                isToday && overallStreak.first > 2 -> item {
+            if (isToday && overallStreak.first > 2) {
+                item {
                     HomeMotivationCard(
                         overallStreak = overallStreak.first,
                         inWeeks = overallStreak.second,
-                    )
-                }
-                isPast && pct < 100 -> item {
-                    HomeDayInfoCard(
-                        pct = pct,
-                        completedCount = completedCount,
-                        totalCount = totalCount,
                     )
                 }
             }
@@ -749,50 +755,6 @@ private fun HomeMotivationCard(overallStreak: Int, inWeeks: Boolean) {
                 ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeDayInfoCard(
-    pct: Int,
-    completedCount: Int,
-    totalCount: Int,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(HabitField)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(
-            painter = painterResource(
-                if (pct >= 50) R.drawable.ic_onboarding_chart else R.drawable.ic_home_calendar,
-            ),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp),
-        )
-        Column {
-            Text(
-                text = stringResource(R.string.home_past_record),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
-                color = HabitOnSurface,
-            )
-            Text(
-                text = stringResource(
-                    R.string.home_past_message,
-                    completedCount,
-                    totalCount,
-                    pct,
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = HabitOnSurfaceVariant,
             )
         }
     }

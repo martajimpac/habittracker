@@ -192,10 +192,6 @@ private class FakeRecommendationRepository(
     val languages = mutableListOf<String>()
     val statsSnapshots = mutableListOf<List<HabitWeekStat>>()
 
-    override suspend fun request(stats: List<HabitWeekStat>): DataResult<String, RecommendationError> {
-        error("The chat does not call recommendations")
-    }
-
     override suspend fun send(
         stats: List<HabitWeekStat>,
         language: String,

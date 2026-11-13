@@ -7,7 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.glance.ColorFilter
+import androidx.glance.currentState
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -90,7 +93,13 @@ class ChallengeGlanceWidget : GlanceAppWidget() {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         val json = entryPoint.json()
         provideContent {
-            val state by produceState<WidgetLoad<ChallengeWidgetSnapshot?>>(WidgetLoad.Loading, appWidgetId) {
+            // Bumped by the config activity so a running session reloads the chosen challenge.
+            val configRevision = currentState<Preferences>()[configRevisionKey]
+            val state by produceState<WidgetLoad<ChallengeWidgetSnapshot?>>(
+                WidgetLoad.Loading,
+                appWidgetId,
+                configRevision,
+            ) {
                 value = loadChallengeSnapshot(
                     appWidgetId = appWidgetId,
                     entryPoint = entryPoint,
@@ -133,6 +142,9 @@ class ChallengeGlanceWidget : GlanceAppWidget() {
                             ?.let { context.getString(R.string.challenge_widget_status_pending) }
                             .orEmpty(),
                         openAppAction = actionStartActivity(WidgetLaunchExtras.openFriendsIntent(context)),
+                        configureAction = actionStartActivity(
+                            ChallengeWidgetConfigActivity.configureIntent(context, appWidgetId),
+                        ),
                     )
                 }
             }
@@ -227,8 +239,11 @@ class ChallengeGlanceWidget : GlanceAppWidget() {
         return resolved
     }
 
-    private companion object {
-        const val TAG = "ChallengeWidget"
+    companion object {
+        private const val TAG = "ChallengeWidget"
+
+        /** Glance state key the config activity bumps after saving a challenge. */
+        val configRevisionKey = longPreferencesKey("challenge_config_revision")
     }
 }
 
@@ -244,13 +259,14 @@ internal fun ChallengeWidgetContent(
     leaderDescription: String,
     statusText: String,
     openAppAction: androidx.glance.action.Action,
+    configureAction: androidx.glance.action.Action,
 ) {
     if (snapshot == null) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(HabitSurface)
-                .clickable(openAppAction)
+                .clickable(configureAction)
                 .padding(16.dp),
             verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {

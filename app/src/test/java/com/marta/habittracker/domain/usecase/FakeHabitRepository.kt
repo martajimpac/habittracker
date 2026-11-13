@@ -16,7 +16,7 @@ class FakeHabitRepository(
 
     val insertedHabits = mutableListOf<Habit>()
     val updatedHabits = mutableListOf<Habit>()
-    val toggledHabits = mutableListOf<Pair<Habit, LocalDate>>()
+    val toggledHabits = mutableListOf<Triple<String, Boolean, LocalDate>>()
     var insertCalls: Int = 0
         private set
     var insertResult: DataResult<Unit, AppError> = DataResult.Success(Unit)
@@ -27,10 +27,11 @@ class FakeHabitRepository(
     override fun getAllHabitsWithRecords(): Flow<List<Habit>> = flowOf(allHabitsWithRecords)
 
     override suspend fun toggleHabitCompletion(
-        habit: Habit,
+        habitId: String,
+        isCompleted: Boolean,
         date: LocalDate,
     ): DataResult<Unit, AppError> {
-        toggledHabits.add(habit to date)
+        toggledHabits.add(Triple(habitId, isCompleted, date))
         return toggleResult
     }
 

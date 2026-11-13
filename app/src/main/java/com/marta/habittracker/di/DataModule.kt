@@ -8,8 +8,8 @@ import com.marta.habittracker.core.network.AndroidNetworkChecker
 import com.marta.habittracker.core.network.NetworkChecker
 import com.marta.habittracker.core.reminder.AndroidDailyCheckInScheduler
 import com.marta.habittracker.core.reminder.AndroidHabitReminderScheduler
-import com.marta.habittracker.data.remote.ProfileRemote
-import com.marta.habittracker.data.remote.SocialRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.ProfileRemote
+import com.marta.habittracker.data.remote.supabase.datasources.ProfileRemoteDataSource
 import com.marta.habittracker.data.repository.AuthRepositoryImpl
 import com.marta.habittracker.data.repository.DailyCheckInRepositoryImpl
 import com.marta.habittracker.data.repository.FriendsRepositoryImpl
@@ -94,7 +94,7 @@ abstract class DataModule {
 
     @Binds
     @Singleton
-    abstract fun bindProfileRemote(impl: SocialRemoteDataSource): ProfileRemote
+    abstract fun bindProfileRemote(impl: ProfileRemoteDataSource): ProfileRemote
 
     @Binds
     @Singleton

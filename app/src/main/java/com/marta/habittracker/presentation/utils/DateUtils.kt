@@ -8,11 +8,6 @@ import java.time.format.TextStyle
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
-fun getCalendarDays(): List<LocalDate> {
-    val today = LocalDate.now()
-    return (-3..3).map { today.plusDays(it.toLong()) }
-}
-
 fun getCurrentWeekDays(today: LocalDate = LocalDate.now()): List<LocalDate> {
     val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     return (0..6).map { monday.plusDays(it.toLong()) }
@@ -30,8 +25,6 @@ fun dayLabel(date: LocalDate): String {
     return date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }
-
-fun isSameDay(a: LocalDate, b: LocalDate): Boolean = a == b
 
 @StringRes
 fun greetingForHour(hour: Int): Int = when {

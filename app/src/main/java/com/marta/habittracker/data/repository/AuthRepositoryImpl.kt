@@ -1,31 +1,25 @@
 package com.marta.habittracker.data.repository
 
 import android.util.Log
+import com.marta.habittracker.core.push.DeviceTokenRegistration
+import com.marta.habittracker.data.mapper.toDomain
+import com.marta.habittracker.data.remote.supabase.datasources.AuthRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.datasources.AuthRemoteException
 import com.marta.habittracker.domain.DataResult
+import com.marta.habittracker.domain.model.User
 import com.marta.habittracker.domain.model.errors.AppError
 import com.marta.habittracker.domain.model.errors.LoginError
 import com.marta.habittracker.domain.model.errors.RegisterError
-import com.marta.habittracker.domain.model.User
-import com.marta.habittracker.domain.model.UserMode
-import com.marta.habittracker.core.auth.AuthLinks
-import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.repository.AuthRepository
 import com.marta.habittracker.domain.repository.HabitRepository
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.exception.AuthRestException
-import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.user.UserInfo
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    private val supabase: SupabaseClient,
+    private val authRemote: AuthRemoteDataSource,
     private val deviceTokenRegistration: DeviceTokenRegistration,
     private val habitRepository: HabitRepository,
 ) : AuthRepository {
@@ -39,17 +33,14 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
     ): DataResult<User, AppError> {
         return try {
-            supabase.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-
-            val currentUser = supabase.auth.currentUserOrNull()
+            val user = authRemote.signIn(email, password)
                 ?: return DataResult.Error(AppError.Common.Unknown)
 
-            DataResult.Success(mapUser(currentUser))
-        } catch (exception: AuthRestException) {
-            DataResult.Error(mapAuthError(exception.error))
+            DataResult.Success(user.toDomain())
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: AuthRemoteException) {
+            DataResult.Error(mapAuthError(exception.errorCode))
         } catch (_: IOException) {
             DataResult.Error(AppError.Common.Network)
         } catch (_: Exception) {
@@ -65,24 +56,18 @@ class AuthRepositoryImpl @Inject constructor(
     ): DataResult<User, AppError> {
         return try {
             Log.d(TAG, "Register started")
-            supabase.auth.signUpWith(Email, redirectUrl = AuthLinks.CONFIRM_URL) {
-                this.email = email
-                this.password = password
-                data = buildJsonObject {
-                    put("username", username)
-                    put("name", name)
-                }
-            }
+            val user = authRemote.signUp(email, password, username, name)
             Log.d(TAG, "Register finished")
 
-            val currentUser = supabase.auth.currentUserOrNull()
-            if (currentUser == null) {
+            if (user == null) {
                 return DataResult.Error(RegisterError.EmailConfirmationRequired)
             }
 
-            DataResult.Success(mapUser(currentUser))
-        } catch (exception: AuthRestException) {
-            DataResult.Error(mapRegisterError(exception.error))
+            DataResult.Success(user.toDomain())
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: AuthRemoteException) {
+            DataResult.Error(mapRegisterError(exception.errorCode))
         } catch (_: IOException) {
             DataResult.Error(AppError.Common.Network)
         } catch (_: Exception) {
@@ -93,15 +78,14 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun requestPasswordReset(email: String): DataResult<Unit, AppError> {
         return try {
             Log.d(TAG, "Password reset request started")
-            supabase.auth.resetPasswordForEmail(
-                email = email,
-                redirectUrl = AuthLinks.RESET_URL,
-            )
+            authRemote.requestPasswordReset(email)
             Log.d(TAG, "Password reset request finished")
             DataResult.Success(Unit)
-        } catch (exception: AuthRestException) {
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: AuthRemoteException) {
             Log.e(TAG, "Password reset request failed: auth error", exception)
-            DataResult.Error(mapAuthError(exception.error))
+            DataResult.Error(mapAuthError(exception.errorCode))
         } catch (exception: IOException) {
             Log.e(TAG, "Password reset request failed: network", exception)
             DataResult.Error(AppError.Common.Network)
@@ -114,14 +98,14 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun updatePassword(newPassword: String): DataResult<Unit, AppError> {
         return try {
             Log.d(TAG, "Password update started")
-            supabase.auth.updateUser {
-                password = newPassword
-            }
+            authRemote.updatePassword(newPassword)
             Log.d(TAG, "Password update finished")
             DataResult.Success(Unit)
-        } catch (exception: AuthRestException) {
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: AuthRemoteException) {
             Log.e(TAG, "Password update failed: auth error", exception)
-            DataResult.Error(mapAuthError(exception.error))
+            DataResult.Error(mapAuthError(exception.errorCode))
         } catch (exception: IOException) {
             Log.e(TAG, "Password update failed: network", exception)
             DataResult.Error(AppError.Common.Network)
@@ -133,9 +117,9 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun isLoggedIn(): Boolean {
         return try {
-            val user = supabase.auth.currentUserOrNull()
-            Log.d(TAG, "isLoggedIn check: ${if (user != null) "YES (${user.email})" else "NO"}")
-            user != null
+            val loggedIn = authRemote.currentUser() != null
+            Log.d(TAG, "isLoggedIn check: ${if (loggedIn) "YES" else "NO"}")
+            loggedIn
         } catch (e: Exception) {
             Log.e(TAG, "Error checking login status", e)
             false
@@ -143,18 +127,11 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCurrentUserId(): String? {
-        return supabase.auth.currentUserOrNull()?.id
-    }
-
-    override suspend fun getCurrentUserDisplayName(): String {
-        val user = supabase.auth.currentUserOrNull() ?: return ""
-        val metadataName = user.userMetadata?.get("name")?.toString()?.trim().orEmpty()
-        if (metadataName.isNotBlank()) return metadataName
-        return user.email?.substringBefore("@").orEmpty()
+        return authRemote.currentUser()?.id
     }
 
     override suspend fun getCurrentUserEmail(): String {
-        return supabase.auth.currentUserOrNull()?.email.orEmpty()
+        return authRemote.currentUser()?.email.orEmpty()
     }
 
     override suspend fun signOut(): DataResult<Unit, AppError> {
@@ -167,7 +144,7 @@ class AuthRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "clearCurrentToken before sign-out failed", e)
             }
-            supabase.auth.signOut()
+            authRemote.signOut()
             try {
                 habitRepository.clearLocal()
             } catch (e: CancellationException) {
@@ -187,17 +164,6 @@ class AuthRepositoryImpl @Inject constructor(
             DataResult.Error(AppError.Common.Unknown)
         }
     }
-
-    private fun mapUser(currentUser: UserInfo): User =
-        User(
-            userId = currentUser.id,
-            name = currentUser.userMetadata?.get("name")?.toString().orEmpty(),
-            nickname = currentUser.email.orEmpty(),
-            followers = 0,
-            following = emptyList(),
-            userMode = UserMode.RegularUser,
-            verified = currentUser.emailConfirmedAt != null,
-        )
 
     private fun mapRegisterError(errorCode: String): AppError = when (errorCode) {
         "user_already_exists" -> RegisterError.EmailAlreadyRegistered

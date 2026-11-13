@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import kotlin.math.roundToInt
-import androidx.core.graphics.toColorInt
 import com.marta.habittracker.presentation.theme.HabitColor1
 import com.marta.habittracker.presentation.theme.HabitColor10
 import com.marta.habittracker.presentation.theme.HabitColor11
@@ -25,10 +24,6 @@ fun Color.toHex(): String {
         (green * 255).roundToInt(),
         (blue * 255).roundToInt(),
     )
-}
-
-fun String.toColor(): Color {
-    return Color(this.toColorInt())
 }
 
 fun parseHabitColor(colorHex: String): Color {

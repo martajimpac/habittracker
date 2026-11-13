@@ -100,43 +100,6 @@ class PreferencesViewModelTest {
     }
 
     @Test
-    fun `upload avatar success updates avatarUrl`() = runTest {
-        val uploaded = FakeProfileRepository.defaultProfile.copy(
-            avatarUrl = "https://cdn.example/avatar.jpg",
-        )
-        val repository = FakeProfileRepository(uploadAvatarResult = DataResult.Success(uploaded))
-        val viewModel = createViewModel(repository)
-        advanceUntilIdle()
-
-        viewModel.onAvatarBytes(byteArrayOf(0xFF.toByte(), 0xD8.toByte()))
-        advanceUntilIdle()
-
-        assertEquals("https://cdn.example/avatar.jpg", viewModel.uiState.value.avatarUrl)
-        assertEquals(1, repository.uploadAvatarCalls)
-        assertFalse(viewModel.uiState.value.isSaving)
-    }
-
-    @Test
-    fun `upload avatar error emits ShowError`() = runTest {
-        val repository = FakeProfileRepository(
-            uploadAvatarResult = DataResult.Error(AppError.Common.Network),
-        )
-        val viewModel = createViewModel(repository)
-        advanceUntilIdle()
-
-        val event = async { viewModel.events.first() }
-        viewModel.onAvatarBytes(byteArrayOf(1, 2, 3))
-        advanceUntilIdle()
-
-        assertEquals(
-            PreferencesEvent.ShowError(R.string.error_no_internet),
-            event.await(),
-        )
-        assertEquals(null, viewModel.uiState.value.avatarUrl)
-        assertFalse(viewModel.uiState.value.isSaving)
-    }
-
-    @Test
     fun `remove photo success nulls avatarUrl`() = runTest {
         val withAvatar = FakeProfileRepository.defaultProfile.copy(
             avatarUrl = "https://cdn.example/avatar.jpg",

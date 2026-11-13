@@ -2,7 +2,7 @@ package com.marta.habittracker.core.push
 
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
-import com.marta.habittracker.data.remote.SocialRemoteDataSource
+import com.marta.habittracker.data.remote.supabase.datasources.DeviceTokenRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -12,13 +12,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Singleton
 class DeviceTokenRegistrar @Inject constructor(
-    private val socialRemoteDataSource: SocialRemoteDataSource,
+    private val deviceTokenRemote: DeviceTokenRemoteDataSource,
 ) : DeviceTokenRegistration {
 
     override suspend fun registerCurrentToken() {
         try {
             val token = fetchFirebaseToken()
-            socialRemoteDataSource.registerDeviceToken(token)
+            deviceTokenRemote.registerDeviceToken(token)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -29,7 +29,7 @@ class DeviceTokenRegistrar @Inject constructor(
     override suspend fun clearCurrentToken() {
         try {
             val token = fetchFirebaseToken()
-            socialRemoteDataSource.deleteDeviceToken(token)
+            deviceTokenRemote.deleteDeviceToken(token)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

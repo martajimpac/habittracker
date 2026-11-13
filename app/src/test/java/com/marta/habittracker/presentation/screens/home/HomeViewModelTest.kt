@@ -8,9 +8,11 @@ import com.marta.habittracker.domain.usecase.FakeHabitRepository
 import com.marta.habittracker.domain.repository.StreakProtectionRepository
 import com.marta.habittracker.domain.usecase.FakeProfileRepository
 import com.marta.habittracker.domain.usecase.ProtectionReconcileResult
+import com.marta.habittracker.domain.widget.AppWidgetRefresher
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -18,6 +20,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -41,7 +45,6 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(
             repository = FakeHabitRepository(),
             authRepository = FakeAuthRepository(
-                displayName = "Auth Name",
                 email = "alex@example.com",
             ),
             profileRepository = FakeProfileRepository(
@@ -70,7 +73,6 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(
             repository = FakeHabitRepository(),
             authRepository = FakeAuthRepository(
-                displayName = "Auth Name",
                 email = "alex@example.com",
             ),
             profileRepository = FakeProfileRepository(
@@ -156,6 +158,26 @@ class HomeViewModelTest {
 
         assertEquals(setOf("habit-1"), viewModel.challengeHabitIds.value)
     }
+
+    @Test
+    fun `is loading until habits are first emitted`() = runTest {
+        val viewModel = HomeViewModel(
+            repository = FakeHabitRepository(),
+            authRepository = FakeAuthRepository(),
+            profileRepository = FakeProfileRepository(),
+            friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
+        )
+        val collector = backgroundScope.launch { viewModel.isLoading.collect {} }
+
+        assertTrue(viewModel.isLoading.value)
+
+        advanceUntilIdle()
+
+        assertFalse(viewModel.isLoading.value)
+        collector.cancel()
+    }
 }
 
 private class FakeStreakProtectionRepository : StreakProtectionRepository {
@@ -166,5 +188,5 @@ private class FakeStreakProtectionRepository : StreakProtectionRepository {
 }
 
 private class FakeAppWidgetRefresher : AppWidgetRefresher {
-    override suspend fun refreshAll() {}
+    override suspend fun refreshTodayWidget(habits: List<com.marta.habittracker.domain.model.Habit>) {}
 }

@@ -26,17 +26,6 @@ class WidgetPreferencesDataSource @Inject constructor(
 ) {
     private val dataStore = context.widgetPreferencesDataStore
 
-    suspend fun setHabitWidgetHabitId(appWidgetId: Int, habitId: String) {
-        dataStore.edit { prefs ->
-            prefs[WidgetPreferencesKeys.habitWidgetHabitId(appWidgetId)] = habitId
-        }
-    }
-
-    suspend fun getHabitWidgetHabitId(appWidgetId: Int): String? =
-        dataStore.data
-            .map { prefs -> prefs[WidgetPreferencesKeys.habitWidgetHabitId(appWidgetId)] }
-            .first()
-
     suspend fun setChallengeWidget(
         appWidgetId: Int,
         challengeId: String,

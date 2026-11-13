@@ -185,49 +185,52 @@ internal fun WidgetHabitRow(
 ) {
     val rowModifier = GlanceModifier
         .fillMaxWidth()
-        .padding(bottom = 6.dp)
         .cornerRadius(16.dp)
         .background(ColorProvider(HabitField))
         .padding(horizontal = 10.dp, vertical = 8.dp)
-    Row(
-        modifier = if (onClick == null) rowModifier else rowModifier.clickable(onClick),
-        verticalAlignment = Alignment.Vertical.CenterVertically,
-    ) {
-        Box(
-            modifier = GlanceModifier
-                .size(32.dp)
-                .cornerRadius(10.dp)
-                .background(ColorProvider(accent.copy(alpha = 0.16f))),
-            contentAlignment = Alignment.Center,
+    // Glance has no margins and merges every padding on a view into one, so the gap between
+    // rows must live on an outer container, outside the row's background.
+    Box(modifier = GlanceModifier.fillMaxWidth().padding(bottom = 8.dp)) {
+        Row(
+            modifier = if (onClick == null) rowModifier else rowModifier.clickable(onClick),
+            verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {
-            Image(
-                provider = ImageProvider(habitIconRes(iconKey)),
-                contentDescription = null,
-                modifier = GlanceModifier.size(18.dp),
-                colorFilter = ColorFilter.tint(ColorProvider(accent)),
-            )
-        }
-        Column(
-            modifier = GlanceModifier.defaultWeight().padding(start = 8.dp),
-        ) {
-            Text(
-                text = name,
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    color = ColorProvider(if (completed) HabitOnSurfaceVariant else HabitOnSurface),
-                    textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
-                ),
-                maxLines = 1,
-            )
-            if (!detail.isNullOrBlank()) {
-                Text(
-                    text = detail,
-                    style = TextStyle(color = ColorProvider(accent)),
-                    maxLines = 1,
+            Box(
+                modifier = GlanceModifier
+                    .size(32.dp)
+                    .cornerRadius(10.dp)
+                    .background(ColorProvider(accent.copy(alpha = 0.16f))),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    provider = ImageProvider(habitIconRes(iconKey)),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(18.dp),
+                    colorFilter = ColorFilter.tint(ColorProvider(accent)),
                 )
             }
+            Column(
+                modifier = GlanceModifier.defaultWeight().padding(start = 8.dp),
+            ) {
+                Text(
+                    text = name,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = ColorProvider(if (completed) HabitOnSurfaceVariant else HabitOnSurface),
+                        textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
+                    ),
+                    maxLines = 1,
+                )
+                if (!detail.isNullOrBlank()) {
+                    Text(
+                        text = detail,
+                        style = TextStyle(color = ColorProvider(accent)),
+                        maxLines = 1,
+                    )
+                }
+            }
+            trailing()
         }
-        trailing()
     }
 }
 
@@ -237,15 +240,23 @@ internal fun WidgetCheck(
     completed: Boolean,
     accent: Color,
     onToggle: Action? = null,
+    loading: Boolean = false,
 ) {
+    // List rows are RemoteViews the launcher recycles between positions. Every row must build
+    // the exact same view tree with the same modifiers; only values may change. Adding or
+    // removing a child (tick only when done, "…" instead of the circle) lets a recycled view
+    // keep another row's background/tint/clip, which showed up as square or wrong-color marks.
+    val color = when {
+        loading -> HabitOutline.copy(alpha = 0.35f)
+        completed -> accent
+        else -> HabitOutline.copy(alpha = 0.35f)
+    }
     val mark = GlanceModifier
         .size(24.dp)
-        .cornerRadius(12.dp)
+        // Oval drawable instead of cornerRadius: see widget_check_circle.xml.
         .background(
-            ColorProvider(
-                if (completed) accent
-                else HabitOutline.copy(alpha = 0.35f)
-            )
+            imageProvider = ImageProvider(R.drawable.widget_check_circle),
+            colorFilter = ColorFilter.tint(ColorProvider(color)),
         )
         .let { base ->
             if (onToggle == null) base else base.clickable(onToggle)
@@ -255,16 +266,18 @@ internal fun WidgetCheck(
         modifier = mark,
         contentAlignment = Alignment.Center,
     ) {
-        if (completed) {
-            Text(
-                text = "✓",
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorProvider(HabitCream),
-                ),
-            )
-        }
+        Text(
+            text = when {
+                loading -> "…"
+                completed -> "✓"
+                else -> ""
+            },
+            style = TextStyle(
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorProvider(if (loading) HabitOnSurfaceVariant else HabitCream),
+            ),
+        )
     }
 }
 

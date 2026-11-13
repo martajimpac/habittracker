@@ -126,21 +126,6 @@ class ComputeChallengeProgress @Inject constructor() {
         challengeDaysLeft(startsAt, endsAt, today)
 }
 
-/** Consecutive completed calendar days ending on [today]. Habit schedule streaks use [calculateScheduledStreak]. */
-fun calculateHabitStreak(records: List<HabitRecord>, today: LocalDate): Int {
-    val completedDates = records
-        .filter { it.isCompleted }
-        .map { it.date }
-        .toSet()
-    var streak = 0
-    var date = today
-    while (completedDates.contains(date)) {
-        streak++
-        date = date.minus(DatePeriod(days = 1))
-    }
-    return streak
-}
-
 private fun Instant.toUtcLocalDate(): LocalDate =
     LocalDate.parse(atZone(ZoneOffset.UTC).toLocalDate().toString())
 

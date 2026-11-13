@@ -16,7 +16,6 @@ import com.marta.habittracker.core.push.DeviceTokenRegistration
 import com.marta.habittracker.domain.push.ChallengeDeclineNotifier
 import com.marta.habittracker.domain.push.ChallengePushIds
 import com.marta.habittracker.domain.push.FriendPushIds
-import com.marta.habittracker.domain.widget.AppWidgetRefresher
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -222,7 +221,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     interface DeviceTokenRegistrarEntryPoint {
         fun deviceTokenRegistration(): DeviceTokenRegistration
         fun challengeDeclineNotifier(): ChallengeDeclineNotifier
-        fun appWidgetRefresher(): AppWidgetRefresher
     }
 
     companion object {

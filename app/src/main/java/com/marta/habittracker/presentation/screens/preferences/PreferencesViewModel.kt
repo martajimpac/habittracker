@@ -114,14 +114,6 @@ class PreferencesViewModel @Inject constructor(
         }
     }
 
-    fun onAvatarBytes(jpegBytes: ByteArray) {
-        if (_uiState.value.isSaving) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            applyAvatarResult(profileRepository.uploadAvatar(jpegBytes))
-        }
-    }
-
     fun onRemovePhoto() {
         if (_uiState.value.isSaving) return
         viewModelScope.launch {
