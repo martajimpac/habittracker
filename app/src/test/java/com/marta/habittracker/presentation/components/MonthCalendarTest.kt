@@ -1,6 +1,8 @@
 package com.marta.habittracker.presentation.components
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -34,5 +36,29 @@ class MonthCalendarTest {
             "Octubre 2026",
             monthCalendarTitle(YearMonth.of(2026, 10), Locale.forLanguageTag("es")),
         )
+    }
+
+    @Test
+    fun `past days and today are editable, future days are not`() {
+        val today = LocalDate.of(2026, 11, 13)
+        val month = YearMonth.of(2026, 11)
+
+        assertTrue(isMonthCalendarDayEditable(LocalDate.of(2026, 11, 1), month, today))
+        assertTrue(isMonthCalendarDayEditable(today, month, today))
+        assertFalse(isMonthCalendarDayEditable(LocalDate.of(2026, 11, 14), month, today))
+    }
+
+    @Test
+    fun `days in earlier months are never locked`() {
+        val today = LocalDate.of(2026, 11, 13)
+
+        assertTrue(isMonthCalendarDayEditable(LocalDate.of(2025, 2, 3), YearMonth.of(2025, 2), today))
+    }
+
+    @Test
+    fun `leading and trailing days of another month are not editable from this month`() {
+        val today = LocalDate.of(2026, 11, 13)
+
+        assertFalse(isMonthCalendarDayEditable(LocalDate.of(2026, 9, 30), YearMonth.of(2026, 10), today))
     }
 }

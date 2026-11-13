@@ -35,4 +35,10 @@ data class ChallengeCard(
     val habitColorHex: String,
     val myCompletedDates: Set<LocalDate> = emptySet(),
     val theirCompletedDates: Set<LocalDate> = emptySet(),
+    /** Current user's profile, when it could be loaded. */
+    val me: Profile? = null,
+    /** Absolute scores on a shared scale: [myScore] / [scoreTotal] and [theirScore] / [scoreTotal]. */
+    val myScore: Int = 0,
+    val theirScore: Int = 0,
+    val scoreTotal: Int = 0,
 )
