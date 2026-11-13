@@ -118,6 +118,14 @@
     <string name="friends_challenge_tie">Tie</string>
     <string name="friends_challenge_leader">Who is ahead</string>
     <string name="friends_days_left">%1$d days left</string>
+    <string name="friends_challenge_vs">VS</string>
+    <string name="friends_challenge_score">%1$d/%2$d</string>
+    <string name="friends_challenge_score_description">%1$s: %2$d of %3$d</string>
+    <string name="friends_challenge_last_day">Last day</string>
+    <plurals name="friends_days_remaining">
+        <item quantity="one">%1$d day remaining</item>
+        <item quantity="other">%1$d days remaining</item>
+    </plurals>
     <string name="friends_username">%1$s</string>
     <string name="friends_best_streak">Best streak: %1$d days</string>
     <string name="friends_public_habits">%1$d public habits</string>
@@ -255,6 +263,10 @@
     <string name="detail_completed">Completed</string>
     <string name="detail_calendar_previous_month">Previous month</string>
     <string name="detail_calendar_next_month">Next month</string>
+    <string name="detail_calendar_hint">Tap a past day to mark it as done or not done.</string>
+    <string name="detail_calendar_day_done">%1$s, done</string>
+    <string name="detail_calendar_day_not_done">%1$s, not done</string>
+    <string name="detail_calendar_toggle_action">Toggle completion</string>
     <string name="detail_edit_habit">Edit habit</string>
     <string name="detail_delete_habit">Delete habit</string>
     <string name="detail_delete_title">Delete this habit?</string>

@@ -36,7 +36,6 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -51,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -65,8 +63,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
-import com.marta.habittracker.domain.model.ChallengeCard
-import com.marta.habittracker.domain.model.challengeLeaderLabel
 import com.marta.habittracker.domain.model.ChallengeCriteria
 import com.marta.habittracker.domain.model.ChallengeHabitDraft
 import com.marta.habittracker.domain.model.HabitSchedule
@@ -75,6 +71,7 @@ import com.marta.habittracker.domain.model.FriendListItem
 import com.marta.habittracker.domain.model.PendingFriendRequest
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.Profile
+import com.marta.habittracker.presentation.components.ChallengeVersusCard
 import com.marta.habittracker.presentation.components.DaysPerWeekStepper
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
@@ -246,15 +243,25 @@ private fun FriendsBody(
                     FriendsInlineEmpty(R.string.friends_empty_challenges)
                 }
             }
-            if (uiState.challenges.isNotEmpty()) {
+            val singleChallenge = uiState.challenges.singleOrNull()
+            if (singleChallenge != null) {
+                ChallengeVersusCard(
+                    card = singleChallenge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    onClick = { onOpenChallenge(singleChallenge.challenge.id) },
+                )
+            } else if (uiState.challenges.isNotEmpty()) {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(uiState.challenges, key = { it.challenge.id }) { card ->
-                        ChallengeCard(
+                        ChallengeVersusCard(
                             card = card,
+                            modifier = Modifier.fillParentMaxWidth(0.82f),
                             onClick = { onOpenChallenge(card.challenge.id) },
                         )
                     }
@@ -298,101 +305,6 @@ private fun FriendsBody(
             }
         }
     }
-}
-
-@Composable
-private fun ChallengeCard(
-    card: ChallengeCard,
-    onClick: () -> Unit = {},
-) {
-    val accent = card.habitColorHex.toComposeColor()
-    Column(
-        modifier = Modifier
-            .width(220.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(accent.copy(alpha = 0.09f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                HabitLineIcon(card.habitIcon, tint = accent, size = 22.dp)
-            }
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = card.habitName,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(R.drawable.ic_trophy),
-                contentDescription = stringResource(R.string.friends_challenge_leader),
-                modifier = Modifier.size(16.dp),
-                tint = accent,
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = challengeLeaderLabel(
-                    myProgress = card.myProgress,
-                    theirProgress = card.theirProgress,
-                    meLabel = stringResource(R.string.friends_me),
-                    opponentName = card.opponent.displayName,
-                    tieLabel = stringResource(R.string.friends_challenge_tie),
-                ),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelLarge,
-                color = accent,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        ChallengeProgress(stringResource(R.string.friends_me), card.myProgress, accent)
-        Spacer(Modifier.height(8.dp))
-        ChallengeProgress(card.opponent.displayName, card.theirProgress, accent)
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.friends_days_left, card.daysLeft),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@Composable
-private fun ChallengeProgress(label: String, progress: Int, accent: Color) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-    LinearProgressIndicator(
-        progress = { progress.coerceIn(0, 100) / 100f },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp)
-            .clip(CircleShape),
-        color = accent,
-        trackColor = HabitOutline.copy(alpha = 0.35f),
-        drawStopIndicator = {},
-    )
 }
 
 @Composable

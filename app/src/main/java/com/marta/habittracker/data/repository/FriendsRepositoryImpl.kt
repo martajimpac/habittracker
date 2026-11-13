@@ -106,7 +106,7 @@ class FriendsRepositoryImpl @Inject constructor(
             val opponentIds = challenges.map { challenge ->
                 if (challenge.challengerId == userId) challenge.challengedId else challenge.challengerId
             }.distinct()
-            val profilesById = profileRemote.fetchProfilesByIds(opponentIds)
+            val profilesById = profileRemote.fetchProfilesByIds((opponentIds + userId).distinct())
                 .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
             val habitIds = challenges.flatMap {
                 listOfNotNull(it.challengerHabitId, it.challengedHabitId)
@@ -395,7 +395,7 @@ class FriendsRepositoryImpl @Inject constructor(
         } else {
             challenge.challengerId
         }
-        val profilesById = profileRemote.fetchProfilesByIds(listOf(opponentId))
+        val profilesById = profileRemote.fetchProfilesByIds(listOf(opponentId, userId))
             .associate { with(socialMapper) { it.toDomain() }.let { profile -> profile.id to profile } }
         val habitIds = listOfNotNull(challenge.challengerHabitId, challenge.challengedHabitId)
         val habits = mapHabits(
@@ -426,6 +426,34 @@ class FriendsRepositoryImpl @Inject constructor(
         if (!isChallenger && challenge.status != ChallengeStatus.Pending && myHabit == null) {
             return null
         }
+
+        val myTarget = myHabit?.weeklyTarget() ?: definedHabit.weeklyTarget()
+        val theirTarget = theirHabit?.weeklyTarget() ?: definedHabit.weeklyTarget()
+        val myScore = computeChallengeProgress.score(
+            challenge.criteria,
+            challenge.startsAt,
+            challenge.endsAt,
+            myHabit?.records.orEmpty(),
+            today,
+            daysPerWeek = myTarget,
+        )
+        val theirScore = computeChallengeProgress.score(
+            challenge.criteria,
+            challenge.startsAt,
+            challenge.endsAt,
+            theirHabit?.records.orEmpty(),
+            today,
+            daysPerWeek = theirTarget,
+        )
+        // Both bars share one scale so they can be compared at a glance.
+        val scoreTotal = computeChallengeProgress.score(
+            challenge.criteria,
+            challenge.startsAt,
+            challenge.endsAt,
+            emptyList(),
+            today,
+            daysPerWeek = definedHabit.weeklyTarget(),
+        ).total
 
         return ChallengeCard(
             challenge = challenge,
@@ -464,6 +492,10 @@ class FriendsRepositoryImpl @Inject constructor(
                 challenge.startsAt,
                 challenge.endsAt,
             ),
+            me = profilesById[userId],
+            myScore = myScore.done.coerceAtMost(scoreTotal),
+            theirScore = theirScore.done.coerceAtMost(scoreTotal),
+            scoreTotal = scoreTotal,
         )
     }
 

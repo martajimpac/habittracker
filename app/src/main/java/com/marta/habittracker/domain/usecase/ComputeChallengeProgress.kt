@@ -94,6 +94,61 @@ fun computeChallengeProgress(
 }
 
 /**
+ * Absolute challenge score: [done] out of [total], on a scale shared by both participants.
+ *
+ * - CompletionPct / AllDays: [done] is the quota-capped completed days from the start through
+ *   `min(today, lastChallengeDay)`; [total] is the quota-capped days of the whole window.
+ * - Streak: [done] is the current in-window streak; [total] is the challenge length in days.
+ *
+ * Ordering by [done] matches ordering by [computeChallengeProgress] for the same window and quota.
+ */
+data class ChallengeScore(
+    val done: Int,
+    val total: Int,
+)
+
+fun computeChallengeScore(
+    criteria: ChallengeCriteria,
+    startsAt: Instant,
+    endsAt: Instant,
+    records: List<HabitRecord>,
+    today: LocalDate,
+    daysPerWeek: Int = 7,
+): ChallengeScore {
+    val startDate = startsAt.toUtcLocalDate()
+    val lastChallengeDay = endsAt.toUtcLocalDate().minus(DatePeriod(days = 1))
+    val totalChallengeDays = inclusiveDaysBetween(startDate, lastChallengeDay)
+    if (totalChallengeDays <= 0) return ChallengeScore(done = 0, total = 0)
+
+    val completedDates = records
+        .filter { it.isCompleted && it.date in startDate..lastChallengeDay }
+        .map { it.date }
+        .toSet()
+    val target = daysPerWeek.coerceIn(1, 7)
+
+    return when (criteria) {
+        ChallengeCriteria.Streak -> ChallengeScore(
+            done = if (today < startDate) {
+                0
+            } else {
+                currentStreakWithinWindow(completedDates, today, startDate, lastChallengeDay)
+            },
+            total = totalChallengeDays,
+        )
+
+        ChallengeCriteria.CompletionPct, ChallengeCriteria.AllDays -> {
+            val (_, expected) = quotaTotals(startDate, lastChallengeDay, completedDates, target)
+            val done = if (today < startDate) {
+                0
+            } else {
+                quotaTotals(startDate, minOf(today, lastChallengeDay), completedDates, target).first
+            }
+            ChallengeScore(done = done.coerceAtMost(expected), total = expected)
+        }
+    }
+}
+
+/**
  * Remaining inclusive challenge days strictly after [today], until [endsAt] (exclusive).
  *
  * Example: `endsAt = Jul 8 00:00Z` (last day Jul 7), `today = Jul 4` → 3 days left (Jul 5–7).
@@ -121,6 +176,15 @@ class ComputeChallengeProgress @Inject constructor() {
         today: LocalDate,
         daysPerWeek: Int = 7,
     ): Int = computeChallengeProgress(criteria, startsAt, endsAt, records, today, daysPerWeek)
+
+    fun score(
+        criteria: ChallengeCriteria,
+        startsAt: Instant,
+        endsAt: Instant,
+        records: List<HabitRecord>,
+        today: LocalDate,
+        daysPerWeek: Int = 7,
+    ): ChallengeScore = computeChallengeScore(criteria, startsAt, endsAt, records, today, daysPerWeek)
 
     fun daysLeft(startsAt: Instant, endsAt: Instant, today: LocalDate): Int =
         challengeDaysLeft(startsAt, endsAt, today)
