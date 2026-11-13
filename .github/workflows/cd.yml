@@ -33,6 +33,8 @@ jobs:
       # Configurar Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       # Dar permisos de ejecución
       - name: Grant execute permission

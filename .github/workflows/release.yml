@@ -35,6 +35,8 @@ jobs:
       # 4. Configurar Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       # 5. Restaurar Keystore desde GitHub Secrets
       - name: Restore Android Keystore
