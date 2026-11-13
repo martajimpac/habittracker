@@ -1,0 +1,378 @@
+---
+name: mobiai-mobile-debugging
+description: "You MUST use this before proposing any fix for a mobile bug, test failure, crash, or unexpected behavior — AND when re-investigating a bug whose previous fix didn't work (user shares a commit SHA and questions whether it resolves the bug). Walks root-cause analysis as phased evidence gathering. For small fixes with clear evidence, runs autonomously and returns the root cause to the caller. For complex or uncertain cases, gates at known-vs-assumed and root-cause steps."
+license: MIT
+compatibility: [claude-code, cursor, copilot, codex, gemini]
+platforms: [android, ios, kmp, flutter, react-native]
+---
+
+# Systematic Mobile Debugging
+
+Random fixes waste time and create new bugs. Quick patches mask underlying issues.
+
+**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.
+
+<HARD-GATE>
+You MUST NOT propose any fix, write any code, edit any production file, refactor any surrounding code, or invoke `mobiai-mobile-tdd` until you have (a) gathered evidence, (b) separated what is known from what is assumed, (c) formed and verified a hypothesis, and (d) stated the root cause.
+
+Whether you also need **explicit user confirmation** at steps (b) and (d) depends on the scope classification inherited from the caller (or declared at Pre-flight below). Fast path: no confirmation gate, proceed autonomously. Gated path: explicit confirmation required at both steps.
+</HARD-GATE>
+
+## Anti-Pattern: "It's Obviously X"
+
+The most common failure mode is pattern-matching the symptom to a familiar-looking cause and proposing a fix before the evidence supports it — especially when a sub-agent or exploration returns a confident diagnosis that was never cross-checked against the code. Threading, null, lifecycle, cache, "the backend changed" — all tempting guesses. Every bug goes through the phased flow.
+
+The scope classification only changes **whether you wait for user confirmation**, not **whether you do the analysis**. Fast path still gathers evidence, splits known vs. assumed, forms and verifies a hypothesis, and states the root cause — it just returns that result to the caller instead of pausing for approval.
+
+## The Iron Law
+
+```
+NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
+```
+
+## Pre-flight: Scope Classification
+
+This skill inherits the scope from its caller (typically `mobiai-fix-issue`). If invoked standalone, classify at the start:
+
+**Fast path** — work autonomously through all phases; return the verified root cause to the caller at Phase 6:
+- Clear symptom with obvious evidence (stack trace points at a specific line, log message is explicit)
+- Single root cause category (not contradictory evidence)
+- No architectural question, no cross-module mystery
+
+**Gated path** — stop and wait for user confirmation at Phase 2 and Phase 5:
+- Contradictory evidence or multiple plausible causes
+- Cross-module / cross-platform investigation required
+- Root cause involves architectural choices (e.g., "should this be on the main thread?")
+- Previous fix attempts failed
+
+In doubt → gated path.
+
+## Checklist
+
+You MUST create a task for each of these items and complete them in order. Do not skip phases. Do not merge phases.
+
+1. **Gather evidence** — logs, stack traces, reproduction steps, affected platforms, recent changes
+2. **State known vs. assumed** — label each fact as observed or inferred (gated path: present to the user and wait for confirmation; fast path: record the split internally and proceed)
+3. **Form a hypothesis** — a single, specific, testable theory about the root cause
+4. **Verify the hypothesis** — against code and evidence, not against intuition
+5. **Present the root cause** (gated path: wait for user confirmation before Phase 6; fast path: state the root cause and proceed to Phase 6)
+6. **Hand off to implementation** — return control to `mobiai-fix-issue` if the broader pipeline is active, or invoke `mobiai-mobile-tdd`
+
+## When to Use
+
+Use for ANY mobile technical issue:
+- Test failures
+- Bugs in production
+- Unexpected behavior
+- Performance problems
+- Build failures
+- Crashes
+
+**Use this ESPECIALLY when:**
+- Under time pressure (emergencies make guessing tempting)
+- "Just one quick fix" seems obvious
+- You've already tried multiple fixes
+- A previous fix didn't work
+- A sub-agent or exploration returned a confident diagnosis
+
+**Don't skip when:**
+- Issue seems simple (simple bugs have root causes too)
+- You're in a hurry (rushing guarantees rework)
+
+## Pre-flight: check the Brain for overdue debt
+
+Standalone invocations only — **skip this section when called from `mobiai-fix-issue`**, which already runs its own pre-flight review and would otherwise double-prompt.
+
+If `<repo>/.mobiai/brain/config.json` exists, do a quick review pass before forming hypotheses. The issue you're investigating might be related to a known workaround already logged as temporary debt; checking up front prevents re-deriving an answer that's already in the brain.
+
+**Preferred — MCP tool** (when `mobiai-brain` MCP server is registered):
+
+Invoke `mobile_review` with default args. From the returned `overdue` list, focus on entries whose `platform` matches the project's platform and whose `area` overlaps with the symptoms (component, module, feature where the bug shows up). Run `mobile_scan` first if you don't already know the project's platform.
+
+**Fallback — CLI**:
+
+```bash
+mobiai brain review --no-fail
+```
+
+If 1+ overdue entries match, **mention them to the user** before Phase 1:
+
+> "Heads up — there are N overdue temporary workaround(s) in <platform>/<area> that may relate to what you're seeing: <title>. I'll proceed with the investigation; let me know if you want to look at those first."
+
+Then continue with Phase 1. Don't pause unless asked. Skip silently when:
+
+- The brain isn't initialized.
+- No overdue entries match the area / platform of the issue.
+
+## Pre-flight: check the Graph for code structure
+
+Standalone invocations only — **skip this section when called from `mobiai-fix-issue`**, which already runs its own Graph pre-flight at Phase 1.
+
+The Graph indexes Kotlin/Swift symbols and can rank files by relevance to a symptom — useful for Phase 1 (Gather Evidence) and Phase 3 (Form a Hypothesis). Brain says "what's known about this area"; Graph says "where the affected code lives today".
+
+**If `<repo>/.mobiai/graph/index.json` exists**:
+
+```bash
+# Freshness — if "hace Xd" with X ≥ 1, suggest refresh (don't auto-run):
+mobiai graph status
+
+# Locate relevant files from the symptom (top results = where to look first):
+mobiai graph context "<one-line symptom or bug title>"
+
+# If a symbol appears in the stack trace, find its callers:
+mobiai graph callers <SymbolFromStackTrace>
+```
+
+If the index is ≥1 day old, mention it to the user before continuing:
+
+> "El índice del Graph es de hace Xd. Si querés resultados frescos, corré `mobiai graph init`."
+
+Don't run `init` autonomously — let the user decide.
+
+**If `.mobiai/graph/index.json` does not exist** and the project has `.kt` or `.swift` files:
+
+> "No veo el índice del Graph. Generalo con `mobiai graph init` y vuelvo a buscar — sin él tengo que grep a ciegas y leer más archivos de los necesarios."
+
+Don't run `init` autonomously.
+
+**Skip silently when**:
+
+- The project has no Kotlin/Swift files (Flutter-only or RN-only without native code).
+- The bug is purely in resources, config, or build files (Graph won't help).
+
+## Phase 1: Gather Evidence
+
+Before forming any opinion, collect the raw material.
+
+1. **Read error messages carefully**
+   - Don't skip past errors or warnings
+   - Read stack traces completely
+   - Note line numbers, file paths, error codes
+
+2. **Confirm reproducibility**
+   - Can you trigger it reliably?
+   - What are the exact steps?
+   - If not reproducible → gather more data, don't guess
+
+   | Platform | How to reproduce |
+   |----------|-----------------|
+   | **Android** | `adb logcat` for logs, reproduce on emulator, check specific API level |
+   | **iOS** | Xcode console or `simctl` logs, reproduce on simulator, check iOS version |
+   | **Flutter** | `flutter run` with `--verbose`, check both platforms |
+   | **React Native** | Metro console, `adb logcat` / Xcode console, check native bridge errors |
+   | **KMP** | Reproduce on each target platform; check whether the issue is in shared code or platform-specific `actual` implementations |
+
+3. **Check recent changes & find the breaking commit**
+   - What changed that could cause this?
+   - `git log --oneline -20 -- <affected-file>` — commits that touched the affected file
+   - `git blame -L <line>,<line> <file>` — which commit last changed the specific failing line
+   - `git log --all --grep="<keyword>"` — past related fixes that might show the introduction of a conflicting pattern
+   - **If this is a regression**: identify the commit that introduced the bug. Record its SHA and subject. Use `git bisect` when the history is dense or the search space is large. The breaking commit goes into the PR description (it helps the reviewer assess scope and decide backport priority).
+   - **If the bug has always existed** (not a regression): state that explicitly. "Always-existed, not a regression" is valid and important information for the reviewer — don't leave it ambiguous.
+   - New dependencies, config changes, Gradle/SPM/pubspec bumps can themselves be the breaking commit.
+
+4. **Collect concrete evidence**
+
+   Add diagnostic instrumentation at component boundaries:
+
+   | Platform | Instrumentation |
+   |----------|----------------|
+   | **Android** | `Log.d(TAG, "value=$value")` at ViewModel, Repository, DAO boundaries |
+   | **iOS** | `print("value=\(value)")` or `os_log` at ViewModel, Service, Store boundaries |
+   | **Flutter** | `debugPrint("value=$value")` at BLoC/Provider, Repository, API boundaries |
+   | **React Native** | `console.log("value=", value)` at component, hook, API boundaries |
+   | **KMP** | Log at the shared/expect boundary AND at each `actual` implementation |
+
+5. **Identify affected platforms precisely**
+   - Does it happen on Android only? iOS only? Both? Specific OS versions? Specific devices?
+   - Precise platform scope often points directly at the root cause category.
+
+## Phase 2: State Known vs. Assumed
+
+Separate what you actually observed from what you are inferring. List in two columns:
+
+- **Known** (direct evidence): log lines seen, stack traces captured, reproduction confirmed, git diff contents
+- **Assumed** (not yet verified): "probably caused by X", "likely a threading issue", "the backend probably returned null"
+
+Every item in "Assumed" is a candidate to either verify (moving it to Known) or to drop.
+
+- **Fast path**: record the split internally, proceed directly to Phase 3.
+- **Gated path**: present the split to the user and wait for confirmation before Phase 3. If the user corrects an assumption, update the list.
+
+## Phase 3: Form a Hypothesis
+
+One hypothesis at a time, stated specifically. Not "it's a race condition" — rather "the ViewModel's `observeUser()` coroutine is cancelled by the Activity being recreated on rotation, so the subsequent emission is dropped".
+
+Check common mobile bug categories to frame the hypothesis:
+
+**Lifecycle bugs:**
+- Android: Activity/Fragment recreated after rotation? ViewModel cleared after process death? `onSaveInstanceState` missing?
+- iOS: View controller deallocated? `viewWillAppear` vs `viewDidLoad` timing? SceneDelegate lifecycle?
+- Flutter: Widget rebuilt unexpectedly? State lost on navigation? `dispose()` not called?
+- React Native: Component unmounted during async operation? Navigation state stale?
+
+**Threading bugs:**
+- Android: Accessing UI from background thread? Coroutine on wrong dispatcher?
+- iOS: UI update not on main thread? Data race in concurrent queue? `@MainActor` missing?
+- Flutter: Isolate communication issue? `setState` after dispose?
+- React Native: Native module callback on wrong thread?
+
+**Memory bugs:**
+- Android: Context leak in singleton? Inner class holding Activity reference?
+- iOS: Retain cycle in closure? Missing `[weak self]`?
+- Flutter: Stream subscription not cancelled? Controller not disposed?
+- React Native: Event listener not removed in cleanup?
+
+**Data bugs:**
+- SQL/Room/CoreData: Wrong query? Migration missing? Schema mismatch?
+- SharedPreferences/UserDefaults: Wrong key? Type mismatch?
+- API: Response format changed? Null field not handled?
+
+**KMP-specific:**
+- Divergence between `actual` implementations across platforms
+- Freezing/threading models in legacy Kotlin/Native
+- Serialization differences between JVM and Native
+
+State the single hypothesis in the form: "I think X is the root cause because Y". Be specific.
+
+## Phase 4: Verify the Hypothesis
+
+Verify against code and evidence, not against intuition.
+
+1. **Find working examples**
+   - Locate similar code in the same codebase that works
+   - What is different between the working and broken paths?
+   - List every difference, however small.
+
+2. **Test minimally**
+   - Make the SMALLEST possible change that would confirm or refute the hypothesis (a log line, a breakpoint, a one-line guard used only as a probe — not as a fix)
+   - One variable at a time
+
+3. **Read the code path carefully**
+   - Trace from the entry point down to where the bad value appears
+   - Fix at the source, not at the symptom
+   - If the hypothesis contradicts the code, the hypothesis is wrong — do not bend the evidence to match
+
+4. **If verification fails**
+   - Discard the hypothesis
+   - Return to Phase 3 and form a new one
+   - Do NOT stack fixes on top of an unverified theory
+
+## Phase 5: Present Root Cause
+
+Once the hypothesis is verified, state:
+
+1. **The root cause** — one or two sentences, stated plainly
+2. **The evidence that proves it** — specific log lines, specific code locations, specific reproduction results
+3. **Why the symptom follows from the cause** — the causal chain from root cause to observed behavior
+4. **What is still uncertain**, if anything
+
+- **Fast path**: state the root cause concisely and proceed to Phase 6 without pausing. If you discover during Phase 4 that the evidence is contradictory or the hypothesis doesn't hold cleanly, upgrade to gated path before presenting.
+- **Gated path**: ask explicitly:
+
+  > "This is the root cause I've identified and verified. Do you confirm this is correct before I propose a fix?"
+
+  Wait for the user's explicit confirmation. If the user pushes back or points to evidence you missed, return to Phase 3 or Phase 4 as appropriate.
+
+## Phase 6: Hand Off to Implementation
+
+The fix itself is not proposed inside this skill. `mobiai-mobile-debugging` ends when the root cause is stated (fast path) or confirmed (gated path).
+
+- If invoked from `mobiai-fix-issue`, return control — `mobiai-fix-issue`'s Phase 4 (Propose the Fix) takes over with its own gating rules. **Skip the Brain hook below** — `mobiai-fix-issue` runs its own save proposal at the end of Phase 6 (verification). Don't double-prompt.
+- Otherwise, **invoke skill `mobiai-mobile-tdd`** to write the failing test first, then the implementation.
+
+### Optional: capture root cause in MobiAI Brain
+
+Standalone invocations only (skip when called from `mobiai-fix-issue`). After the root cause is confirmed, check whether `<repo>/.mobiai/brain/config.json` exists. If it does NOT, skip silently.
+
+If it does, judge whether the cause is worth remembering. Save when:
+
+- It's a platform gotcha that's likely to bite again (lifecycle timing, threading, build-config interaction).
+- The investigation surfaced a non-obvious causal chain that took real effort to find.
+- A workaround was identified that the project will keep using until a future cleanup.
+
+Skip when the cause is trivial (typo, obvious null, one-line bug with no broader pattern).
+
+When worth saving, **propose** the save to the user (one-line confirmation). Never invoke silently. Use `status: active` when the root cause is documented but no fix is applied yet (the entry serves as "we understood this, future agents should know"), or `status: temporary` with `review_after` when a workaround was applied that needs revisiting.
+
+**Preferred — MCP tool** (if your client has the `mobiai-brain` MCP server registered, you'll see this tool in your toolbox):
+
+Invoke `mobile_save_bugfix` with:
+
+- `title`: short, e.g. `"Compose recomposition loop in LazyColumn with derivedStateOf"`
+- `platform`: `android | ios | shared | kmp | flutter | react-native`
+- `area`: free-form, e.g. `"compose" | "coroutines" | "gradle"`
+- `status`: `active | temporary`
+- `review_after`: `"YYYY-MM-DD"` (only when status is temporary)
+- `files`: array of repo-relative file paths
+- `body`: Markdown with `### Symptom` / `### Root Cause` / `### Investigation Notes` / `### Resolution`
+
+**Fallback — CLI** (if MCP isn't configured):
+
+```bash
+mobiai brain save bugfix \
+  --title "<short, e.g. 'Compose recomposition loop in LazyColumn with derivedStateOf'>" \
+  --platform <android|ios|shared|kmp|flutter|react-native> \
+  --area <free-form, e.g. compose | coroutines | gradle> \
+  --status <active|temporary> \
+  --review-after <YYYY-MM-DD if temporary> \
+  --files "<file1>,<file2>" \
+  --body "### Symptom
+What the user observed.
+
+### Root Cause
+The actual cause, in plain language.
+
+### Investigation Notes
+The evidence that confirmed it — log lines, commits, behavior on different builds.
+
+### Resolution
+What was done about it (or 'documented only, no fix applied yet')."
+```
+
+The body fields are suggestions, not a rigid template. Use the structure that fits what you found.
+
+## Red Flags — STOP and Follow Process
+
+If you catch yourself thinking:
+- "Quick fix for now, investigate later"
+- "Just try changing X and see if it works"
+- "Add multiple changes, run tests"
+- "It's probably a threading issue" (without evidence)
+- "I'll add a null check here" (without knowing why it's null)
+- "Works on my emulator" (without checking other devices)
+- "The sub-agent said it's X, I'll go with that" (without verifying against code)
+- **"One more fix attempt" (when already tried 2+)**
+
+**ALL of these mean: STOP. Return to Phase 1.**
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "Issue is simple, don't need process" | Simple issues have root causes too. The phased flow is fast for simple bugs. |
+| "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing. |
+| "Just try this first, then investigate" | First fix sets the pattern. Do it right from the start. |
+| "I'll write tests after confirming the fix works" | Untested fixes don't stick. Test first proves it. |
+| "This null check should handle it" | Why is it null? That's the actual bug. |
+| "Works on my device" | There are thousands of device/OS combinations. |
+| "The Explore agent already diagnosed it" | Sub-agents can be confidently wrong. Verify against the code. |
+| "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question the pattern, don't fix again. |
+
+## Quick Reference
+
+| Phase | Key Activity | Fast path | Gated path |
+|-------|--------------|-----------|------------|
+| **1. Gather evidence** | Read errors, reproduce, check changes, instrument | Proceed autonomously | Proceed autonomously |
+| **2. Known vs. assumed** | Split facts from inferences | Record internally, proceed | Present to user, wait for confirmation |
+| **3. Hypothesis** | Single specific testable theory | Proceed autonomously | Proceed autonomously |
+| **4. Verify** | Compare to working code, test minimally | Proceed autonomously | Proceed autonomously |
+| **5. Root cause** | Present cause + evidence + causal chain | State and proceed to Phase 6 | Ask user to confirm before Phase 6 |
+| **6. Hand off** | Return to `mobiai-fix-issue` or invoke `mobiai-mobile-tdd` | Implementation begins elsewhere | Implementation begins elsewhere |
+
+## Related Skills
+
+- **`mobiai-fix-issue`** — the broader pipeline; calls this skill for its Phase 3. The scope classification (fast/gated) declared in `mobiai-fix-issue` is inherited by this skill.
+- **`mobiai-mobile-tdd`** — for creating the failing test once the root cause is confirmed
+- **`mobiai-mobile-verification`** — to verify the fix worked before claiming success
+- **`mobiai-reproduce-bug`** — for driving a device/emulator/simulator to reproduce the bug in Phase 1 (use only when `mobiai-fix-issue` Phase 2 authorized reproduction; do not invoke autonomously)
