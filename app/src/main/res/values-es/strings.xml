@@ -119,6 +119,14 @@
     <string name="friends_challenge_tie">Empate</string>
     <string name="friends_challenge_leader">Quién va ganando</string>
     <string name="friends_days_left">%1$d días restantes</string>
+    <string name="friends_challenge_vs">VS</string>
+    <string name="friends_challenge_score">%1$d/%2$d</string>
+    <string name="friends_challenge_score_description">%1$s: %2$d de %3$d</string>
+    <string name="friends_challenge_last_day">Último día</string>
+    <plurals name="friends_days_remaining">
+        <item quantity="one">Queda %1$d día</item>
+        <item quantity="other">Quedan %1$d días</item>
+    </plurals>
     <string name="friends_username">%1$s</string>
     <string name="friends_best_streak">Mejor racha: %1$d días</string>
     <string name="friends_public_habits">%1$d hábitos públicos</string>
@@ -256,6 +264,10 @@
     <string name="detail_completed">Completado</string>
     <string name="detail_calendar_previous_month">Mes anterior</string>
     <string name="detail_calendar_next_month">Mes siguiente</string>
+    <string name="detail_calendar_hint">Toca un día pasado para marcarlo como hecho o no hecho.</string>
+    <string name="detail_calendar_day_done">%1$s, hecho</string>
+    <string name="detail_calendar_day_not_done">%1$s, sin hacer</string>
+    <string name="detail_calendar_toggle_action">Cambiar estado</string>
     <string name="detail_edit_habit">Editar hábito</string>
     <string name="detail_delete_habit">Eliminar hábito</string>
     <string name="detail_delete_title">¿Eliminar este hábito?</string>

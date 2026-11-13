@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,17 +30,21 @@ import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -78,6 +83,7 @@ import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -96,8 +102,12 @@ fun HabitDetailScreen(
     val completionRate by viewModel.completionPercentage.collectAsStateWithLifecycle()
     val inChallenge by viewModel.inChallenge.collectAsStateWithLifecycle()
     val protectionProgress by viewModel.protectionProgress.collectAsStateWithLifecycle()
+    val savingDates by viewModel.savingDates.collectAsStateWithLifecycle()
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showProtectionHelp by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshChallengeMembership()
@@ -105,6 +115,16 @@ fun HabitDetailScreen(
 
     ObserveAsEvents(flow = viewModel.habitDeleted) {
         onBack()
+    }
+
+    ObserveAsEvents(flow = viewModel.events) { event ->
+        when (event) {
+            is HabitDetailEvent.ToggleFailed -> {
+                val message = context.getString(event.messageRes)
+                snackbarHostState.currentSnackbarData?.dismiss()
+                coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+            }
+        }
     }
 
     HabitDetailContent(
@@ -117,6 +137,9 @@ fun HabitDetailScreen(
         inChallenge = inChallenge,
         protectionProgress = protectionProgress,
         onProtectionHelp = { showProtectionHelp = true },
+        onToggleDay = viewModel::toggleDay,
+        savingDates = savingDates,
+        snackbarHostState = snackbarHostState,
     )
 
     if (showDeleteConfirm) {
@@ -155,6 +178,9 @@ fun HabitDetailContent(
     inChallenge: Boolean = false,
     protectionProgress: HabitProtectionProgress? = null,
     onProtectionHelp: () -> Unit = {},
+    onToggleDay: (LocalDate) -> Unit = {},
+    savingDates: Set<LocalDate> = emptySet(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val habitName = habit?.name ?: stringResource(R.string.detail_loading)
     val iconKey = habit?.icon
@@ -164,70 +190,82 @@ fun HabitDetailContent(
     val actionsEnabled = habit != null
     val danger = habitDangerColors()
 
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = HabitTopBarHorizontalPadding, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            HabitIconButton(
-                onClick = onBack,
-                icon = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = stringResource(R.string.detail_back),
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            HabitIconButton(
-                onClick = onEdit,
-                icon = Icons.Rounded.Edit,
-                contentDescription = stringResource(R.string.detail_edit_habit),
-                enabled = actionsEnabled,
-            )
-            HabitIconButton(
-                onClick = onDelete,
-                icon = Icons.Rounded.Delete,
-                contentDescription = stringResource(R.string.detail_delete_habit),
-                enabled = actionsEnabled,
-                backgroundColor = danger.container,
-                iconTint = danger.icon,
-                borderColor = danger.border,
-            )
-        }
-
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
         ) {
-            DetailOverviewCard(
-                habit = habit,
-                records = records,
-                habitName = habitName,
-                iconKey = iconKey,
-                accent = accent,
-                reminder = reminder,
-                inChallenge = inChallenge,
-                protectionProgress = protectionProgress,
-                onProtectionHelp = onProtectionHelp,
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = HabitTopBarHorizontalPadding, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HabitIconButton(
+                    onClick = onBack,
+                    icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(R.string.detail_back),
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                HabitIconButton(
+                    onClick = onEdit,
+                    icon = Icons.Rounded.Edit,
+                    contentDescription = stringResource(R.string.detail_edit_habit),
+                    enabled = actionsEnabled,
+                )
+                HabitIconButton(
+                    onClick = onDelete,
+                    icon = Icons.Rounded.Delete,
+                    contentDescription = stringResource(R.string.detail_delete_habit),
+                    enabled = actionsEnabled,
+                    backgroundColor = danger.container,
+                    iconTint = danger.icon,
+                    borderColor = danger.border,
+                )
+            }
 
-            DetailChartsCard(
-                habit = habit,
-                records = records,
-                accent = accent,
-                completionRate = completionRate,
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 24.dp),
+            ) {
+                DetailOverviewCard(
+                    habit = habit,
+                    records = records,
+                    habitName = habitName,
+                    iconKey = iconKey,
+                    accent = accent,
+                    reminder = reminder,
+                    inChallenge = inChallenge,
+                    protectionProgress = protectionProgress,
+                    onProtectionHelp = onProtectionHelp,
+                )
 
-            DetailCalendar(records = records, accent = accent)
+                DetailChartsCard(
+                    habit = habit,
+                    records = records,
+                    accent = accent,
+                    completionRate = completionRate,
+                )
+
+                DetailCalendar(
+                    records = records,
+                    accent = accent,
+                    onToggleDay = onToggleDay.takeIf { habit != null },
+                    savingDates = savingDates,
+                )
+            }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding(),
+        )
     }
 }
 
@@ -628,6 +666,8 @@ private fun WeekdayCompletionsChart(
 private fun DetailCalendar(
     records: List<HabitRecord>,
     accent: Color,
+    onToggleDay: ((LocalDate) -> Unit)?,
+    savingDates: Set<LocalDate>,
 ) {
     val today = remember { LocalDate.now() }
     var month by remember { mutableStateOf(YearMonth.from(today)) }
@@ -647,8 +687,21 @@ private fun DetailCalendar(
         onNextMonth = { month = month.plusMonths(1) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 12.dp),
+        onDayClick = onToggleDay,
+        pendingDates = savingDates,
     )
+    if (onToggleDay != null) {
+        Text(
+            text = stringResource(R.string.detail_calendar_hint),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 @Composable

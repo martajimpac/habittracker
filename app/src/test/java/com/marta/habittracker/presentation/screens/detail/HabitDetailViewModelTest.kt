@@ -109,12 +109,64 @@ class HabitDetailViewModelTest {
         assertTrue(viewModel.inChallenge.value)
     }
 
+    @Test
+    fun `toggleDay saves a past day`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
+        val viewModel = createViewModel(habit, repository = repository)
+        viewModel.clock = { LocalDate.of(2026, 11, 13) }
+        advanceUntilIdle()
+
+        viewModel.toggleDay(LocalDate.of(2026, 10, 2))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(Triple(habit.id, false, LocalDate.of(2026, 10, 2))),
+            repository.toggledHabits,
+        )
+        assertTrue(viewModel.savingDates.value.isEmpty())
+    }
+
+    @Test
+    fun `toggleDay ignores future days`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
+        val viewModel = createViewModel(habit, repository = repository)
+        viewModel.clock = { LocalDate.of(2026, 11, 13) }
+        advanceUntilIdle()
+
+        viewModel.toggleDay(LocalDate.of(2026, 11, 14))
+        advanceUntilIdle()
+
+        assertTrue(repository.toggledHabits.isEmpty())
+    }
+
+    @Test
+    fun `toggleDay failure emits an error event`() = runTest {
+        val habit = sampleHabit(reminderTime = null)
+        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
+        repository.toggleResult = DataResult.Error(AppError.Common.Network)
+        val viewModel = createViewModel(habit, repository = repository)
+        viewModel.clock = { LocalDate.of(2026, 11, 13) }
+        advanceUntilIdle()
+        val events = mutableListOf<HabitDetailEvent>()
+        val collectJob = launch { viewModel.events.collect { events += it } }
+
+        viewModel.toggleDay(LocalDate.of(2026, 11, 1))
+        advanceUntilIdle()
+
+        assertEquals(1, events.size)
+        assertTrue(events.single() is HabitDetailEvent.ToggleFailed)
+        assertTrue(viewModel.savingDates.value.isEmpty())
+        collectJob.cancel()
+    }
+
     private fun createViewModel(
         habit: Habit,
         friendsRepository: FakeFriendsRepository = FakeFriendsRepository(),
         streakProtectionRepository: StreakProtectionRepository = FakeStreakProtectionRepository(),
+        repository: FakeHabitRepository = FakeHabitRepository(habitsById = mapOf(habit.id to habit)),
     ): HabitDetailViewModel {
-        val repository = FakeHabitRepository(habitsById = mapOf(habit.id to habit))
         return HabitDetailViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("habitId" to habit.id)),
