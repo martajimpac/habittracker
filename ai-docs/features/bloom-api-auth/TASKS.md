@@ -31,3 +31,11 @@ Ejecutado el 2026-11-14:
 - Prueba en dispositivo enviando un mensaje a Bloom.
 - No hay AWS CLI/SAM ni credenciales aquí.
 - La skill `mobiai-mobile-verification`, que exige la SDD, no existe en el repositorio. La validación se ha hecho con los checks anteriores.
+
+## Cambio durante el despliegue (2026-11-14)
+
+- La organización de AWS de la cuenta solo deja desplegar en `eu-north-1`. En esa región, CloudFormation rechaza `AWS::Budgets::Budget` ("Unrecognized resource types").
+- Se quita el presupuesto (y los parámetros `AlertEmail` y `MonthlyBudgetUsd`) de `template.yaml`. La alerta de 5 USD/mes de RF-06 se crea aparte en AWS Budgets (consola o CLI). El comportamiento de la spec no cambia; solo cambia dónde se define.
+- `cfn-lint` sobre la plantilla nueva: pasa.
+- La cuenta tiene un límite total de concurrencia de 10 y Lambda exige dejar 10 sin reservar, así que reservar 5 falla. Se despliega con `MaxConcurrentExecutions=0` (sin tope), que es la alternativa prevista en la SPEC. RF-06 queda cubierto solo por la alerta de presupuesto, si la cuenta permite crearla. El límite de 10 de la cuenta actúa en la práctica como tope.
+- Desplegado en `eu-north-1` (stack `bloom-api`). Comprobación contra la URL real: `GET /health` → 200; `POST /api/chat` sin token → 401 «Falta la sesión.»; con token falso → 401 «Sesión no válida.» (CA-01 y CA-07 en producción). Pendiente: CA-02 con un token real desde la app.

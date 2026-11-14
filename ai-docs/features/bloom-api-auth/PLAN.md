@@ -67,7 +67,7 @@ recorrido de datos y eventos hasta la interfaz. Usa un diagrama si aporta clarid
 
 **Infraestructura (RF-06), en `template.yaml`:**
 - `ReservedConcurrentExecutions` en un parámetro, con 5 por defecto.
-- `AWS::Budgets::Budget` de 5 USD/mes con avisos por correo (gasto real al 80 % y previsto al 100 %). Nuevo parámetro `AlertEmail`.
+- ~~`AWS::Budgets::Budget` en la plantilla~~ → la alerta de 5 USD/mes (gasto real al 80 % y previsto al 100 %) se crea en AWS Budgets fuera de la plantilla, porque CloudFormation no admite ese recurso en `eu-north-1` (ver TASKS.md).
 - Nuevo parámetro `SupabaseUrl`.
 
 **App:**
