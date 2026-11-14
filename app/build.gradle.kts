@@ -19,6 +19,11 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
+/** CI (GitHub Actions) passes config as env vars; locally it comes from local.properties. */
+fun configValue(name: String): String =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: localProperties.getProperty(name, "")
+
 room {
     schemaDirectory("$projectDir/schemas")
 }
@@ -45,7 +50,7 @@ android {
             buildConfigField(
                 "String",
                 "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_DEBUG", "")}\"",
+                "\"${configValue("BLOOM_API_BASE_URL_DEBUG")}\"",
             )
         }
 
@@ -59,7 +64,7 @@ android {
             buildConfigField(
                 "String",
                 "BLOOM_API_BASE_URL",
-                "\"${localProperties.getProperty("BLOOM_API_BASE_URL_PRODUCTION", "")}\"",
+                "\"${configValue("BLOOM_API_BASE_URL_PRODUCTION")}\"",
             )
 
             proguardFiles(
@@ -84,12 +89,12 @@ android {
         buildConfigField(
             "String",
             "SUPABASE_URL",
-            "\"${localProperties.getProperty("SUPABASE_URL", "")}\"",
+            "\"${configValue("SUPABASE_URL")}\"",
         )
         buildConfigField(
             "String",
             "SUPABASE_PUBLISHABLE_KEY",
-            "\"${localProperties.getProperty("SUPABASE_PUBLISHABLE_KEY", "")}\"",
+            "\"${configValue("SUPABASE_PUBLISHABLE_KEY")}\"",
         )
     }
 

@@ -403,6 +403,15 @@ Aprobado 2026-08-07. Actualizado 2026-11-13: quedan dos widgets independientes, 
 - Los interceptores no deben escribir tokens ni credenciales en logs.
 - Las politicas RLS de Supabase deben impedir lecturas/escrituras indebidas: por defecto solo el dueño (`user_id = auth.uid()`). Excepciones documentadas en Social: amigos pueden leer hábitos `is_public` y records asociados; participantes de un challenge pueden leer el hábito/records del otro necesarios para el progreso.
 
+### API del asistente Bloom (`bloom-api`)
+
+Detalle en `ai-docs/features/bloom-api-auth/`.
+
+- La API corre en AWS Lambda. `POST /api/chat` exige `Authorization: Bearer <access_token>` de la sesión de Supabase del usuario. La API valida el token con las claves públicas (JWKS) del proyecto: firma ES256, caducidad, emisor `<SUPABASE_URL>/auth/v1`, `aud`/`role` `authenticated` y que no sea anónimo. Si falla, responde 401 sin llamar a Groq. `GET /health` es público.
+- La app envía el token de la sesión actual. Ante un 401 refresca la sesión y reintenta una sola vez. Si sigue en 401, el refresco es rechazado o no hay sesión, el chat muestra `recommendation_error_session` y no se hace la petición sin sesión. Un fallo de red al refrescar muestra el error de no disponible.
+- Ni la app ni la API registran el token ni la clave de Groq.
+- Límite de gasto en AWS: 5 ejecuciones simultáneas de la Lambda y alerta de presupuesto de 5 USD/mes por correo.
+
 ### Secretos
 
 - El proyecto debe escanearse en tests para detectar posibles claves de Firebase, API keys, tokens, passwords o private keys hardcodeadas.
@@ -425,6 +434,7 @@ Aprobado 2026-08-07. Actualizado 2026-11-13: quedan dos widgets independientes, 
 - No se debe hacer push directo a `main`.
 - Los commits deben seguir Conventional Commits.
 - Los despliegues deben realizarse mediante el flujo automatizado definido por el proyecto.
+- La configuración de la app (`BLOOM_API_BASE_URL_*`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) se lee primero de variables de entorno y, si no existen, de `local.properties`. El workflow de release las recibe de GitHub Secrets (`BLOOM_API_BASE_URL_PRODUCTION`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) y falla antes de compilar si falta alguna.
 
 ## Deuda Tecnica Conocida
 

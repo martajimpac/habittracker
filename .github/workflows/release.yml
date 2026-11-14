@@ -52,6 +52,22 @@ jobs:
         run: |
           test -s keys/habittracker.jks
 
+      # 6b. Comprobar la configuración de la app (si falta, la release saldría sin API ni login)
+      - name: Verify app config
+        env:
+          BLOOM_API_BASE_URL_PRODUCTION: ${{ secrets.BLOOM_API_BASE_URL_PRODUCTION }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          missing=0
+          for name in BLOOM_API_BASE_URL_PRODUCTION SUPABASE_URL SUPABASE_PUBLISHABLE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Falta el secret $name"
+              missing=1
+            fi
+          done
+          exit $missing
+
       # 7. Permisos Gradle
       - name: Grant execute permission
         run: chmod +x gradlew
@@ -70,6 +86,9 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          BLOOM_API_BASE_URL_PRODUCTION: ${{ secrets.BLOOM_API_BASE_URL_PRODUCTION }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: ./gradlew assembleRelease
 
       # 10. Generar AAB Release
@@ -78,6 +97,9 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          BLOOM_API_BASE_URL_PRODUCTION: ${{ secrets.BLOOM_API_BASE_URL_PRODUCTION }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: ./gradlew bundleRelease
 
       # 11. Guardar mapping de R8

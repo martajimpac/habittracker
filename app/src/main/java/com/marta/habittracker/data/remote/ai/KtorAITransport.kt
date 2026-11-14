@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -22,10 +23,11 @@ class KtorAITransport : RecommendationTransport {
         }
     }
 
-    override suspend fun post(url: String, jsonBody: String): TransportResult {
+    override suspend fun post(url: String, jsonBody: String, bearerToken: String): TransportResult {
         return try {
             val response = client.post(url) {
                 contentType(ContentType.Application.Json)
+                bearerAuth(bearerToken)
                 setBody(jsonBody)
             }
             TransportResult.Http(code = response.status.value, body = response.bodyAsText())

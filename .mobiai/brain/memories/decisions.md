@@ -193,3 +193,28 @@ Time-ordered IDs improve locality/sorting; Kotlin 2.4.10 already provides genera
 ### Files
 - spec.md
 - app/src/main/java/com/marta/habittracker/core/IdGenerator.kt
+
+## Bloom API authenticated with the Supabase session JWT
+
+- id: bloom-api-authenticated-with-the-supabase-session-jwt-20261114-174321
+- type: architecture_decision
+- status: active
+- platform: android
+- area: bloom_api_auth
+- date: 2026-11-14
+
+### Decision
+The Bloom AI API (AWS Lambda, Function URL) requires `Authorization: Bearer <Supabase access token>` on `/api/chat` and validates it against the project JWKS (ES256, iss `<SUPABASE_URL>/auth/v1`, aud/role `authenticated`, not anonymous). The app sends the session token; on 401 it refreshes the session once and retries once, then shows `recommendation_error_session`. AWS cost capped with reserved concurrency (5) and a 5 USD/month budget alert.
+
+### Reason
+The API URL ships inside the APK; an open endpoint lets anyone spend the Groq quota. The project already has Supabase auth with asymmetric signing keys, so no new secret is needed in the app or the API.
+
+### Alternatives considered
+- Shared static API key in the APK — rejected: extractable by decompiling.
+- Play Integrity / Firebase App Check — deferred: more setup than needed now.
+- Per-user rate limiting — deferred to a later feature.
+
+### Files
+- bloom-api/main.py
+- app/src/main/java/com/marta/habittracker/data/remote/ai/datasources/AIDataSource.kt
+- app/src/main/java/com/marta/habittracker/data/remote/supabase/SupabaseSession.kt
