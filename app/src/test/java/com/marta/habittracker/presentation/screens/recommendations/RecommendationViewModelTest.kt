@@ -158,6 +158,26 @@ class RecommendationViewModelTest {
         assertEquals(null, viewModel.uiState.value.errorRes)
     }
 
+    @Test
+    fun `an expired session shows the sign in again message`() = runTest {
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Error(RecommendationError.SessionExpired)),
+        )
+        val viewModel = viewModel(habits = listOf(habit()), remote = remote)
+        advanceUntilIdle()
+
+        viewModel.onDraftChange("How is my week?")
+        viewModel.send()
+        advanceUntilIdle()
+
+        assertEquals(ChatPhase.Ready, viewModel.uiState.value.phase)
+        assertEquals(R.string.recommendation_error_session, viewModel.uiState.value.errorRes)
+        assertEquals(
+            listOf(AssistantTurn(AssistantRole.User, "How is my week?")),
+            viewModel.uiState.value.messages,
+        )
+    }
+
     private fun viewModel(
         habits: List<Habit>,
         remote: FakeRecommendationRepository,

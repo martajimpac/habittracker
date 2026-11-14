@@ -1,7 +1,7 @@
 package com.marta.habittracker.data.remote.ai
 
 interface RecommendationTransport {
-    suspend fun post(url: String, jsonBody: String): TransportResult
+    suspend fun post(url: String, jsonBody: String, bearerToken: String): TransportResult
 }
 
 sealed interface TransportResult {

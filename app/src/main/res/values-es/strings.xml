@@ -445,6 +445,7 @@
     <string name="recommendation_error_timeout">La respuesta ha tardado demasiado. Inténtalo de nuevo.</string>
     <string name="recommendation_error_empty">No ha llegado ninguna respuesta. Inténtalo de nuevo.</string>
     <string name="recommendation_error_unavailable">El asistente no está disponible. Inténtalo de nuevo.</string>
+    <string name="recommendation_error_session">Tu sesión ha caducado. Cierra sesión y vuelve a entrar para usar Bloom.</string>
 
     <!-- Legacy tab keys -->
 </resources>

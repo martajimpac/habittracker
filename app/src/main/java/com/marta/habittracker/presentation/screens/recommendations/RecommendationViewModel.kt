@@ -150,6 +150,7 @@ private fun RecommendationError.toMessageRes(): Int = when (this) {
     RecommendationError.InvalidRequest -> R.string.recommendation_error_invalid
     RecommendationError.TimedOut -> R.string.recommendation_error_timeout
     RecommendationError.EmptyResponse -> R.string.recommendation_error_empty
+    RecommendationError.SessionExpired -> R.string.recommendation_error_session
     RecommendationError.Unavailable,
     RecommendationError.MissingBaseUrl,
     -> R.string.recommendation_error_unavailable

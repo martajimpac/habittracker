@@ -445,6 +445,7 @@
     <string name="recommendation_error_timeout">The reply took too long. Try again.</string>
     <string name="recommendation_error_empty">No reply came back. Try again.</string>
     <string name="recommendation_error_unavailable">The assistant is unavailable. Try again.</string>
+    <string name="recommendation_error_session">Your session has expired. Sign out and sign in again to use Bloom.</string>
 
     <!-- Legacy tab keys -->
 </resources>
