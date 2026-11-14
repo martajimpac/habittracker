@@ -434,6 +434,7 @@ Detalle en `ai-docs/features/bloom-api-auth/`.
 - No se debe hacer push directo a `main`.
 - Los commits deben seguir Conventional Commits.
 - Los despliegues deben realizarse mediante el flujo automatizado definido por el proyecto.
+- La configuración de la app (`BLOOM_API_BASE_URL_*`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) se lee primero de variables de entorno y, si no existen, de `local.properties`. El workflow de release las recibe de GitHub Secrets (`BLOOM_API_BASE_URL_PRODUCTION`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) y falla antes de compilar si falta alguna.
 
 ## Deuda Tecnica Conocida
 
