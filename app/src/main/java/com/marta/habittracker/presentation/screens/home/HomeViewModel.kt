@@ -1,5 +1,6 @@
 package com.marta.habittracker.presentation.screens.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marta.habittracker.domain.DataResult
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -66,6 +68,10 @@ class HomeViewModel @Inject constructor(
 
     private val _protection = MutableStateFlow(ProtectionReconcileResult(0, emptyList(), emptyList()))
     val protection: StateFlow<ProtectionReconcileResult> = _protection.asStateFlow()
+
+    /** (habitId, day) pairs with a save in flight; taps on them are ignored until it finishes. */
+    private val _savingToggles = MutableStateFlow<Set<Pair<String, LocalDate>>>(emptySet())
+    val savingToggles: StateFlow<Set<Pair<String, LocalDate>>> = _savingToggles.asStateFlow()
 
     private val _events = Channel<HomeEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -156,12 +162,32 @@ class HomeViewModel @Inject constructor(
         _selectedDate.value = date
     }
 
+    /**
+     * Marks [habit] as done on the selected day, or as not done if it already was. Today and
+     * past days can be edited; future days are ignored. The day is captured on tap, so changing
+     * the selected day while saving does not change which day is saved.
+     */
     fun toggleComplete(habit: Habit) {
-        if (_selectedDate.value != _today.value) return
+        val date = _selectedDate.value
+        if (date.isAfter(_today.value)) return
+        val key = habit.id to date
+        if (key in _savingToggles.value) return
+        _savingToggles.update { it + key }
         viewModelScope.launch {
-            val result = repository.toggleHabitCompletion(habit.id, habit.isCompleted, _selectedDate.value)
-            _events.send(HomeEvent.HabitToggle(result))
+            try {
+                val result = repository.toggleHabitCompletion(habit.id, habit.isCompleted, date)
+                if (result is DataResult.Error) {
+                    Log.e(TAG, "toggleComplete failed date=$date error=${result.error}")
+                }
+                _events.send(HomeEvent.HabitToggle(result))
+            } finally {
+                _savingToggles.update { it - key }
+            }
         }
+    }
+
+    companion object {
+        private const val TAG = "HomeViewModel"
     }
 }
 

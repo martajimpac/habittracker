@@ -178,6 +178,119 @@ class HomeViewModelTest {
         assertFalse(viewModel.isLoading.value)
         collector.cancel()
     }
+
+    @Test
+    fun `toggle on a past day saves that day`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = toggleViewModel(repository)
+        viewModel.onDateSelected(WEDNESDAY.minusDays(2))
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        advanceUntilIdle()
+
+        assertEquals(listOf(Triple("h1", false, WEDNESDAY.minusDays(2))), repository.toggledHabits)
+        assertTrue(viewModel.savingToggles.value.isEmpty())
+    }
+
+    @Test
+    fun `toggle on a past day that was done unmarks it`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = toggleViewModel(repository)
+        viewModel.onDateSelected(WEDNESDAY.minusDays(1))
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = true))
+        advanceUntilIdle()
+
+        assertEquals(listOf(Triple("h1", true, WEDNESDAY.minusDays(1))), repository.toggledHabits)
+    }
+
+    @Test
+    fun `toggle today still saves`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = toggleViewModel(repository)
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        advanceUntilIdle()
+
+        assertEquals(listOf(Triple("h1", false, WEDNESDAY)), repository.toggledHabits)
+    }
+
+    @Test
+    fun `toggle on a future day is ignored`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = toggleViewModel(repository)
+        viewModel.onDateSelected(WEDNESDAY.plusDays(1))
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        advanceUntilIdle()
+
+        assertTrue(repository.toggledHabits.isEmpty())
+    }
+
+    @Test
+    fun `second tap while saving is ignored`() = runTest {
+        val repository = FakeHabitRepository()
+        val viewModel = toggleViewModel(repository)
+        viewModel.onDateSelected(WEDNESDAY.minusDays(1))
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        assertEquals(setOf("h1" to WEDNESDAY.minusDays(1)), viewModel.savingToggles.value)
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        advanceUntilIdle()
+
+        assertEquals(1, repository.toggledHabits.size)
+        assertTrue(viewModel.savingToggles.value.isEmpty())
+    }
+
+    @Test
+    fun `toggle failure emits the error`() = runTest {
+        val repository = FakeHabitRepository()
+        repository.toggleResult = DataResult.Error(AppError.Common.Network)
+        val viewModel = toggleViewModel(repository)
+        viewModel.onDateSelected(WEDNESDAY.minusDays(1))
+        val events = mutableListOf<HomeEvent>()
+        val collector = backgroundScope.launch { viewModel.events.collect { events += it } }
+
+        viewModel.toggleComplete(toggleHabit(isCompleted = false))
+        advanceUntilIdle()
+
+        val event = events.filterIsInstance<HomeEvent.HabitToggle>().single()
+        assertTrue(event.result is DataResult.Error)
+        assertTrue(viewModel.savingToggles.value.isEmpty())
+        collector.cancel()
+    }
+
+    private fun toggleViewModel(repository: FakeHabitRepository): HomeViewModel {
+        val viewModel = HomeViewModel(
+            repository = repository,
+            authRepository = FakeAuthRepository(),
+            profileRepository = FakeProfileRepository(),
+            friendsRepository = FakeFriendsRepository(),
+            streakProtectionRepository = FakeStreakProtectionRepository(),
+            widgetRefresher = FakeAppWidgetRefresher(),
+        )
+        viewModel.currentDate = { WEDNESDAY }
+        viewModel.refreshDay()
+        viewModel.onDateSelected(WEDNESDAY)
+        return viewModel
+    }
+
+    private fun toggleHabit(isCompleted: Boolean) = com.marta.habittracker.domain.model.Habit(
+        id = "h1",
+        name = "Test",
+        description = null,
+        daysOfWeek = emptySet(),
+        icon = "water_drop",
+        colorHex = "#6750A4",
+        reminderTime = null,
+        createdAt = java.time.Instant.parse("2026-01-01T00:00:00Z"),
+        records = emptyList(),
+        isCompleted = isCompleted,
+    )
+
+    private companion object {
+        val WEDNESDAY: LocalDate = LocalDate.of(2026, 11, 11)
+    }
 }
 
 private class FakeStreakProtectionRepository : StreakProtectionRepository {

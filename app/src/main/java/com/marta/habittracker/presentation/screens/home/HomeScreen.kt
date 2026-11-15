@@ -118,6 +118,7 @@ fun HomeScreen(
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
     val challengeHabitIds by viewModel.challengeHabitIds.collectAsStateWithLifecycle()
     val protection by viewModel.protection.collectAsStateWithLifecycle()
+    val savingToggles by viewModel.savingToggles.collectAsStateWithLifecycle()
     var showProtectionEarned by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -180,6 +181,7 @@ fun HomeScreen(
             protectionBalance = protection.balance,
             protectionByHabit = protection.habits.associateBy { it.habitId },
             isLoading = isLoading,
+            savingToggles = savingToggles,
         )
 
         SnackbarHost(
@@ -216,8 +218,10 @@ fun HomeContent(
     protectionBalance: Int = 0,
     protectionByHabit: Map<String, HabitProtectionStatus> = emptyMap(),
     isLoading: Boolean = false,
+    savingToggles: Set<Pair<String, LocalDate>> = emptySet(),
 ) {
     val isToday = selectedDate == today
+    val isFuture = selectedDate.isAfter(today)
     val isPast = selectedDate.isBefore(today)
 
     val (completedCount, totalCount) = remember(habits, selectedDate) {
@@ -354,7 +358,8 @@ fun HomeContent(
                     HomeHabitCard(
                         habit = habit,
                         isDone = habit.isCompleted,
-                        isToday = isToday,
+                        isFuture = isFuture,
+                        isSaving = (habit.id to selectedDate) in savingToggles,
                         inChallenge = habit.id in challengeHabitIds,
                         protection = protectionByHabit[habit.id],
                         onToggle = { onToggleHabit(habit) },
@@ -589,7 +594,8 @@ private fun HomeProgressCard(
 private fun HomeHabitCard(
     habit: Habit,
     isDone: Boolean,
-    isToday: Boolean,
+    isFuture: Boolean,
+    isSaving: Boolean,
     inChallenge: Boolean,
     protection: HabitProtectionStatus?,
     onToggle: () -> Unit,
@@ -601,11 +607,12 @@ private fun HomeHabitCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (!isToday && !isDone) 0.55f else 1f)
+            // Today and past days can be marked; only future days look locked.
+            .alpha(if (isFuture && !isDone) 0.55f else 1f)
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
-            .clickable(enabled = isToday, onClick = onToggle)
+            .clickable(enabled = !isFuture && !isSaving, onClick = onToggle)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
