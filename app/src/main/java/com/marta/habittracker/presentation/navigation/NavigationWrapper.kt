@@ -29,6 +29,7 @@ import com.marta.habittracker.presentation.utils.ObserveAsEvents
 @Composable
 fun NavigationWrapper(
     initialTabRoute: String? = null,
+    onTabRouteConsumed: () -> Unit = {},
     initialHabitId: String? = null,
     onHabitIdConsumed: () -> Unit = {},
     initialChallengeId: String? = null,
@@ -181,6 +182,7 @@ fun NavigationWrapper(
         composable<Home> {
             BottomNavScreen(
                 initialTabRoute = initialTabRoute,
+                onTabRouteConsumed = onTabRouteConsumed,
                 initialHabitId = initialHabitId,
                 onHabitIdConsumed = onHabitIdConsumed,
                 initialChallengeId = initialChallengeId,

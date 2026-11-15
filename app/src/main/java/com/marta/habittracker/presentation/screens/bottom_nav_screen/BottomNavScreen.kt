@@ -29,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.marta.habittracker.presentation.navigation.BottomNavigation
 import com.marta.habittracker.presentation.navigation.NavigationBottomWrapper
 import com.marta.habittracker.presentation.navigation.TabScreens
+import com.marta.habittracker.presentation.navigation.navigateToTab
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 
@@ -36,6 +37,7 @@ import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 fun BottomNavScreen(
     onSignedOut: () -> Unit,
     initialTabRoute: String? = null,
+    onTabRouteConsumed: () -> Unit = {},
     initialHabitId: String? = null,
     onHabitIdConsumed: () -> Unit = {},
     initialChallengeId: String? = null,
@@ -65,24 +67,17 @@ fun BottomNavScreen(
             onChallengeIdConsumed()
             return@LaunchedEffect
         }
-        when (initialTabRoute) {
-            WidgetLaunchExtras.TAB_HOME -> tabNavController.navigate(TabScreens.TabHome) {
-                launchSingleTop = true
-            }
-
-            WidgetLaunchExtras.TAB_STATS -> tabNavController.navigate(TabScreens.TabStats) {
-                launchSingleTop = true
-            }
-
-            WidgetLaunchExtras.TAB_FRIENDS -> {
-                tabNavController.navigate(TabScreens.TabFriends) {
-                    launchSingleTop = true
-                }
-                if (!initialFriendRequestId.isNullOrBlank()) {
-                    onFriendRequestConsumed()
-                }
-            }
+        val tab = when (initialTabRoute) {
+            WidgetLaunchExtras.TAB_HOME -> TabScreens.TabHome
+            WidgetLaunchExtras.TAB_STATS -> TabScreens.TabStats
+            WidgetLaunchExtras.TAB_FRIENDS -> TabScreens.TabFriends
+            else -> null
+        } ?: return@LaunchedEffect
+        tabNavController.navigateToTab(tab)
+        if (tab == TabScreens.TabFriends && !initialFriendRequestId.isNullOrBlank()) {
+            onFriendRequestConsumed()
         }
+        onTabRouteConsumed()
     }
     val navStackEntry by tabNavController.currentBackStackEntryAsState()
     val destinationRoute = navStackEntry?.destination?.route.orEmpty()
@@ -135,13 +130,7 @@ fun BottomNavContent(
                     selectedTab = selectedTab,
                     onTabSelected = { tab ->
                         if (tab != selectedTab) {
-                            tabNavController.navigate(tab.tabScreen) {
-                                popUpTo(tabNavController.graph.startDestinationId) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                            tabNavController.navigateToTab(tab.tabScreen)
                         }
                     },
                     onAdd = onAdd,

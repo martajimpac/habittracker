@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
             HabitAppTheme {
                 NavigationWrapper(
                     initialTabRoute = initialTab,
+                    onTabRouteConsumed = { consumeTab() },
                     initialHabitId = initialHabitId,
                     onHabitIdConsumed = { consumeHabitId() },
                     initialChallengeId = initialChallengeId,
@@ -100,6 +101,11 @@ class MainActivity : ComponentActivity() {
         if (initialHabitId != null || initialChallengeId != null) {
             intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
         }
+    }
+
+    private fun consumeTab() {
+        initialTab = null
+        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
     }
 
     private fun consumeHabitId() {
