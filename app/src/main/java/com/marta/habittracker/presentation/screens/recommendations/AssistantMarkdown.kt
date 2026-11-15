@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -29,7 +30,7 @@ internal sealed interface AssistantBlock {
     data object Rule : AssistantBlock
 }
 
-internal data class TextRun(val text: String, val bold: Boolean)
+internal data class TextRun(val text: String, val bold: Boolean, val italic: Boolean = false)
 
 internal fun parseAssistantMarkdown(source: String): List<AssistantBlock> {
     val blocks = mutableListOf<AssistantBlock>()
@@ -67,31 +68,45 @@ internal fun AssistantBlock.isStructural(): Boolean {
 }
 
 internal fun parseInline(text: String): List<TextRun> {
-    if (boldMarker.findAll(text).count() % 2 != 0) {
-        return listOf(TextRun(text, bold = false))
-    }
     val runs = mutableListOf<TextRun>()
-    val buffer = StringBuilder()
-    var bold = false
-    var index = 0
-    fun flush() {
-        if (buffer.isNotEmpty()) {
-            runs += TextRun(buffer.toString(), bold)
-            buffer.clear()
-        }
-    }
-    while (index < text.length) {
-        if (index + 1 < text.length && text[index] == '*' && text[index + 1] == '*') {
-            flush()
-            bold = !bold
-            index += 2
-        } else {
-            buffer.append(text[index])
-            index++
-        }
-    }
-    flush()
+    collectRuns(text, bold = false, italic = false, into = runs)
     return runs.ifEmpty { listOf(TextRun(text, bold = false)) }
+}
+
+/**
+ * Splits [text] into styled runs, removing the markdown emphasis markers the
+ * model uses: `***x***` (bold italic), `**x**` (bold), `*x*` / `_x_` (italic).
+ * Markers without a closing pair are kept as literal text.
+ */
+private fun collectRuns(
+    text: String,
+    bold: Boolean,
+    italic: Boolean,
+    into: MutableList<TextRun>,
+) {
+    var cursor = 0
+    for (match in emphasisPattern.findAll(text)) {
+        appendRun(into, text.substring(cursor, match.range.first), bold, italic)
+        val groups = match.groups
+        when {
+            groups[1] != null -> collectRuns(groups[1]!!.value, bold = true, italic = true, into = into)
+            groups[2] != null -> collectRuns(groups[2]!!.value, bold = true, italic = italic, into = into)
+            groups[3] != null -> collectRuns(groups[3]!!.value, bold = bold, italic = true, into = into)
+            else -> collectRuns(groups[4]!!.value, bold = bold, italic = true, into = into)
+        }
+        cursor = match.range.last + 1
+    }
+    appendRun(into, text.substring(cursor), bold, italic)
+}
+
+private fun appendRun(into: MutableList<TextRun>, text: String, bold: Boolean, italic: Boolean) {
+    if (text.isEmpty()) return
+    val last = into.lastOrNull()
+    if (last != null && last.bold == bold && last.italic == italic) {
+        into[into.lastIndex] = last.copy(text = last.text + text)
+    } else {
+        into += TextRun(text, bold, italic)
+    }
 }
 
 private fun normalizeNewlines(source: String): String {
@@ -103,7 +118,12 @@ private fun normalizeNewlines(source: String): String {
 private val rulePattern = Regex("""^(-{3,}|\*{3,})$""")
 private val bulletPattern = Regex("""^[*+-]\s+(.+)$""")
 private val numberedPattern = Regex("""^(\d+)[.)]\s+(.+)$""")
-private val boldMarker = Regex("""\*\*""")
+private val emphasisPattern = Regex(
+    """\*\*\*(?!\s)(.+?)(?<!\s)\*\*\*""" +
+        """|\*\*(?!\s)(.+?)(?<!\s)\*\*""" +
+        """|\*(?![\s*])(.+?)(?<![\s*])\*""" +
+        """|(?<![\p{L}\p{N}_])_(?![\s_])(.+?)(?<![\s_])_(?![\p{L}\p{N}_])""",
+)
 
 @Composable
 internal fun AssistantMarkdownText(
@@ -181,8 +201,12 @@ private fun InlineItem(
 
 private fun List<TextRun>.toAnnotated(): AnnotatedString = buildAnnotatedString {
     for (run in this@toAnnotated) {
-        if (run.bold) {
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+        if (run.bold || run.italic) {
+            val style = SpanStyle(
+                fontWeight = if (run.bold) FontWeight.Bold else null,
+                fontStyle = if (run.italic) FontStyle.Italic else null,
+            )
+            withStyle(style) {
                 append(run.text)
             }
         } else {

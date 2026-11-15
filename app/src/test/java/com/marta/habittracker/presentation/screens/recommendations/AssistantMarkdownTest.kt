@@ -88,4 +88,50 @@ class AssistantMarkdownTest {
             blocks,
         )
     }
+
+    @Test
+    fun `renders single asterisks as italics without showing them`() {
+        val runs = parseInline("Dedica 5 minutos a *estirar* cada mañana.")
+
+        assertEquals(
+            listOf(
+                TextRun("Dedica 5 minutos a ", bold = false),
+                TextRun("estirar", bold = false, italic = true),
+                TextRun(" cada mañana.", bold = false),
+            ),
+            runs,
+        )
+        assertEquals("Dedica 5 minutos a estirar cada mañana.", assistantPlainText("Dedica 5 minutos a *estirar* cada mañana."))
+    }
+
+    @Test
+    fun `supports underscores, bold italics and italics inside bold`() {
+        assertEquals(
+            listOf(
+                TextRun("Haz ", bold = false),
+                TextRun("pausas", bold = false, italic = true),
+                TextRun(" y ", bold = false),
+                TextRun("respira", bold = true, italic = true),
+            ),
+            parseInline("Haz _pausas_ y ***respira***"),
+        )
+        assertEquals(
+            listOf(
+                TextRun("Rutina ", bold = true),
+                TextRun("corta", bold = true, italic = true),
+                TextRun(":", bold = true),
+            ),
+            parseInline("**Rutina *corta*:**"),
+        )
+    }
+
+    @Test
+    fun `keeps stray asterisks and snake_case words literal`() {
+        assertEquals(listOf(TextRun("5 * 3 = 15", bold = false)), parseInline("5 * 3 = 15"))
+        assertEquals(listOf(TextRun("usa habit_name aquí", bold = false)), parseInline("usa habit_name aquí"))
+        assertEquals(
+            listOf(AssistantBlock.Bullet(listOf(TextRun("estirar", bold = false, italic = true)))),
+            parseAssistantMarkdown("* *estirar*"),
+        )
+    }
 }
