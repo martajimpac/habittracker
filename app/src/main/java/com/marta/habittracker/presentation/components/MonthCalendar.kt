@@ -2,7 +2,6 @@ package com.marta.habittracker.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
@@ -62,13 +60,6 @@ fun monthCalendarTitle(month: YearMonth, locale: Locale = Locale.getDefault()): 
     }
 }
 
-/**
- * A day can be marked or unmarked when it belongs to the shown [month] and is not after [today].
- * Past days are never locked.
- */
-fun isMonthCalendarDayEditable(date: LocalDate, month: YearMonth, today: LocalDate): Boolean =
-    YearMonth.from(date) == month && !date.isAfter(today)
-
 @Composable
 fun MonthCalendar(
     month: YearMonth,
@@ -78,8 +69,6 @@ fun MonthCalendar(
     onNextMonth: () -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
-    onDayClick: ((LocalDate) -> Unit)? = null,
-    pendingDates: Set<LocalDate> = emptySet(),
 ) {
     val dates = remember(month) { monthCalendarDates(month) }
     val title = remember(month) { monthCalendarTitle(month) }
@@ -154,10 +143,6 @@ fun MonthCalendar(
                         isToday = date == today,
                         accentColor = accentColor,
                         onAccent = onAccent,
-                        onClick = onDayClick
-                            ?.takeIf { isMonthCalendarDayEditable(date, month, today) }
-                            ?.let { click -> { click(date) } },
-                        isPending = date in pendingDates,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -175,10 +160,8 @@ private fun MonthDayCell(
     accentColor: Color,
     onAccent: Color,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    isPending: Boolean = false,
 ) {
-    val stateDescription = if (inMonth && onClick != null) {
+    val description = if (inMonth) {
         val label = date.format(DateTimeFormatter.ofPattern("d MMMM", Locale.getDefault()))
         stringResource(
             if (completed) R.string.detail_calendar_day_done else R.string.detail_calendar_day_not_done,
@@ -187,26 +170,10 @@ private fun MonthDayCell(
     } else {
         null
     }
-    val actionLabel = stringResource(R.string.detail_calendar_toggle_action)
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .then(
-                if (onClick != null) {
-                    Modifier
-                        .clip(CircleShape)
-                        .clickable(
-                            enabled = !isPending,
-                            onClickLabel = actionLabel,
-                            role = Role.Button,
-                            onClick = onClick,
-                        )
-                        .clearAndSetSemantics { stateDescription?.let { contentDescription = it } }
-                } else {
-                    Modifier
-                },
-            )
-            .alpha(if (isPending) 0.5f else 1f),
+            .clearAndSetSemantics { description?.let { contentDescription = it } },
         contentAlignment = Alignment.Center,
     ) {
         if (inMonth && completed) {
