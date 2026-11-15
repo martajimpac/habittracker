@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Widget picker preview for ChallengeGlanceWidget (Android 12+ previewLayout).
-    Mirrors ChallengeWidgetContent + WidgetScreen + WidgetProgressBar: green header with habit
-    and rival, trophy + leader, progress line, two 10-segment bars (me / rival at 55 %) and days left.
+    Mirrors the full card of ChallengeWidgetContent (and the app's ChallengeVersusCard):
+    light rounded card, habit icon tile + name, both participants face to face around "VS"
+    with initials avatars (leader ring + trophy badge), two score bars on a shared scale
+    (the trailing one dimmed) and the days left with a clock.
+    Sample: Run, Me 4/7 (leading) vs Alex 3/7, 5 days left.
     RemoteViews only allows framework layouts/views here (no plain View, no custom views).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,133 +13,276 @@
     android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_preview_background"
+    android:background="@drawable/widget_preview_card_background"
     android:clipToOutline="true"
     android:orientation="vertical"
+    android:padding="12dp"
     tools:targetApi="31">
 
-    <!-- Header -->
+    <!-- Header: habit icon tile (habit colour at 12 %) + name -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/habit_primary"
-        android:orientation="vertical"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="12dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/widget_preview_icon_box"
+            android:backgroundTint="@color/widget_preview_accent_orange_tile">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_habit_directions_run"
+                android:tint="@color/widget_preview_accent_orange" />
+        </FrameLayout>
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             android:text="@string/challenge_widget_preview_habit"
-            android:textColor="@color/habit_cream"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/challenge_widget_preview_versus"
-            android:textColor="@color/habit_cream"
-            android:textSize="14sp"
+            android:textColor="@color/habit_on_surface"
+            android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Participants face to face -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:padding="10dp">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- Leader: separate image + text like the Glance Row (tinted 16dp trophy). -->
+        <!-- Me (leading: accent ring + trophy badge) -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            tools:ignore="UseCompoundDrawables">
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:contentDescription="@string/friends_challenge_leader"
-                android:src="@drawable/ic_trophy"
-                android:tint="@color/widget_preview_accent_orange" />
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <FrameLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/widget_check_circle"
+                    android:backgroundTint="@color/widget_preview_accent_orange">
+
+                    <TextView
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_check_circle"
+                        android:backgroundTint="@color/widget_preview_accent_blue"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/challenge_widget_preview_me_initials"
+                        android:textColor="@color/habit_cream"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="top|end"
+                    android:background="@drawable/widget_check_circle"
+                    android:backgroundTint="@color/widget_preview_accent_orange">
+
+                    <ImageView
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/friends_challenge_leader"
+                        android:src="@drawable/ic_trophy"
+                        android:tint="@android:color/white" />
+                </FrameLayout>
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
+                android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@string/challenge_widget_preview_leader"
+                android:text="@string/friends_me"
                 android:textColor="@color/habit_on_surface"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/challenge_widget_preview_progress"
-            android:textColor="@color/habit_on_surface"
-            android:textSize="14sp"
+            android:layout_marginHorizontal="6dp"
+            android:text="@string/friends_challenge_vs"
+            android:textColor="@color/widget_preview_accent_orange"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
-        <!-- My progress: 60 % = 6 of 10 segments -->
+        <!-- Rival (behind: outline ring, no badge) -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="4dp"
-            android:paddingBottom="8dp">
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <FrameLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/widget_check_circle"
+                    android:backgroundTint="@color/widget_preview_outline">
+
+                    <TextView
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_check_circle"
+                        android:backgroundTint="@color/widget_preview_accent_teal"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/challenge_widget_preview_rival_initials"
+                        android:textColor="@color/habit_cream"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/challenge_widget_preview_rival"
+                android:textColor="@color/habit_on_surface"
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </LinearLayout>
+    </LinearLayout>
 
-        <!-- Rival progress: 40 % = 4 of 10 segments, accent at 55 % -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="4dp"
-            android:paddingBottom="8dp">
-
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange_rival" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange_rival" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange_rival" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_accent_orange_rival" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-            <FrameLayout style="@style/WidgetPreviewSegment" android:backgroundTint="@color/widget_preview_track" />
-        </LinearLayout>
+    <!-- My score bar (leading: full accent) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/friends_me"
+            android:textColor="@color/habit_on_surface"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_widget_preview_my_score"
+            android:textColor="@color/widget_preview_accent_orange"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="3dp"
+        android:max="7"
+        android:progress="4"
+        android:progressBackgroundTint="@color/widget_preview_bar_track"
+        android:progressDrawable="@drawable/widget_preview_progress"
+        android:progressTint="@color/widget_preview_accent_orange" />
+
+    <!-- Rival score bar (behind: dimmed) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/challenge_widget_preview_rival"
+            android:textColor="@color/habit_on_surface"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_widget_preview_rival_score"
+            android:textColor="@color/habit_on_surface_variant"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="3dp"
+        android:max="7"
+        android:progress="3"
+        android:progressBackgroundTint="@color/widget_preview_bar_track"
+        android:progressDrawable="@drawable/widget_preview_progress"
+        android:progressTint="@color/widget_preview_accent_orange_rival" />
+
+    <!-- Fills the remaining height so the days line sits at the bottom, like the widget. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Days left -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        tools:ignore="UseCompoundDrawables">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_schedule"
+            android:tint="@color/habit_on_surface_variant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/challenge_widget_preview_days_left"
             android:textColor="@color/habit_on_surface_variant"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

@@ -36,6 +36,45 @@ class ChallengeWidgetSnapshotTest {
     }
 
     @Test
+    fun `snapshot codec keeps the card design fields`() {
+        val card = sampleCard().copy(
+            me = Profile(
+                id = "me",
+                username = "marta",
+                displayName = "Marta",
+                avatarColor = "#3A98EA",
+            ),
+            myScore = 4,
+            theirScore = 3,
+            scoreTotal = 7,
+        )
+
+        val snapshot = decodeChallengeWidgetSnapshot(encodeChallengeWidgetSnapshot(card, json), json)
+
+        assertEquals("directions_run", snapshot.habitIcon)
+        assertEquals("Marta", snapshot.myDisplayName)
+        assertEquals("#3A98EA", snapshot.myAvatarColor)
+        assertEquals("#6750A4", snapshot.opponentAvatarColor)
+        assertEquals(4, snapshot.myScore)
+        assertEquals(3, snapshot.theirScore)
+        assertEquals(7, snapshot.scoreTotal)
+    }
+
+    // CA-09: JSON saved by the previous widget version, without the card fields.
+    @Test
+    fun `an old snapshot json still decodes with defaults`() {
+        val oldJson = """{"challengeId":"challenge-1","habitName":"Morning Run","habitColorHex":"#FF6B6B",""" +
+            """"opponentDisplayName":"Alex Rivera","myProgress":75,"theirProgress":50,"daysLeft":7,"status":"active"}"""
+
+        val snapshot = decodeChallengeWidgetSnapshot(oldJson, json)
+
+        assertEquals("Morning Run", snapshot.habitName)
+        assertEquals("", snapshot.habitIcon)
+        assertEquals("", snapshot.myDisplayName)
+        assertEquals(0, snapshot.scoreTotal)
+    }
+
+    @Test
     fun `decode rejects invalid snapshot json`() {
         assertThrows(SerializationException::class.java) {
             decodeChallengeWidgetSnapshot("{not-json", json)

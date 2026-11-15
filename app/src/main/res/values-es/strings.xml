@@ -116,7 +116,6 @@
     <string name="friends_decline">Rechazar</string>
     <string name="friends_list_title">Amigos</string>
     <string name="friends_me">Yo</string>
-    <string name="friends_challenge_tie">Empate</string>
     <string name="friends_challenge_leader">Quién va ganando</string>
     <string name="friends_days_left">%1$d días restantes</string>
     <string name="friends_challenge_vs">VS</string>
@@ -404,17 +403,17 @@
     <string name="challenge_widget_configure">Configurar desafío</string>
     <string name="challenge_widget_load_failed">No se pudo cargar los desafíos. Por favor, inténtalo de nuevo.</string>
     <string name="challenge_widget_versus">vs %1$s</string>
-    <string name="challenge_widget_progress">Tú %1$d%% · %2$s %3$d%%</string>
-    <string name="challenge_widget_days_left">%1$d días restantes</string>
     <string name="challenge_widget_status_pending">Pendiente</string>
     <string name="challenge_widget_status_active">Activo</string>
 
     <!-- Weekly widget -->
     <string name="challenge_widget_preview_habit">Correr</string>
-    <string name="challenge_widget_preview_versus">vs Alex</string>
-    <string name="challenge_widget_preview_progress">Tú 60% · Alex 40%</string>
-    <string name="challenge_widget_preview_days_left">5 días restantes</string>
-    <string name="challenge_widget_preview_leader">Yo</string>
+    <string name="challenge_widget_preview_days_left">Quedan 5 días</string>
+    <string name="challenge_widget_preview_me_initials">YO</string>
+    <string name="challenge_widget_preview_rival">Alex</string>
+    <string name="challenge_widget_preview_rival_initials">AL</string>
+    <string name="challenge_widget_preview_my_score">4/7</string>
+    <string name="challenge_widget_preview_rival_score">3/7</string>
 
     <!-- Today widget -->
     <string name="today_widget_label">Hoy</string>
