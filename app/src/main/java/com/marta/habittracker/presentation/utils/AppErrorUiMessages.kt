@@ -3,6 +3,7 @@ package com.marta.habittracker.presentation.utils
 import androidx.annotation.StringRes
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.errors.AppError
+import com.marta.habittracker.domain.model.errors.AssistantActionError
 import com.marta.habittracker.domain.model.errors.LoginError
 import com.marta.habittracker.domain.model.errors.ProfileError
 import com.marta.habittracker.domain.model.errors.RecommendationError
@@ -24,6 +25,8 @@ fun AppError.toUserMessageRes(): Int = when (this) {
     RecommendationError.SessionExpired -> R.string.recommendation_error_session
     RecommendationError.Unavailable,
     RecommendationError.MissingBaseUrl, -> R.string.recommendation_error_unavailable
+    AssistantActionError.HabitNotFound -> R.string.chat_action_error_habit_missing
+    AssistantActionError.DayNotAllowed -> R.string.chat_action_error_day_not_allowed
     AppError.Common.Network -> R.string.error_no_internet
     AppError.Common.Unauthorized -> R.string.error_common_unauthorized
     AppError.Common.Unknown -> R.string.error_common_unknown

@@ -218,3 +218,20 @@ The API URL ships inside the APK; an open endpoint lets anyone spend the Groq qu
 - bloom-api/main.py
 - app/src/main/java/com/marta/habittracker/data/remote/ai/datasources/AIDataSource.kt
 - app/src/main/java/com/marta/habittracker/data/remote/supabase/SupabaseSession.kt
+
+## Bloom chat actions: model proposes via tool calling, app validates and executes
+
+- id: bloom-chat-actions-model-proposes-via-tool-calling-app-valid-20261115-180600
+- type: architecture_decision
+- status: active
+- platform: android
+- area: bloom_chat
+- date: 2026-11-15
+
+Chat orders (create habit, mark/unmark a day of the current week) use Groq tool calling (propose_create_habit, propose_set_completion) in bloom-api; the API never writes to Supabase. It returns {message, action?}. The app re-validates with Home rules (shownOn, Monday..today) and the form catalogs, shows a confirmation card, and on confirm saves through SaveHabit / toggleHabitCompletion (online-first). Revalidates on confirm; habit id generated at proposal time to make retries idempotent. History carries action + status so the model knows outcomes. Rejected: structured outputs (Groq does not combine it with tools; strict mode reported unreliable on gpt-oss-120b); server-side writes (would need Supabase secrets in the Lambda); executing without confirmation (product decision).
+
+### Files
+- bloom-api/main.py
+- app/src/main/java/com/marta/habittracker/domain/usecase/ResolveAssistantAction.kt
+- app/src/main/java/com/marta/habittracker/domain/usecase/ExecuteAssistantAction.kt
+- ai-docs/features/chat-actions/PLAN.md

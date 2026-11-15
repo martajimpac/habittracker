@@ -436,13 +436,27 @@
     <string name="recommendation_sending">Esperando la respuesta</string>
     <string name="recommendation_you">Tú</string>
     <string name="recommendation_assistant">Asistente</string>
-    <string name="recommendation_empty_title">Aún no hay hábitos</string>
-    <string name="recommendation_empty_message">Crea un hábito antes de enviar un mensaje.</string>
     <string name="recommendation_error_invalid">No se han podido enviar los números de la semana. Inténtalo de nuevo.</string>
     <string name="recommendation_error_timeout">La respuesta ha tardado demasiado. Inténtalo de nuevo.</string>
     <string name="recommendation_error_empty">No ha llegado ninguna respuesta. Inténtalo de nuevo.</string>
     <string name="recommendation_error_unavailable">El asistente no está disponible. Inténtalo de nuevo.</string>
     <string name="recommendation_error_session">Tu sesión ha caducado. Cierra sesión y vuelve a entrar para usar Bloom.</string>
+    <string name="recommendation_greeting_no_habits">Aún no tienes hábitos. Dime cuál quieres empezar y lo preparo.</string>
+    <string name="chat_action_create_title">Nuevo hábito</string>
+    <string name="chat_action_mark_done">Marcar como hecho</string>
+    <string name="chat_action_unmark">Quitar hecho</string>
+    <string name="chat_action_create">Crear</string>
+    <string name="chat_action_cancel">Cancelar</string>
+    <string name="chat_action_saving">Guardando…</string>
+    <string name="chat_action_status_pending">Pendiente de confirmar</string>
+    <string name="chat_action_status_created">Hábito creado</string>
+    <string name="chat_action_status_marked">Marcado como hecho</string>
+    <string name="chat_action_status_unmarked">Hecho quitado</string>
+    <string name="chat_action_status_cancelled">Cancelado</string>
+    <string name="chat_action_cd_create">Propuesta: crear el hábito %1$s, %2$s. %3$s</string>
+    <string name="chat_action_cd_completion">Propuesta: %1$s, %2$s, %3$s. %4$s</string>
+    <string name="chat_action_error_habit_missing">Ese hábito ya no existe.</string>
+    <string name="chat_action_error_day_not_allowed">Ese día ya no se puede cambiar desde el chat.</string>
 
     <!-- Legacy tab keys -->
 </resources>

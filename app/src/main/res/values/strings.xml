@@ -436,13 +436,27 @@
     <string name="recommendation_sending">Waiting for a reply</string>
     <string name="recommendation_you">You</string>
     <string name="recommendation_assistant">Assistant</string>
-    <string name="recommendation_empty_title">No habits yet</string>
-    <string name="recommendation_empty_message">Create a habit before sending a message.</string>
     <string name="recommendation_error_invalid">The weekly numbers could not be sent. Try again.</string>
     <string name="recommendation_error_timeout">The reply took too long. Try again.</string>
     <string name="recommendation_error_empty">No reply came back. Try again.</string>
     <string name="recommendation_error_unavailable">The assistant is unavailable. Try again.</string>
     <string name="recommendation_error_session">Your session has expired. Sign out and sign in again to use Bloom.</string>
+    <string name="recommendation_greeting_no_habits">You have no habits yet. Tell me which one you want to start and I will set it up.</string>
+    <string name="chat_action_create_title">New habit</string>
+    <string name="chat_action_mark_done">Mark as done</string>
+    <string name="chat_action_unmark">Remove done</string>
+    <string name="chat_action_create">Create</string>
+    <string name="chat_action_cancel">Cancel</string>
+    <string name="chat_action_saving">Saving…</string>
+    <string name="chat_action_status_pending">Waiting for your confirmation</string>
+    <string name="chat_action_status_created">Habit created</string>
+    <string name="chat_action_status_marked">Marked as done</string>
+    <string name="chat_action_status_unmarked">Done mark removed</string>
+    <string name="chat_action_status_cancelled">Cancelled</string>
+    <string name="chat_action_cd_create">Proposal: create the habit %1$s, %2$s. %3$s</string>
+    <string name="chat_action_cd_completion">Proposal: %1$s, %2$s, %3$s. %4$s</string>
+    <string name="chat_action_error_habit_missing">That habit no longer exists.</string>
+    <string name="chat_action_error_day_not_allowed">That day can no longer be changed from the chat.</string>
 
     <!-- Legacy tab keys -->
 </resources>

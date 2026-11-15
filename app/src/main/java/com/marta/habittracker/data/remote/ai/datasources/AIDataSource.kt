@@ -1,21 +1,28 @@
 package com.marta.habittracker.data.remote.ai.datasources
 
 import android.util.Log
+import com.marta.habittracker.data.mapper.AssistantActionMapper.toBody
+import com.marta.habittracker.data.mapper.AssistantActionMapper.toProposal
+import com.marta.habittracker.data.mapper.AssistantActionMapper.wire
 import com.marta.habittracker.data.remote.ai.BloomAccessTokens
 import com.marta.habittracker.data.remote.ai.RecommendationTransport
 import com.marta.habittracker.data.remote.ai.TokenRefresh
 import com.marta.habittracker.data.remote.ai.TransportResult
+import com.marta.habittracker.data.remote.ai.dto.ChatActionBody
 import com.marta.habittracker.data.remote.ai.dto.ChatMessageBody
 import com.marta.habittracker.data.remote.ai.dto.ChatRequestBody
 import com.marta.habittracker.data.remote.ai.dto.ChatResponseBody
-import com.marta.habittracker.data.remote.ai.dto.RecommendationHabitBody
 import com.marta.habittracker.data.remote.ai.helper.unwrapAssistantReply
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChatReply
+import com.marta.habittracker.domain.model.ProposedAction
 import com.marta.habittracker.domain.model.errors.RecommendationError
-import com.marta.habittracker.domain.usecase.HabitWeekStat
+import com.marta.habittracker.domain.usecase.ChatContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 class BloomRecommendationDataSource(
     private val baseUrl: String,
@@ -26,10 +33,10 @@ class BloomRecommendationDataSource(
 
 
     suspend fun send(
-        stats: List<HabitWeekStat>,
+        context: ChatContext,
         language: String,
         messages: List<AssistantTurn>,
-    ): DataResult<String, RecommendationError> {
+    ): DataResult<ChatReply, RecommendationError> {
         val trimmed = baseUrl.trim()
         if (trimmed.isEmpty()) {
             Log.w(TAG, "Chat skipped: base URL is blank")
@@ -39,20 +46,18 @@ class BloomRecommendationDataSource(
         val url = trimmed.trimEnd('/') + CHAT_PATH
         val body = json.encodeToString(
             ChatRequestBody(
-                habits = stats.map { stat ->
-                    RecommendationHabitBody(
-                        name = stat.name,
-                        completedDays = stat.completedDays,
-                        totalDays = stat.totalDays,
-                    )
-                },
+                habits = context.habits.map { it.toBody() },
                 language = language,
                 messages = messages.map { turn ->
                     ChatMessageBody(
                         role = turn.role.wire(),
                         content = turn.text,
+                        action = turn.action?.toBody(),
+                        actionStatus = turn.action?.let { turn.actionStatus?.wire() },
                     )
                 },
+                today = context.today.toString(),
+                catalog = context.catalog.toBody(),
             ),
         )
         val token = accessTokens.current()
@@ -90,7 +95,7 @@ class BloomRecommendationDataSource(
         }
     }
 
-    private fun interpretChat(response: TransportResult): DataResult<String, RecommendationError> {
+    private fun interpretChat(response: TransportResult): DataResult<ChatReply, RecommendationError> {
         return when (response) {
             TransportResult.Timeout -> DataResult.Error(RecommendationError.TimedOut)
             TransportResult.Failure -> DataResult.Error(RecommendationError.Unavailable)
@@ -98,7 +103,7 @@ class BloomRecommendationDataSource(
         }
     }
 
-    private fun interpretChatHttp(code: Int, body: String): DataResult<String, RecommendationError> {
+    private fun interpretChatHttp(code: Int, body: String): DataResult<ChatReply, RecommendationError> {
         return when (code) {
             HTTP_UNAUTHORIZED -> DataResult.Error(RecommendationError.SessionExpired)
             400, 422 -> DataResult.Error(RecommendationError.InvalidRequest)
@@ -108,21 +113,36 @@ class BloomRecommendationDataSource(
         }
     }
 
-    private fun parseChat(body: String): DataResult<String, RecommendationError> {
+    private fun parseChat(body: String): DataResult<ChatReply, RecommendationError> {
         if (body.isBlank()) return DataResult.Error(RecommendationError.EmptyResponse)
-        val text = try {
-            val parsed = json.decodeFromString<ChatResponseBody>(body)
-            parsed.message?.takeIf { it.isNotBlank() } ?: parsed.recommendations
+        val parsed = try {
+            json.decodeFromString<ChatResponseBody>(body)
         } catch (error: IllegalArgumentException) {
             Log.e(TAG, "Chat response was not valid JSON", error)
             return DataResult.Error(RecommendationError.Unavailable)
         }
+        val text = parsed.message?.takeIf { it.isNotBlank() } ?: parsed.recommendations
         val reply = unwrapAssistantReply(text?.trim().orEmpty(), json).trim()
         return if (reply.isEmpty()) {
             DataResult.Error(RecommendationError.EmptyResponse)
         } else {
-            DataResult.Success(reply)
+            DataResult.Success(ChatReply(text = reply, proposal = parsed.action?.let(::parseProposal)))
         }
+    }
+
+    /** A malformed proposal is dropped; the text reply is kept. */
+    private fun parseProposal(element: JsonElement): ProposedAction? {
+        val proposal = try {
+            json.decodeFromJsonElement(ChatActionBody.serializer(), element).toProposal()
+        } catch (error: SerializationException) {
+            Log.e(TAG, "Chat action dropped: unexpected shape", error)
+            return null
+        } catch (error: IllegalArgumentException) {
+            Log.e(TAG, "Chat action dropped: unexpected shape", error)
+            return null
+        }
+        if (proposal == null) Log.w(TAG, "Chat action dropped: unknown type or missing fields")
+        return proposal
     }
 
 

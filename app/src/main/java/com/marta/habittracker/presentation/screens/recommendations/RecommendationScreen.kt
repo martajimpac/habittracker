@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -42,10 +44,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -58,6 +63,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import kotlinx.coroutines.launch
 import com.marta.habittracker.presentation.components.HabitIconButton
 import com.marta.habittracker.presentation.theme.habitTopBarButtonHorizontalPadding
 
@@ -81,12 +88,27 @@ fun RecommendationScreen(
     viewModel: RecommendationViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
+    val scope = rememberCoroutineScope()
+
+    ObserveAsEvents(flow = viewModel.events) { event ->
+        when (event) {
+            is ChatEvent.ShowError -> scope.launch {
+                snackbarHostState.showSnackbar(resources.getString(event.messageRes))
+            }
+        }
+    }
+
     RecommendationContent(
         uiState = uiState,
+        snackbarHostState = snackbarHostState,
         onBack = onBack,
         onDraftChange = viewModel::onDraftChange,
         onSend = viewModel::send,
         onRetry = viewModel::retry,
+        onConfirmAction = viewModel::confirmAction,
+        onCancelAction = viewModel::cancelAction,
     )
 }
 
@@ -98,10 +120,14 @@ fun RecommendationContent(
     onDraftChange: (String) -> Unit,
     onSend: () -> Unit,
     onRetry: () -> Unit,
+    onConfirmAction: (Int) -> Unit,
+    onCancelAction: (Int) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scheme = MaterialTheme.colorScheme
     Scaffold(
         containerColor = scheme.surface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
@@ -130,13 +156,12 @@ fun RecommendationContent(
                 ChatPhase.LoadingHabits -> CenteredStatus {
                     CircularProgressIndicator(color = scheme.primary)
                 }
-                ChatPhase.Empty -> CenteredStatus {
-                    EmptyCopy()
-                }
                 ChatPhase.Ready,
                 ChatPhase.Sending,
                 -> ChatTranscript(
                     uiState = uiState,
+                    onConfirmAction = onConfirmAction,
+                    onCancelAction = onCancelAction,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -150,7 +175,7 @@ fun RecommendationContent(
                     onRetry = onRetry,
                 )
             }
-            if (uiState.phase == ChatPhase.Ready || uiState.phase == ChatPhase.Sending) {
+            if (uiState.phase != ChatPhase.LoadingHabits) {
                 Composer(
                     draft = uiState.draft,
                     sending = uiState.phase == ChatPhase.Sending,
@@ -177,27 +202,10 @@ private fun CenteredStatus(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun EmptyCopy() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = stringResource(R.string.recommendation_empty_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Black,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.recommendation_empty_message),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
 private fun ChatTranscript(
     uiState: ChatUiState,
+    onConfirmAction: (Int) -> Unit,
+    onCancelAction: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -217,11 +225,16 @@ private fun ChatTranscript(
     ) {
         if (uiState.messages.isEmpty() && !sending) {
             item {
-                Greeting()
+                Greeting(hasHabits = uiState.hasHabits)
             }
         }
-        items(uiState.messages) { message ->
-            MessageBubble(message)
+        itemsIndexed(uiState.messages) { index, message ->
+            MessageBubble(
+                message = message,
+                saving = index in uiState.savingActions,
+                onConfirm = { onConfirmAction(index) },
+                onCancel = { onCancelAction(index) },
+            )
         }
         if (sending) {
             item { TypingBubble() }
@@ -230,7 +243,7 @@ private fun ChatTranscript(
 }
 
 @Composable
-private fun Greeting() {
+private fun Greeting(hasHabits: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -238,7 +251,9 @@ private fun Greeting() {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.recommendation_greeting),
+            text = stringResource(
+                if (hasHabits) R.string.recommendation_greeting else R.string.recommendation_greeting_no_habits,
+            ),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
@@ -248,41 +263,60 @@ private fun Greeting() {
 }
 
 @Composable
-private fun MessageBubble(message: AssistantTurn) {
+private fun MessageBubble(
+    message: AssistantTurn,
+    saving: Boolean,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
     val fromUser = message.role == AssistantRole.User
     val label = stringResource(
         if (fromUser) R.string.recommendation_you else R.string.recommendation_assistant,
     )
     val spoken = if (fromUser) message.text else assistantPlainText(message.text).ifBlank { message.text }
-    val wide = !fromUser && parseAssistantMarkdown(message.text).any { it.isStructural() }
+    val action = message.action.takeIf { !fromUser }
+    val actionStatus = message.actionStatus
+    val wide = !fromUser && (action != null || parseAssistantMarkdown(message.text).any { it.isStructural() })
     val scheme = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (fromUser) Arrangement.End else Arrangement.Start,
-    ) {
-        Surface(
-            modifier = Modifier
-                .then(if (wide) Modifier.fillMaxWidth() else Modifier.widthIn(max = 300.dp))
-                .semantics(mergeDescendants = true) {
-                    contentDescription = "$label. $spoken"
-                },
-            shape = if (fromUser) UserBubbleShape else AssistantBubbleShape,
-            color = if (fromUser) scheme.primary else scheme.surfaceContainerLowest,
-            contentColor = if (fromUser) scheme.onPrimary else scheme.onSurface,
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = if (fromUser) Arrangement.End else Arrangement.Start,
         ) {
-            if (fromUser) {
-                Text(
-                    text = message.text,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            } else {
-                AssistantMarkdownText(
-                    text = message.text,
-                    color = scheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                )
+            Surface(
+                modifier = Modifier
+                    .then(if (wide) Modifier.fillMaxWidth() else Modifier.widthIn(max = 300.dp))
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = "$label. $spoken"
+                    },
+                shape = if (fromUser) UserBubbleShape else AssistantBubbleShape,
+                color = if (fromUser) scheme.primary else scheme.surfaceContainerLowest,
+                contentColor = if (fromUser) scheme.onPrimary else scheme.onSurface,
+            ) {
+                if (fromUser) {
+                    Text(
+                        text = message.text,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                } else {
+                    AssistantMarkdownText(
+                        text = message.text,
+                        color = scheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    )
+                }
             }
+        }
+        if (action != null && actionStatus != null) {
+            ActionCard(
+                action = action,
+                status = actionStatus,
+                saving = saving,
+                onConfirm = onConfirm,
+                onCancel = onCancel,
+                modifier = Modifier.padding(top = 6.dp),
+            )
         }
     }
 }
