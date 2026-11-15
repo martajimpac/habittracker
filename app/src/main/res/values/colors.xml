@@ -9,9 +9,8 @@
     <color name="habit_on_surface_variant">#FF5D5D60</color>
 
     <!-- Widget picker previews: same tokens the Glance widgets compute in code. -->
-    <!-- HabitOutline at 35 % (empty check) and 28 % (empty progress segment). -->
+    <!-- HabitOutline at 35 % (empty check). -->
     <color name="widget_preview_check_empty">#597D828A</color>
-    <color name="widget_preview_track">#477D828A</color>
     <!-- Sample habit colours (HabitColor2/6/8) and their 16 % icon backgrounds. -->
     <color name="widget_preview_accent_orange">#FFF27A24</color>
     <color name="widget_preview_accent_orange_soft">#29F27A24</color>
@@ -20,4 +19,9 @@
     <color name="widget_preview_accent_teal_soft">#2912CEA8</color>
     <color name="widget_preview_accent_blue">#FF3A98EA</color>
     <color name="widget_preview_accent_blue_soft">#293A98EA</color>
+    <!-- Challenge card preview: HabitOutline (loser ring), HabitOutline at 35 % (bar track),
+         and the habit colour at 12 % (icon tile). Avatars reuse the blue / teal samples. -->
+    <color name="widget_preview_outline">#FF7D828A</color>
+    <color name="widget_preview_bar_track">#597D828A</color>
+    <color name="widget_preview_accent_orange_tile">#1FF27A24</color>
 </resources>

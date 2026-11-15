@@ -6,6 +6,8 @@
     android:minHeight="110dp"
     android:previewLayout="@layout/challenge_widget_preview"
     android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
     android:widgetFeatures="reconfigurable|configuration_optional" />

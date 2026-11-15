@@ -115,7 +115,6 @@
     <string name="friends_decline">Decline</string>
     <string name="friends_list_title">Friends</string>
     <string name="friends_me">Me</string>
-    <string name="friends_challenge_tie">Tie</string>
     <string name="friends_challenge_leader">Who is ahead</string>
     <string name="friends_days_left">%1$d days left</string>
     <string name="friends_challenge_vs">VS</string>
@@ -403,17 +402,17 @@
     <string name="challenge_widget_configure">Configure challenge</string>
     <string name="challenge_widget_load_failed">Could not load challenges. Please try again.</string>
     <string name="challenge_widget_versus">vs %1$s</string>
-    <string name="challenge_widget_progress">You %1$d%% · %2$s %3$d%%</string>
-    <string name="challenge_widget_days_left">%1$d days left</string>
     <string name="challenge_widget_status_pending">Pending</string>
     <string name="challenge_widget_status_active">Active</string>
 
     <!-- Weekly widget -->
     <string name="challenge_widget_preview_habit">Run</string>
-    <string name="challenge_widget_preview_versus">vs Alex</string>
-    <string name="challenge_widget_preview_progress">You 60% · Alex 40%</string>
-    <string name="challenge_widget_preview_days_left">5 days left</string>
-    <string name="challenge_widget_preview_leader">Me</string>
+    <string name="challenge_widget_preview_days_left">5 days remaining</string>
+    <string name="challenge_widget_preview_me_initials">ME</string>
+    <string name="challenge_widget_preview_rival">Alex</string>
+    <string name="challenge_widget_preview_rival_initials">AL</string>
+    <string name="challenge_widget_preview_my_score">4/7</string>
+    <string name="challenge_widget_preview_rival_score">3/7</string>
 
     <!-- Today widget -->
     <string name="today_widget_label">Today</string>

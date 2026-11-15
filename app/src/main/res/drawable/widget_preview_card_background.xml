@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Challenge widget preview root: light card like the app's challenge card (24dp corners).
+     Android 12+ uses the system widget radius (drawable-v31). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/habit_cream" />
+    <corners android:radius="24dp" />
+</shape>

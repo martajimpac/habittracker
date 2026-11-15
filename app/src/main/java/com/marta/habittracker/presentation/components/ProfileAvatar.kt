@@ -85,9 +85,12 @@ fun ProfileAvatar(
 }
 
 @Composable
-fun userAvatarInitials(displayName: String): String {
+fun userAvatarInitials(displayName: String): String =
+    avatarInitials(displayName, stringResource(R.string.user_avatar_initials_fallback))
+
+/** Initials shown when there is no photo: first letters of the first and last word, or the first two letters. */
+fun avatarInitials(displayName: String, fallback: String): String {
     val parts = displayName.trim().split(" ").filter { it.isNotBlank() }
-    val fallback = stringResource(R.string.user_avatar_initials_fallback)
     return when {
         parts.isEmpty() -> fallback
         parts.size == 1 -> parts.first().take(2).uppercase()
