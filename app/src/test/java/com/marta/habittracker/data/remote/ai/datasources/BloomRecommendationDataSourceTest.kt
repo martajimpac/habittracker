@@ -6,7 +6,16 @@ import com.marta.habittracker.data.remote.ai.TokenRefresh
 import com.marta.habittracker.data.remote.ai.TransportResult
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantRole
+import com.marta.habittracker.domain.model.AssistantAction
+import com.marta.habittracker.domain.model.AssistantActionStatus
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChatReply
+import com.marta.habittracker.domain.model.HabitCatalog
+import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.ProposedAction
+import com.marta.habittracker.domain.usecase.ChatContext
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.usecase.HabitWeekStat
 import kotlinx.coroutines.test.runTest
@@ -19,7 +28,11 @@ import org.junit.Test
 
 class BloomRecommendationDataSourceTest {
 
-    private val stats = listOf(HabitWeekStat(name = "Read", completedDays = 2, totalDays = 3))
+    private val context = ChatContext(
+        habits = listOf(HabitWeekStat(name = "Read", completedDays = 2, totalDays = 3)),
+        today = LocalDate(2026, 11, 12),
+        catalog = HabitCatalog(icons = listOf("menu_book"), colorHexes = listOf("#294536")),
+    )
 
 
     @Test
@@ -33,14 +46,14 @@ class BloomRecommendationDataSourceTest {
         )
 
         val result = source.send(
-            stats = stats,
+            context = context,
             language = "en",
             messages = listOf(
                 AssistantTurn(role = AssistantRole.User, text = "How is my week?"),
             ),
         )
 
-        assertEquals(DataResult.Success("Walk after lunch."), result)
+        assertEquals(DataResult.Success(ChatReply("Walk after lunch.")), result)
         assertEquals("http://10.0.2.2:8000/api/chat", transport.url)
         assertFalse(transport.url.orEmpty().contains("11434"))
         assertTrue(transport.body.orEmpty().contains("\"language\":\"en\""))
@@ -60,12 +73,12 @@ class BloomRecommendationDataSourceTest {
         )
 
         val result = source.send(
-            stats = stats,
+            context = context,
             language = "es",
             messages = listOf(AssistantTurn(role = AssistantRole.User, text = "¿Cómo voy?")),
         )
 
-        assertEquals(DataResult.Success(markdown), result)
+        assertEquals(DataResult.Success(ChatReply(markdown)), result)
     }
 
     @Test
@@ -78,12 +91,12 @@ class BloomRecommendationDataSourceTest {
         )
 
         val result = source.send(
-            stats = stats,
+            context = context,
             language = "es",
             messages = listOf(AssistantTurn(role = AssistantRole.User, text = "Hola")),
         )
 
-        assertEquals(DataResult.Success("**Hola**\n* uno"), result)
+        assertEquals(DataResult.Success(ChatReply("**Hola**\n* uno")), result)
     }
 
     @Test
@@ -94,7 +107,7 @@ class BloomRecommendationDataSourceTest {
         )
 
         val result = source.send(
-            stats = stats,
+            context = context,
             language = "es",
             messages = listOf(AssistantTurn(role = AssistantRole.User, text = "Hola")),
         )
@@ -109,7 +122,7 @@ class BloomRecommendationDataSourceTest {
         val source = dataSource(baseUrl = "  ", transport = transport)
 
         val result = source.send(
-            stats = stats,
+            context = context,
             language = "es",
             messages = listOf(AssistantTurn(role = AssistantRole.User, text = "Hola")),
         )
@@ -124,7 +137,7 @@ class BloomRecommendationDataSourceTest {
         val transport = FakeRecommendationTransport(TransportResult.Http(200, OK_BODY))
         val source = dataSource(BASE_URL, transport, FakeAccessTokens(current = "session-token"))
 
-        source.send(stats, "es", hello)
+        source.send(context, "es", hello)
 
         assertEquals(listOf("session-token"), transport.tokens)
     }
@@ -139,9 +152,9 @@ class BloomRecommendationDataSourceTest {
         val tokens = FakeAccessTokens(refresh = TokenRefresh.Refreshed("fresh-token"))
         val source = dataSource(BASE_URL, transport, tokens)
 
-        val result = source.send(stats, "es", hello)
+        val result = source.send(context, "es", hello)
 
-        assertEquals(DataResult.Success("Hola"), result)
+        assertEquals(DataResult.Success(ChatReply("Hola")), result)
         assertEquals(listOf("session-token", "fresh-token"), transport.tokens)
         assertEquals(1, tokens.refreshCalls)
     }
@@ -153,7 +166,7 @@ class BloomRecommendationDataSourceTest {
         val tokens = FakeAccessTokens()
         val source = dataSource(BASE_URL, transport, tokens)
 
-        val result = source.send(stats, "es", hello)
+        val result = source.send(context, "es", hello)
 
         assertEquals(DataResult.Error(RecommendationError.SessionExpired), result)
         assertEquals(2, transport.tokens.size)
@@ -165,7 +178,7 @@ class BloomRecommendationDataSourceTest {
         val transport = FakeRecommendationTransport(TransportResult.Http(401, UNAUTHORIZED_BODY))
         val source = dataSource(BASE_URL, transport, FakeAccessTokens(refresh = TokenRefresh.SignedOut))
 
-        val result = source.send(stats, "es", hello)
+        val result = source.send(context, "es", hello)
 
         assertEquals(DataResult.Error(RecommendationError.SessionExpired), result)
         assertEquals(1, transport.tokens.size)
@@ -176,7 +189,7 @@ class BloomRecommendationDataSourceTest {
         val transport = FakeRecommendationTransport(TransportResult.Http(401, UNAUTHORIZED_BODY))
         val source = dataSource(BASE_URL, transport, FakeAccessTokens(refresh = TokenRefresh.Failed))
 
-        val result = source.send(stats, "es", hello)
+        val result = source.send(context, "es", hello)
 
         assertEquals(DataResult.Error(RecommendationError.Unavailable), result)
         assertEquals(1, transport.tokens.size)
@@ -189,7 +202,7 @@ class BloomRecommendationDataSourceTest {
         val tokens = FakeAccessTokens(current = null)
         val source = dataSource(BASE_URL, transport, tokens)
 
-        val result = source.send(stats, "es", hello)
+        val result = source.send(context, "es", hello)
 
         assertEquals(DataResult.Error(RecommendationError.SessionExpired), result)
         assertEquals(null, transport.url)
@@ -203,7 +216,7 @@ class BloomRecommendationDataSourceTest {
         val transport = FakeRecommendationTransport(TransportResult.Http(200, OK_BODY))
         val source = dataSource(BASE_URL, transport, FakeAccessTokens(current = "secret-session-token"))
 
-        source.send(stats, "es", hello)
+        source.send(context, "es", hello)
 
         assertFalse(transport.body.orEmpty().contains("secret-session-token"))
     }
@@ -214,6 +227,76 @@ class BloomRecommendationDataSourceTest {
         const val BASE_URL = "http://10.0.2.2:8000"
         const val OK_BODY = """{"message":"Hola"}"""
         const val UNAUTHORIZED_BODY = """{"detail":"Sesión no válida."}"""
+    }
+
+    @Test
+    fun `sends today, the catalog, habit schedules and the outcome of earlier proposals`() = runTest {
+        val transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"Ok"}"""))
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = transport)
+        val gym = HabitWeekStat(
+            name = "Gym",
+            completedDays = 1,
+            totalDays = 2,
+            id = "h-gym",
+            schedule = HabitSchedule.WEEKDAYS,
+            days = setOf(DayOfWeek.FRIDAY, DayOfWeek.MONDAY),
+            weeklyTarget = 7,
+            doneDates = listOf(LocalDate(2026, 11, 9)),
+        )
+        val proposal = AssistantAction.SetCompletion("h-gym", "Gym", "fitness_center", "#294536", LocalDate(2026, 11, 9), false)
+
+        source.send(
+            context = context.copy(habits = listOf(gym)),
+            language = "es",
+            messages = listOf(
+                AssistantTurn(AssistantRole.User, "quita el gym del lunes"),
+                AssistantTurn(AssistantRole.Assistant, "¿Lo quito?", proposal, AssistantActionStatus.Cancelled),
+                AssistantTurn(AssistantRole.User, "¿qué ha pasado?"),
+            ),
+        )
+
+        val body = transport.body.orEmpty()
+        assertTrue(body.contains("\"today\":\"2026-11-12\""))
+        assertTrue(body.contains("\"catalog\":{\"icons\":[\"menu_book\"],\"colors\":[\"#294536\"]}"))
+        assertTrue(body.contains("\"id\":\"h-gym\""))
+        assertTrue(body.contains("\"schedule\":{\"mode\":\"weekdays\",\"days\":[\"MONDAY\",\"FRIDAY\"]}"))
+        assertTrue(body.contains("\"done_dates\":[\"2026-11-09\"]"))
+        assertTrue(body.contains("\"action\":{\"type\":\"set_completion\",\"habit_id\":\"h-gym\",\"date\":\"2026-11-09\",\"completed\":false}"))
+        assertTrue(body.contains("\"action_status\":\"cancelled\""))
+    }
+
+    @Test
+    fun `reads a proposed action next to the text`() = runTest {
+        val payload = """{"message":"Mira:","action":{"type":"create_habit","name":"Leer","icon":"menu_book","color":"#294536","schedule":{"mode":"weekly_count","weekly_target":3}}}"""
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = FakeRecommendationTransport(TransportResult.Http(200, payload)))
+
+        val result = source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "crea leer")))
+
+        assertEquals(
+            DataResult.Success(
+                ChatReply(
+                    text = "Mira:",
+                    proposal = ProposedAction.CreateHabit("Leer", null, "menu_book", "#294536", "weekly_count", emptyList(), 3),
+                ),
+            ),
+            result,
+        )
+    }
+
+    // CA-23
+    @Test
+    fun `a malformed action is dropped and the text is kept`() = runTest {
+        listOf(
+            """{"message":"Hola","action":{"type":"set_completion","habit_id":"h","date":"2026-11-11","completed":"yes"}}""",
+            """{"message":"Hola","action":{"type":"delete_habit"}}""",
+            """{"message":"Hola","action":"oops"}""",
+        ).forEach { payload ->
+            val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = FakeRecommendationTransport(TransportResult.Http(200, payload)))
+
+            val result = source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "hola")))
+
+            assertEquals(payload, DataResult.Success(ChatReply("Hola")), result)
+        }
     }
 }
 

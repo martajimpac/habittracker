@@ -417,6 +417,17 @@ Detalle en `ai-docs/features/bloom-api-auth/`.
 - Ni la app ni la API registran el token ni la clave de Groq.
 - Límite de gasto en AWS: 5 ejecuciones simultáneas de la Lambda y alerta de presupuesto de 5 USD/mes por correo.
 
+### Órdenes en el chat de Bloom
+
+Detalle en `ai-docs/features/chat-actions/`.
+
+- En el chat, la persona puede pedir a Bloom que cree un hábito o que marque o quite el hecho de un hábito en un día. Bloom no ejecuta nada: propone la acción en una tarjeta dentro de la conversación, y solo se guarda al pulsar el botón de confirmar (Crear, Marcar como hecho o Quitar hecho). Cancelar no guarda nada. Una propuesta por respuesta. Editar y eliminar hábitos desde el chat quedan fuera.
+- Crear: nombre (obligatorio, máximo 100 caracteres), descripción opcional, icono y color del formulario (si Bloom propone otro, se usan los de por defecto) y frecuencia (diaria si no se indica). Siempre privado y con el recordatorio apagado; los recordatorios no se piden desde el chat.
+- Marcar o quitar: las mismas reglas que Inicio, es decir, hoy o un día pasado de la semana actual y en un hábito que aparece ese día. Si la orden es ambigua, el día no se permite o ya está en ese estado, Bloom lo explica y no muestra tarjeta. Al confirmar, el día queda en el estado de la tarjeta aunque se haya cambiado desde Inicio.
+- La app comprueba cada propuesta antes de mostrarla y otra vez al confirmar. Si el hábito ya no existe o el día ya no se puede cambiar, se muestra un error y no cambia nada. Mientras se guarda, los botones no responden; si falla (p. ej. sin red), se muestra un snackbar y la tarjeta conserva sus botones. Guardar usa el mismo camino online-first que el formulario y que Inicio.
+- El chat funciona sin hábitos: el saludo invita a crear el primero. La API acepta la lista vacía.
+- A Bloom se le envían los nombres, los recuentos semanales, la programación y los días hechos de la semana de cada hábito, la fecha de hoy, los iconos y colores del formulario y el resultado de cada propuesta (pendiente, hecha o cancelada). La conversación sigue sin guardarse.
+
 ### Secretos
 
 - El proyecto debe escanearse en tests para detectar posibles claves de Firebase, API keys, tokens, passwords o private keys hardcodeadas.

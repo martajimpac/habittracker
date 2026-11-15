@@ -2,6 +2,7 @@ package com.marta.habittracker.domain.usecase
 
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitRecord
+import com.marta.habittracker.domain.model.HabitSchedule
 import java.time.Instant
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
@@ -30,10 +31,7 @@ class HabitWeekRecommendationStatsTest {
 
         val stats = habitWeekRecommendationStats(listOf(habit), wednesday)
 
-        assertEquals(
-            listOf(HabitWeekStat(name = "Read", completedDays = 2, totalDays = 3)),
-            stats,
-        )
+        assertEquals(listOf(Triple("Read", 2, 3)), stats.counts())
     }
 
     @Test
@@ -50,12 +48,31 @@ class HabitWeekRecommendationStatsTest {
 
         val stats = habitWeekRecommendationStats(listOf(blank, overTarget), wednesday)
 
-        assertEquals(
-            listOf(HabitWeekStat(name = "Walk", completedDays = 4, totalDays = 2)),
-            stats,
+        assertEquals(listOf(Triple("Walk", 4, 2)), stats.counts())
+    }
+
+    @Test
+    fun `includes id, schedule and the done days up to today for chat actions`() {
+        val monday = LocalDate(2026, 10, 26)
+        val habit = habit(
+            name = "Gym",
+            daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY),
+            records = listOf(
+                record("a", monday, completed = true),
+                record("b", monday.plus(DatePeriod(days = 3)), completed = true),
+            ),
         )
+
+        val stat = habitWeekRecommendationStats(listOf(habit), wednesday).single()
+
+        assertEquals("Gym", stat.id)
+        assertEquals(HabitSchedule.WEEKDAYS, stat.schedule)
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY), stat.days)
+        assertEquals(listOf(monday), stat.doneDates)
     }
 }
+
+private fun List<HabitWeekStat>.counts() = map { Triple(it.name, it.completedDays, it.totalDays) }
 
 private fun habit(
     name: String,
