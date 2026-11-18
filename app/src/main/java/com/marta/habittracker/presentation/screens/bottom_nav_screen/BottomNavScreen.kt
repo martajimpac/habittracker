@@ -29,7 +29,10 @@ import com.marta.habittracker.presentation.navigation.BottomNavigation
 import com.marta.habittracker.presentation.navigation.LaunchTarget
 import com.marta.habittracker.presentation.navigation.NavigationBottomWrapper
 import com.marta.habittracker.presentation.navigation.TabScreens
+import com.marta.habittracker.presentation.navigation.hasDarkTop
+import com.marta.habittracker.presentation.navigation.hidesBottomBar
 import com.marta.habittracker.presentation.navigation.navigateToTab
+import com.marta.habittracker.presentation.navigation.selectedBottomTab
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
 import kotlinx.coroutines.flow.Flow
@@ -60,26 +63,11 @@ fun BottomNavScreen(
         }
     }
     val navStackEntry by tabNavController.currentBackStackEntryAsState()
-    val destinationRoute = navStackEntry?.destination?.route.orEmpty()
+    val destination = navStackEntry?.destination
 
-    val selectedTab = BottomNavigation.destinationTabs.firstOrNull { tab ->
-        destinationRoute.contains(tab.tabScreen::class.qualifiedName.toString())
-    } ?: BottomNavigation.TabHome
-
-    val hideBottomBar =
-        destinationRoute.contains(TabScreens.TabAddContent::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabDetail::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabEditHabit::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabPreferences::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabGoals::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabRecommendations::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabDeleteAccount::class.qualifiedName.toString()) ||
-            destinationRoute.contains(TabScreens.TabChallengeDetail::class.qualifiedName.toString())
-
-    val darkTop = destinationRoute.contains(TabScreens.TabHome::class.qualifiedName.toString()) ||
-        destinationRoute.contains(TabScreens.TabProfile::class.qualifiedName.toString()) ||
-        destinationRoute.contains(TabScreens.TabAddContent::class.qualifiedName.toString()) ||
-        destinationRoute.contains(TabScreens.TabEditHabit::class.qualifiedName.toString())
+    val selectedTab = destination.selectedBottomTab()
+    val hideBottomBar = destination.hidesBottomBar()
+    val darkTop = destination.hasDarkTop()
     SyncStatusBarIcons(lightBackground = !isHabitDarkTheme() && !darkTop)
 
     BottomNavContent(
