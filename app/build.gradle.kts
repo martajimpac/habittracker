@@ -81,8 +81,8 @@ android {
         applicationId = "com.marta.habittracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20251106
-        versionName = "1.0.0"
+        versionCode = 20261118
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
