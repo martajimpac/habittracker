@@ -96,6 +96,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
+import com.marta.habittracker.BuildConfig
 import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.presentation.utils.toUserMessageRes
 import com.marta.habittracker.presentation.widgets.WidgetRefresher
@@ -164,6 +165,9 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         viewModel.refreshDisplayName()
+        if (BuildConfig.DEBUG) {
+            snackbarHostState.showSnackbar(context.getString(R.string.debug_mode_active))
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
