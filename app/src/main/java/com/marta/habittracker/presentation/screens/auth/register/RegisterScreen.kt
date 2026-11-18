@@ -89,11 +89,12 @@ fun RegisterScreen(
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
-    ObserveAsEvents(flow = registerViewModel.navigateToHome) {
-        navigateToHome()
-    }
-    ObserveAsEvents(flow = registerViewModel.accountCreated) { account ->
-        navigateToLogin(account.email, account.password)
+    ObserveAsEvents(flow = registerViewModel.events) { event ->
+        when (event) {
+            RegisterEvent.NavigateToHome -> navigateToHome()
+            is RegisterEvent.AccountCreated ->
+                navigateToLogin(event.account.email, event.account.password)
+        }
     }
 
     RegisterContent(
@@ -198,7 +199,9 @@ fun RegisterContent(
                 painter = painterResource(bloomLogoRes()),
                 contentDescription = stringResource(R.string.app_name),
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(0.72f)
+                    .align(Alignment.CenterHorizontally),
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(

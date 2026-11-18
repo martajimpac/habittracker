@@ -457,6 +457,16 @@
     <string name="chat_action_cd_completion">Proposal: %1$s, %2$s, %3$s. %4$s</string>
     <string name="chat_action_error_habit_missing">That habit no longer exists.</string>
     <string name="chat_action_error_day_not_allowed">That day can no longer be changed from the chat.</string>
+    <string name="chat_action_error_friend_missing">That person is no longer your friend, so the challenge was not sent.</string>
+    <string name="chat_challenge_title">Challenge</string>
+    <string name="chat_challenge_confirm">Challenge</string>
+    <string name="chat_challenge_terms">%1$s · %2$s</string>
+    <string name="chat_challenge_status_sent">Challenge sent</string>
+    <string name="chat_challenge_open">View challenge</string>
+    <string name="chat_challenge_cd">Challenge proposal for %1$s: %2$s, %3$s, %4$s, %5$s. Status: %6$s</string>
+    <string name="chat_challenge_friend_not_found">I can\'t find “%1$s” among your friends. Check the name, or add them from Friends.</string>
+    <string name="chat_challenge_friend_ambiguous">Several friends match “%1$s”: %2$s. Which one do you want to challenge?</string>
+    <string name="chat_challenge_no_friends">You don\'t have any friends yet. Add one from Friends to challenge them.</string>
 
     <!-- Legacy tab keys -->
 </resources>

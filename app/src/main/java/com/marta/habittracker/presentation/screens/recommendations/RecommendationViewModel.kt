@@ -13,11 +13,14 @@ import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitCatalog
+import com.marta.habittracker.domain.model.ProposedAction
 import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.repository.HabitRepository
 import com.marta.habittracker.domain.repository.RecommendationRepository
+import com.marta.habittracker.domain.usecase.ChallengeResolution
 import com.marta.habittracker.domain.usecase.ChatContext
 import com.marta.habittracker.domain.usecase.ExecuteAssistantAction
+import com.marta.habittracker.domain.usecase.ResolveChallengeProposal
 import com.marta.habittracker.domain.usecase.habitWeekRecommendationStats
 import com.marta.habittracker.domain.usecase.resolveAssistantAction
 import com.marta.habittracker.presentation.components.HabitIconOptions
@@ -62,6 +65,7 @@ class RecommendationViewModel(
     habitRepository: HabitRepository,
     private val recommendations: RecommendationRepository,
     private val executeAction: ExecuteAssistantAction,
+    private val resolveChallenge: ResolveChallengeProposal,
     private val today: () -> LocalDate,
     private val language: () -> String,
     private val catalog: HabitCatalog = formCatalog(),
@@ -73,10 +77,12 @@ class RecommendationViewModel(
         habitRepository: HabitRepository,
         recommendations: RecommendationRepository,
         executeAction: ExecuteAssistantAction,
+        resolveChallenge: ResolveChallengeProposal,
     ) : this(
         habitRepository,
         recommendations,
         executeAction,
+        resolveChallenge,
         { LocalDate.now() },
         { appChatLanguage(Locale.getDefault().language) },
     )
@@ -188,18 +194,11 @@ class RecommendationViewModel(
         viewModelScope.launch {
             when (val result = recommendations.send(context, languageCode, messages)) {
                 is DataResult.Success -> {
-                    val action = result.data.proposal?.let { proposal ->
-                        resolveAssistantAction(proposal, snapshot, day, catalog, newId)
-                    }
+                    val turn = assistantTurn(result.data.text, result.data.proposal, snapshot, day)
                     _uiState.update {
                         it.copy(
                             phase = ChatPhase.Ready,
-                            messages = it.messages + AssistantTurn(
-                                role = AssistantRole.Assistant,
-                                text = result.data.text,
-                                action = action,
-                                actionStatus = action?.let { AssistantActionStatus.Pending },
-                            ),
+                            messages = it.messages + turn,
                             errorRes = null,
                         )
                     }
@@ -212,6 +211,41 @@ class RecommendationViewModel(
                 }
             }
         }
+    }
+
+    /**
+     * Bloom's turn with its card, if any. A challenge proposal needs the friends list, so it is
+     * resolved here; when no friend fits, the turn carries the app's notice instead of a card.
+     */
+    private suspend fun assistantTurn(
+        text: String,
+        proposal: ProposedAction?,
+        snapshot: List<Habit>,
+        day: kotlinx.datetime.LocalDate,
+    ): AssistantTurn {
+        val plain = AssistantTurn(role = AssistantRole.Assistant, text = text)
+        if (proposal is ProposedAction.CreateChallenge) {
+            return when (val resolution = resolveChallenge(proposal, catalog, newId)) {
+                is ChallengeResolution.Card -> plain.copy(
+                    action = resolution.action,
+                    actionStatus = AssistantActionStatus.Pending,
+                )
+                is ChallengeResolution.Discarded -> {
+                    resolution.error?.let { error ->
+                        Log.e(TAG, "Chat challenge: friends lookup failed $error")
+                        _events.send(ChatEvent.ShowError(error.toUserMessageRes()))
+                    }
+                    Log.d(TAG, "Chat challenge discarded: ${resolution.discard.reason}")
+                    plain.copy(
+                        actionStatus = AssistantActionStatus.Discarded,
+                        discard = resolution.discard,
+                    )
+                }
+                ChallengeResolution.Invalid -> plain
+            }
+        }
+        val action = proposal?.let { resolveAssistantAction(it, snapshot, day, catalog, newId) }
+        return plain.copy(action = action, actionStatus = action?.let { AssistantActionStatus.Pending })
     }
 
     companion object {

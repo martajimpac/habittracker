@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.usecase.WeeklyGoalDay
 import com.marta.habittracker.presentation.components.HabitIconButton
@@ -143,7 +144,7 @@ private fun Modifier.profileCard(): Modifier {
     return this
         .clip(shape)
         .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-        .border(1.dp, MaterialTheme.colorScheme.outline, shape)
+        .border(1.dp, habitCardBorderColor(), shape)
         .padding(16.dp)
 }
 

@@ -47,6 +47,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.countsInWeeks
@@ -67,7 +68,6 @@ import com.marta.habittracker.domain.usecase.statsStreakHighlight
 import com.marta.habittracker.presentation.screens.home.calculateStreak
 import com.marta.habittracker.presentation.screens.home.habitTimeLabel
 import com.marta.habittracker.presentation.theme.HabitColor2
-import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.utils.habitAccentColor
 import java.time.LocalDate
 
@@ -235,7 +235,7 @@ private fun StatsStreakCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -309,7 +309,7 @@ private fun StatsHabitRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

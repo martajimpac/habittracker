@@ -6,6 +6,10 @@ import com.marta.habittracker.data.remote.ai.dto.HabitScheduleBody
 import com.marta.habittracker.data.remote.ai.dto.RecommendationHabitBody
 import com.marta.habittracker.domain.model.AssistantAction
 import com.marta.habittracker.domain.model.AssistantActionStatus
+import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeDiscardReason
+import com.marta.habittracker.domain.model.ChallengeProposal
 import com.marta.habittracker.domain.model.HabitCatalog
 import com.marta.habittracker.domain.model.HabitSchedule
 import com.marta.habittracker.domain.model.ProposedAction
@@ -17,6 +21,7 @@ internal object AssistantActionMapper {
 
     private const val TYPE_CREATE = "create_habit"
     private const val TYPE_COMPLETION = "set_completion"
+    private const val TYPE_CHALLENGE = "create_challenge"
 
     fun HabitWeekStat.toBody(): RecommendationHabitBody = RecommendationHabitBody(
         name = name,
@@ -45,8 +50,31 @@ internal object AssistantActionMapper {
             date = date ?: return null,
             completed = completed ?: return null,
         )
+        TYPE_CHALLENGE -> ProposedAction.CreateChallenge(
+            friendName = friendName ?: return null,
+            name = name ?: return null,
+            icon = icon,
+            color = color,
+            scheduleMode = schedule?.mode,
+            days = schedule?.days.orEmpty(),
+            weeklyTarget = schedule?.weeklyTarget,
+            criteria = criteria,
+            durationDays = durationDays,
+        )
         else -> null
     }
+
+    /**
+     * The proposal of a Bloom turn as sent back in the history, with its status. A discarded
+     * challenge sends its proposal too, so Bloom knows why no card was shown. Friend data never
+     * leaves the app: only the name the person wrote ([ChallengeProposal.friendQuery]).
+     */
+    fun AssistantTurn.historyAction(): ChatActionBody? = action?.toBody() ?: discard?.proposal?.toBody()
+
+    fun AssistantTurn.historyStatus(): String? =
+        if (action != null || discard != null) actionStatus?.wire() else null
+
+    fun AssistantTurn.historyDiscardReason(): String? = discard?.reason?.wire()
 
     /** The action as sent back in the history, so Bloom knows what it proposed. */
     fun AssistantAction.toBody(): ChatActionBody = when (this) {
@@ -64,12 +92,45 @@ internal object AssistantActionMapper {
             date = date.toString(),
             completed = completed,
         )
+        is AssistantAction.CreateChallenge -> proposal.toBody()
+    }
+
+    private fun ChallengeProposal.toBody(): ChatActionBody {
+        val schedule = when (draft.scheduleMode) {
+            "weekdays" -> HabitSchedule.WEEKDAYS
+            "weekly_count" -> HabitSchedule.WEEKLY_COUNT
+            else -> HabitSchedule.DAILY
+        }
+        return ChatActionBody(
+            type = TYPE_CHALLENGE,
+            friendName = friendQuery,
+            name = draft.name,
+            icon = draft.icon,
+            color = draft.colorHex,
+            schedule = scheduleBody(schedule, draft.daysOfWeek, draft.daysPerWeek),
+            criteria = criteria.wire(),
+            durationDays = durationDays,
+        )
+    }
+
+    private fun ChallengeCriteria.wire(): String = when (this) {
+        ChallengeCriteria.CompletionPct -> "completion_pct"
+        ChallengeCriteria.AllDays -> "all_days"
+        ChallengeCriteria.Streak -> "streak"
+    }
+
+    private fun ChallengeDiscardReason.wire(): String = when (this) {
+        ChallengeDiscardReason.FriendNotFound -> "friend_not_found"
+        ChallengeDiscardReason.FriendAmbiguous -> "friend_ambiguous"
+        ChallengeDiscardReason.NoFriends -> "no_friends"
+        ChallengeDiscardReason.LookupFailed -> "lookup_failed"
     }
 
     fun AssistantActionStatus.wire(): String = when (this) {
         AssistantActionStatus.Pending -> "pending"
         AssistantActionStatus.Done -> "done"
         AssistantActionStatus.Cancelled -> "cancelled"
+        AssistantActionStatus.Discarded -> "discarded"
     }
 
     private fun scheduleBody(

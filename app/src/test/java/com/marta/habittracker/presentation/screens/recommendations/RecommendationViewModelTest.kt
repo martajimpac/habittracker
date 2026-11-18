@@ -6,7 +6,10 @@ import com.marta.habittracker.domain.model.AssistantAction
 import com.marta.habittracker.domain.model.AssistantActionStatus
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChallengeDiscardReason
 import com.marta.habittracker.domain.model.ChatReply
+import com.marta.habittracker.domain.model.FriendListItem
+import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitCatalog
 import com.marta.habittracker.domain.model.ProposedAction
@@ -15,7 +18,9 @@ import com.marta.habittracker.domain.model.errors.RecommendationError
 import com.marta.habittracker.domain.repository.RecommendationRepository
 import com.marta.habittracker.domain.usecase.ChatContext
 import com.marta.habittracker.domain.usecase.ExecuteAssistantAction
+import com.marta.habittracker.domain.usecase.FakeFriendsRepository
 import com.marta.habittracker.domain.usecase.FakeHabitRepository
+import com.marta.habittracker.domain.usecase.ResolveChallengeProposal
 import com.marta.habittracker.domain.usecase.SaveHabit
 import java.time.Instant
 import java.time.LocalDate
@@ -321,6 +326,140 @@ class RecommendationViewModelTest {
         assertEquals(AssistantActionStatus.Done, viewModel.uiState.value.messages[3].actionStatus)
     }
 
+    // ---- Retos (SPEC chat-challenges) ----
+
+    private val laura = Profile(id = "laura-id", username = "laurag", displayName = "Laura García", avatarColor = "#FF7775")
+
+    private fun friendsOf(vararg profiles: Profile) = FakeFriendsRepository(
+        acceptedFriendsResult = DataResult.Success(
+            profiles.map { FriendListItem(it, bestStreak = 0, publicHabitsCount = 0, activeChallengeCount = 0) },
+        ),
+    )
+
+    private fun challengeProposal(friendName: String = "Laura") = ProposedAction.CreateChallenge(
+        friendName = friendName,
+        name = "Meditate",
+        icon = "menu_book",
+        color = "#294536",
+        scheduleMode = "daily",
+        days = emptyList(),
+        weeklyTarget = null,
+        criteria = null,
+        durationDays = null,
+    )
+
+    // CA-01, CA-03, CA-04
+    @Test
+    fun `challenge proposal shows a card and a double confirm creates one challenge`() = runTest {
+        val friends = friendsOf(laura)
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = friends)
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura to meditate")
+
+        val turn = viewModel.uiState.value.messages[1]
+        assertEquals(AssistantActionStatus.Pending, turn.actionStatus)
+        assertEquals(laura, (turn.action as AssistantAction.CreateChallenge).friend)
+
+        viewModel.confirmAction(1)
+        viewModel.confirmAction(1)
+        advanceUntilIdle()
+
+        assertEquals(1, friends.createChallengeCalls)
+        assertEquals("laura-id", friends.lastChallengedId)
+        assertEquals(AssistantActionStatus.Done, viewModel.uiState.value.messages[1].actionStatus)
+    }
+
+    // CA-06
+    @Test
+    fun `cancelling a challenge card creates nothing`() = runTest {
+        val friends = friendsOf(laura)
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = friends)
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura")
+
+        viewModel.cancelAction(1)
+        advanceUntilIdle()
+
+        assertEquals(0, friends.createChallengeCalls)
+        assertEquals(AssistantActionStatus.Cancelled, viewModel.uiState.value.messages[1].actionStatus)
+    }
+
+    // CA-05
+    @Test
+    fun `failed challenge keeps the card pending and reports the error`() = runTest {
+        val friends = friendsOf(laura)
+        friends.createChallengeResult = DataResult.Error(AppError.Common.Network)
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = friends)
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura")
+
+        viewModel.confirmAction(1)
+        advanceUntilIdle()
+
+        assertEquals(AssistantActionStatus.Pending, viewModel.uiState.value.messages[1].actionStatus)
+        assertEquals(ChatEvent.ShowError(R.string.error_no_internet), viewModel.events.first())
+    }
+
+    // CA-07, RF-12: the app replaces the card with its notice and Bloom learns why.
+    @Test
+    fun `ambiguous friend is discarded and the next request carries the reason`() = runTest {
+        val other = laura.copy(id = "2", displayName = "Laura Martín", username = "lauram")
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = friendsOf(laura, other))
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura")
+
+        val turn = viewModel.uiState.value.messages[1]
+        assertEquals(AssistantActionStatus.Discarded, turn.actionStatus)
+        assertEquals(null, turn.action)
+        assertEquals(ChallengeDiscardReason.FriendAmbiguous, turn.discard?.reason)
+        assertEquals(listOf("Laura García", "Laura Martín"), turn.discard?.candidates)
+
+        viewModel.chat("Laura García")
+        val history = remote.sent.last()
+        assertEquals(ChallengeDiscardReason.FriendAmbiguous, history[1].discard?.reason)
+    }
+
+    // CA-08
+    @Test
+    fun `no friends gives a discarded turn without card`() = runTest {
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = FakeFriendsRepository())
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura")
+
+        assertEquals(ChallengeDiscardReason.NoFriends, viewModel.uiState.value.messages[1].discard?.reason)
+    }
+
+    @Test
+    fun `friends lookup failure shows Bloom text, no card and an error`() = runTest {
+        val friends = FakeFriendsRepository(acceptedFriendsResult = DataResult.Error(AppError.Common.Network))
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here it is", challengeProposal()))),
+        )
+        val viewModel = viewModel(FakeHabitRepository(), remote, friends = friends)
+        advanceUntilIdle()
+        viewModel.chat("challenge Laura")
+
+        val turn = viewModel.uiState.value.messages[1]
+        assertEquals("Here it is", turn.text)
+        assertEquals(ChallengeDiscardReason.LookupFailed, turn.discard?.reason)
+        assertEquals(ChatEvent.ShowError(R.string.error_no_internet), viewModel.events.first())
+    }
+
     private suspend fun RecommendationViewModel.chat(text: String) {
         onDraftChange(text)
         send()
@@ -337,10 +476,12 @@ class RecommendationViewModelTest {
         habits: FakeHabitRepository,
         remote: FakeRecommendationRepository,
         language: String = "en",
+        friends: FakeFriendsRepository = FakeFriendsRepository(),
     ) = RecommendationViewModel(
         habitRepository = habits,
         recommendations = remote,
-        executeAction = ExecuteAssistantAction(habits, SaveHabit(habits)),
+        executeAction = ExecuteAssistantAction(habits, SaveHabit(habits), friends),
+        resolveChallenge = ResolveChallengeProposal(friends),
         today = { LocalDate.parse("2026-10-28") },
         language = { language },
         catalog = catalog,

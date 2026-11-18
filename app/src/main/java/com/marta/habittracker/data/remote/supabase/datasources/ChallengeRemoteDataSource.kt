@@ -1,7 +1,6 @@
 package com.marta.habittracker.data.remote.supabase.datasources
 
 import android.util.Log
-import com.marta.habittracker.core.IdGenerator
 import com.marta.habittracker.data.remote.supabase.SupabaseTables
 import com.marta.habittracker.data.remote.supabase.dto.ChallengeAcceptUpdateDto
 import com.marta.habittracker.data.remote.supabase.dto.ChallengeDto
@@ -117,6 +116,7 @@ class ChallengeRemoteDataSource @Inject constructor(
     }
 
     suspend fun insertChallenge(
+        id: String,
         challengerId: String,
         challengedId: String,
         challengerHabitId: String,
@@ -130,7 +130,7 @@ class ChallengeRemoteDataSource @Inject constructor(
             val challenge = supabase.from(SupabaseTables.CHALLENGES)
                 .insert(
                     ChallengeInsertDto(
-                        id = IdGenerator.newId(),
+                        id = id,
                         challengerId = challengerId,
                         challengedId = challengedId,
                         challengerHabitId = challengerHabitId,

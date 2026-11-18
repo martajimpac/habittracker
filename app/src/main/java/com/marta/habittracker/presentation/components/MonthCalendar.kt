@@ -33,9 +33,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitOutline
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -88,7 +88,7 @@ fun MonthCalendar(
             .fillMaxWidth()
             .clip(CardShape)
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitOutline, CardShape)
+            .border(1.dp, habitCardBorderColor(), CardShape)
             .padding(12.dp),
     ) {
         Row(

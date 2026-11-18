@@ -42,6 +42,9 @@ interface FriendsRepository {
         draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
+        /** Fixed ids make a retry idempotent (chat). Null: new ids (Amigos sheet). */
+        habitId: String? = null,
+        challengeId: String? = null,
     ): DataResult<Unit, AppError>
 
     suspend fun cancelChallenge(challengeId: String): DataResult<Unit, AppError>

@@ -12,7 +12,7 @@ import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.domain.repository.FriendsRepository
 
 class FakeFriendsRepository(
-    private val acceptedFriendsResult: DataResult<List<FriendListItem>, AppError> =
+    var acceptedFriendsResult: DataResult<List<FriendListItem>, AppError> =
         DataResult.Success(emptyList()),
     var activeChallengesResult: DataResult<List<ChallengeCard>, AppError> =
         DataResult.Success(emptyList()),
@@ -27,7 +27,7 @@ class FakeFriendsRepository(
     private val sendFriendRequestResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val respondToFriendRequestResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val publicHabitsResult: DataResult<List<Habit>, AppError> = DataResult.Success(emptyList()),
-    private val createChallengeResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
+    var createChallengeResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val cancelChallengeResult: DataResult<Unit, AppError> = DataResult.Success(Unit),
     private val renameChallengeResult: DataResult<ChallengeCard, AppError> =
         DataResult.Error(AppError.Common.Unknown),
@@ -56,6 +56,10 @@ class FakeFriendsRepository(
     var renameChallengeCalls: Int = 0
         private set
 
+    var lastChallengeHabitId: String? = null
+        private set
+    var lastChallengeId: String? = null
+        private set
     var lastSearchQuery: String? = null
         private set
     var lastAddresseeId: String? = null
@@ -141,8 +145,12 @@ class FakeFriendsRepository(
         draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
+        habitId: String?,
+        challengeId: String?,
     ): DataResult<Unit, AppError> {
         createChallengeCalls++
+        lastChallengeHabitId = habitId
+        lastChallengeId = challengeId
         lastChallengedId = challengedId
         lastDraft = draft
         lastChallengeCriteria = criteria

@@ -3,9 +3,9 @@ package com.marta.habittracker.presentation.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -25,19 +25,16 @@ import com.marta.habittracker.presentation.screens.auth.reset_password.ResetPass
 import com.marta.habittracker.presentation.screens.bottom_nav_screen.BottomNavScreen
 import com.marta.habittracker.presentation.screens.onboarding.OnboardingScreen
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+
+private const val TAG = "NavigationWrapper"
 
 @Composable
 fun NavigationWrapper(
-    initialTabRoute: String? = null,
-    onTabRouteConsumed: () -> Unit = {},
-    initialHabitId: String? = null,
-    onHabitIdConsumed: () -> Unit = {},
-    initialChallengeId: String? = null,
-    onChallengeIdConsumed: () -> Unit = {},
-    initialFriendRequestId: String? = null,
-    onFriendRequestConsumed: () -> Unit = {},
     appStartViewModel: AppStartViewModel = hiltViewModel(),
     authDeeplinkViewModel: AuthDeeplinkViewModel = hiltViewModel(),
+    launchTargetViewModel: LaunchTargetViewModel = hiltViewModel(),
     loginPromptCoordinator: LoginPromptCoordinator = hiltViewModel<LoginPromptSender>().coordinator,
 ) {
     val startDestination by appStartViewModel.startDestination.collectAsStateWithLifecycle()
@@ -70,26 +67,18 @@ fun NavigationWrapper(
         AppStartDestination.Home -> Home
     }
 
-    LaunchedEffect(initialChallengeId) {
-        if (initialChallengeId.isNullOrBlank()) return@LaunchedEffect
-        snapshotFlow { navController.currentBackStackEntry }
-            .collect { entry ->
-                if (entry == null) return@collect
-                if (!entry.destination.hasRoute<Home>()) {
-                    onChallengeIdConsumed()
-                }
-            }
-    }
-
-    LaunchedEffect(initialFriendRequestId) {
-        if (initialFriendRequestId.isNullOrBlank()) return@LaunchedEffect
-        snapshotFlow { navController.currentBackStackEntry }
-            .collect { entry ->
-                if (entry == null) return@collect
-                if (!entry.destination.hasRoute<Home>()) {
-                    onFriendRequestConsumed()
-                }
-            }
+    // Launch targets only apply to the signed-in shell (Home). Elsewhere (onboarding,
+    // login...) they are dropped. On Home they are relayed once to BottomNavScreen,
+    // which owns the tab NavController.
+    val homeLaunchTargets = remember { Channel<LaunchTarget>(Channel.BUFFERED) }
+    val homeLaunchTargetFlow = remember(homeLaunchTargets) { homeLaunchTargets.receiveAsFlow() }
+    ObserveAsEvents(flow = launchTargetViewModel.events) { target ->
+        val onHome = navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+        if (onHome) {
+            homeLaunchTargets.trySend(target)
+        } else {
+            Log.d(TAG, "Dropping launch target outside Home: ${target::class.simpleName}")
+        }
     }
 
     ObserveAsEvents(flow = authDeeplinkViewModel.events) { event ->
@@ -181,14 +170,7 @@ fun NavigationWrapper(
 
         composable<Home> {
             BottomNavScreen(
-                initialTabRoute = initialTabRoute,
-                onTabRouteConsumed = onTabRouteConsumed,
-                initialHabitId = initialHabitId,
-                onHabitIdConsumed = onHabitIdConsumed,
-                initialChallengeId = initialChallengeId,
-                onChallengeIdConsumed = onChallengeIdConsumed,
-                initialFriendRequestId = initialFriendRequestId,
-                onFriendRequestConsumed = onFriendRequestConsumed,
+                launchTargets = homeLaunchTargetFlow,
                 onSignedOut = {
                     openLogin()
                 },

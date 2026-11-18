@@ -25,6 +25,8 @@ fun resolveAssistantAction(
 ): AssistantAction? = when (proposal) {
     is ProposedAction.CreateHabit -> resolveCreate(proposal, catalog, newId)
     is ProposedAction.SetCompletion -> resolveCompletion(proposal, habits, today)
+    // Needs the friends list (network): resolved by ResolveChallengeProposal.
+    is ProposedAction.CreateChallenge -> null
 }
 
 private fun resolveCreate(
@@ -32,37 +34,73 @@ private fun resolveCreate(
     catalog: HabitCatalog,
     newId: () -> String,
 ): AssistantAction.CreateHabit? {
-    val name = proposal.name.trim()
-    if (name.isEmpty() || name.length > CHAT_HABIT_NAME_MAX_LENGTH) return null
+    val fields = resolveHabitFields(
+        name = proposal.name,
+        scheduleMode = proposal.scheduleMode,
+        days = proposal.days,
+        weeklyTarget = proposal.weeklyTarget,
+        icon = proposal.icon,
+        color = proposal.color,
+        catalog = catalog,
+    ) ?: return null
+    return AssistantAction.CreateHabit(
+        habitId = newId(),
+        name = fields.name,
+        description = proposal.description?.trim()?.ifEmpty { null },
+        icon = fields.icon,
+        colorHex = fields.colorHex,
+        schedule = fields.schedule,
+        daysOfWeek = fields.daysOfWeek,
+        daysPerWeek = fields.daysPerWeek,
+    )
+}
 
-    val schedule = when (proposal.scheduleMode) {
+/** Habit fields checked with the habit form rules (shared by habits and challenges). */
+internal data class ResolvedHabitFields(
+    val name: String,
+    val icon: String,
+    val colorHex: String,
+    val schedule: HabitSchedule,
+    val daysOfWeek: Set<DayOfWeek>,
+    val daysPerWeek: Int,
+)
+
+/** Null when the name or the frequency is not valid. Unknown icon or color: the defaults. */
+internal fun resolveHabitFields(
+    name: String,
+    scheduleMode: String?,
+    days: List<String>,
+    weeklyTarget: Int?,
+    icon: String?,
+    color: String?,
+    catalog: HabitCatalog,
+): ResolvedHabitFields? {
+    val trimmed = name.trim()
+    if (trimmed.isEmpty() || trimmed.length > CHAT_HABIT_NAME_MAX_LENGTH) return null
+
+    val schedule = when (scheduleMode) {
         "daily" -> HabitSchedule.DAILY
         "weekdays" -> HabitSchedule.WEEKDAYS
         "weekly_count" -> HabitSchedule.WEEKLY_COUNT
         else -> return null
     }
     val daysOfWeek = when (schedule) {
-        HabitSchedule.WEEKDAYS -> proposal.days
+        HabitSchedule.WEEKDAYS -> days
             .mapNotNull { day -> DayOfWeek.entries.find { it.name == day } }
             .toSet()
             .ifEmpty { return null }
         else -> DayOfWeek.entries.toSet()
     }
     val daysPerWeek = when (schedule) {
-        HabitSchedule.WEEKLY_COUNT -> proposal.weeklyTarget?.takeIf { it in 1..7 } ?: return null
+        HabitSchedule.WEEKLY_COUNT -> weeklyTarget?.takeIf { it in 1..7 } ?: return null
         else -> 7
     }
 
-    val icon = proposal.icon?.takeIf { it in catalog.icons } ?: catalog.defaultIcon
-    val color = catalog.colorHexes.find { it.equals(proposal.color, ignoreCase = true) }
-        ?: catalog.defaultColorHex
-
-    return AssistantAction.CreateHabit(
-        habitId = newId(),
-        name = name,
-        description = proposal.description?.trim()?.ifEmpty { null },
-        icon = icon,
-        colorHex = color,
+    return ResolvedHabitFields(
+        name = trimmed,
+        icon = icon?.takeIf { it in catalog.icons } ?: catalog.defaultIcon,
+        colorHex = catalog.colorHexes.find { it.equals(color, ignoreCase = true) }
+            ?: catalog.defaultColorHex,
         schedule = schedule,
         daysOfWeek = daysOfWeek,
         daysPerWeek = daysPerWeek,

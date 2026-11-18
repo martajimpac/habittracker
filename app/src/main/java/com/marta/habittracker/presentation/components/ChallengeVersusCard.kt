@@ -36,12 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.ChallengeCard
 import com.marta.habittracker.domain.model.ChallengeLeader
 import com.marta.habittracker.domain.model.challengeLeader
 import com.marta.habittracker.presentation.theme.HabitOutline
-import com.marta.habittracker.presentation.theme.HabitPrimary
 
 private val VersusCardShape = RoundedCornerShape(24.dp)
 private val ParticipantAvatarSize = 56.dp
@@ -108,7 +108,7 @@ fun ChallengeVersusCardContent(
         modifier = modifier
             .clip(VersusCardShape)
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), VersusCardShape)
+            .border(1.dp, habitCardBorderColor(), VersusCardShape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(16.dp),
     ) {

@@ -14,4 +14,6 @@ data class AssistantTurn(
     val text: String,
     val action: AssistantAction? = null,
     val actionStatus: AssistantActionStatus? = null,
+    /** Set when the app replaced a challenge card with its own notice ([actionStatus] = Discarded). */
+    val discard: ChallengeDiscard? = null,
 )

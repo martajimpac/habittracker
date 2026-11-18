@@ -154,7 +154,9 @@ class RegisterViewModelTest {
             },
         )
         val created = mutableListOf<RegisteredAccount>()
-        val collectJob = launch { viewModel.accountCreated.collect { created.add(it) } }
+        val collectJob = launch {
+            viewModel.events.collect { if (it is RegisterEvent.AccountCreated) created.add(it.account) }
+        }
 
         viewModel.onNameChanged("Marta")
         viewModel.onUsernameChanged("marta")

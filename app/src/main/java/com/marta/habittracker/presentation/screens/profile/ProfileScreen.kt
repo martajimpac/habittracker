@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
@@ -111,24 +112,20 @@ fun ProfileScreen(
         }
     }
 
-    ObserveAsEvents(flow = viewModel.reminderDenied) { messageRes ->
-        deniedMessage = messageRes
-    }
-
-    ObserveAsEvents(flow = viewModel.dailyCheckInActivated) {
-        Toast.makeText(
-            context,
-            checkInEnabledMessage,
-            Toast.LENGTH_SHORT,
-        ).show()
+    ObserveAsEvents(flow = viewModel.events) { event ->
+        when (event) {
+            is ProfileEvent.ReminderDenied -> deniedMessage = event.messageRes
+            ProfileEvent.DailyCheckInActivated -> Toast.makeText(
+                context,
+                checkInEnabledMessage,
+                Toast.LENGTH_SHORT,
+            ).show()
+            ProfileEvent.NavigateToLogin -> onSignedOut()
+        }
     }
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
-    }
-
-    ObserveAsEvents(flow = viewModel.navigateToLogin) {
-        onSignedOut()
     }
 
     ProfileContent(
@@ -424,7 +421,7 @@ private fun ProfileMenuRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(colors.surfaceContainerLowest)
-            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -473,7 +470,7 @@ private fun ProfileDarkModeRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(colors.surfaceContainerLowest)
-            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -523,7 +520,7 @@ private fun ProfileDailyCheckInRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(colors.surfaceContainerLowest)
-            .border(1.dp, colors.outline, RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

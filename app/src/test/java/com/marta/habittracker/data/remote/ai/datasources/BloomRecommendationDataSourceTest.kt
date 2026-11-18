@@ -35,6 +35,98 @@ class BloomRecommendationDataSourceTest {
     )
 
 
+    // ---- Retos (SPEC chat-challenges) ----
+
+    private val laura = com.marta.habittracker.domain.model.Profile(
+        id = "laura-secret-id",
+        username = "laura_secret_user",
+        displayName = "Laura Secret Surname",
+        avatarColor = "#FF7775",
+        avatarUrl = "https://example.com/laura.png",
+    )
+
+    private val challengeProposal = com.marta.habittracker.domain.model.ChallengeProposal(
+        friendQuery = "Laura",
+        draft = com.marta.habittracker.domain.model.ChallengeHabitDraft(
+            name = "Meditar",
+            icon = "menu_book",
+            colorHex = "#294536",
+            daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY),
+            scheduleMode = "weekdays",
+        ),
+        criteria = com.marta.habittracker.domain.model.ChallengeCriteria.Streak,
+        durationDays = 14,
+    )
+
+    @Test
+    fun `parses a create challenge action`() = runTest {
+        val payload = """{"message":"Reto:","action":{"type":"create_challenge","friend_name":"Laura","name":"Meditar",""" +
+            """"icon":"menu_book","color":"#294536","schedule":{"mode":"daily"},"criteria":"streak","duration_days":14}}"""
+        val source = dataSource(
+            baseUrl = "http://10.0.2.2:8000",
+            transport = FakeRecommendationTransport(TransportResult.Http(200, payload)),
+        )
+
+        val result = source.send(context, "es", listOf(AssistantTurn(role = AssistantRole.User, text = "reta a Laura")))
+
+        val proposal = (result as DataResult.Success).data.proposal as ProposedAction.CreateChallenge
+        assertEquals("Laura", proposal.friendName)
+        assertEquals("streak", proposal.criteria)
+        assertEquals(14, proposal.durationDays)
+        assertEquals("daily", proposal.scheduleMode)
+    }
+
+    // Privacy: a confirmed challenge card goes back to Bloom with the typed name only.
+    @Test
+    fun `challenge history never contains the resolved friend data`() = runTest {
+        val transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"ok"}"""))
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = transport)
+        val card = AssistantTurn(
+            role = AssistantRole.Assistant,
+            text = "Reto:",
+            action = AssistantAction.CreateChallenge("challenge-id", "habit-id", laura, challengeProposal),
+            actionStatus = AssistantActionStatus.Done,
+        )
+
+        source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "reta a Laura"), card, AssistantTurn(AssistantRole.User, "gracias")))
+
+        val body = transport.body.orEmpty()
+        assertTrue(body.contains("\"type\":\"create_challenge\""))
+        assertTrue(body.contains("\"friend_name\":\"Laura\""))
+        assertTrue(body.contains("\"action_status\":\"done\""))
+        assertTrue(body.contains("\"criteria\":\"streak\""))
+        assertTrue(body.contains("\"duration_days\":14"))
+        for (secret in listOf("laura-secret-id", "laura_secret_user", "Secret Surname", "example.com", "challenge-id", "habit-id")) {
+            assertFalse("Body leaks $secret", body.contains(secret))
+        }
+    }
+
+    // RF-12: a discarded challenge carries its reason; the notice (with friend names) is not sent.
+    @Test
+    fun `discarded challenge is sent with its reason and without candidates`() = runTest {
+        val transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"ok"}"""))
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = transport)
+        val discarded = AssistantTurn(
+            role = AssistantRole.Assistant,
+            text = "Reto:",
+            actionStatus = AssistantActionStatus.Discarded,
+            discard = com.marta.habittracker.domain.model.ChallengeDiscard(
+                proposal = challengeProposal,
+                reason = com.marta.habittracker.domain.model.ChallengeDiscardReason.FriendAmbiguous,
+                candidates = listOf("Laura Secret Surname", "Laura Other"),
+            ),
+        )
+
+        source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "reta a Laura"), discarded, AssistantTurn(AssistantRole.User, "la primera")))
+
+        val body = transport.body.orEmpty()
+        assertTrue(body.contains("\"action_status\":\"discarded\""))
+        assertTrue(body.contains("\"discard_reason\":\"friend_ambiguous\""))
+        assertTrue(body.contains("\"content\":\"Reto:\""))
+        assertFalse(body.contains("Secret Surname"))
+        assertFalse(body.contains("Laura Other"))
+    }
+
     @Test
     fun `posts the chat thread to bloom api and does not call ollama`() = runTest {
         val transport = FakeRecommendationTransport(

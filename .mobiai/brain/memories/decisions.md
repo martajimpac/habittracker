@@ -235,3 +235,21 @@ Chat orders (create habit, mark/unmark a day of the current week) use Groq tool 
 - app/src/main/java/com/marta/habittracker/domain/usecase/ResolveAssistantAction.kt
 - app/src/main/java/com/marta/habittracker/domain/usecase/ExecuteAssistantAction.kt
 - ai-docs/features/chat-actions/PLAN.md
+
+## Bloom chat challenges: app resolves the friend, Bloom never sees friends
+
+- id: bloom-chat-challenges-app-resolves-the-friend-bloom-never-se-20261116-095055
+- type: architecture_decision
+- status: active
+- platform: android
+- area: bloom_chat
+- date: 2026-11-16
+
+Chat challenges reuse the chat-actions pattern (tool propose_create_challenge; app validates and executes). Privacy decision: no friend data is sent to Groq. The tool only carries friend_name as the person typed it; the app matches it locally against accepted friends (display name or username, case/accent-insensitive, exact beats partial, <2 chars = not found). On no match / ambiguous / no friends / lookup failure the app shows its own notice instead of Bloom's text and the turn is sent back as action_status=discarded + discard_reason (never the notice, which may list friend names). Durations limited to 3/7/14/30, rounded in the app (tie -> longer). createChallenge accepts fixed habitId/challengeId; on INSERT failure it checks fetchChallengeById before rolling back the habit, making chat retries idempotent and fixing a lost-response rollback bug in the Friends sheet. Rejected: sending the friends list to Bloom (third-party data to an external LLM).
+
+### Files
+- bloom-api/main.py
+- app/src/main/java/com/marta/habittracker/domain/usecase/ResolveChallengeProposal.kt
+- app/src/main/java/com/marta/habittracker/domain/usecase/MatchChallengeFriend.kt
+- app/src/main/java/com/marta/habittracker/data/repository/CreateChallengeSteps.kt
+- ai-docs/features/chat-challenges/PLAN.md

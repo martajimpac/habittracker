@@ -6,15 +6,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import com.marta.habittracker.core.auth.AuthDeeplinkTarget
 import com.marta.habittracker.core.auth.AuthLinks
 import com.marta.habittracker.core.auth.authDeeplinkTarget
 import com.marta.habittracker.presentation.theme.HabitAppTheme
+import com.marta.habittracker.presentation.navigation.LaunchTarget
+import com.marta.habittracker.presentation.navigation.LaunchTargetCoordinator
 import com.marta.habittracker.presentation.navigation.NavigationWrapper
+import com.marta.habittracker.presentation.navigation.TabScreens
 import com.marta.habittracker.presentation.auth.AuthDeeplinkCoordinator
 import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
 import com.marta.habittracker.presentation.widgets.WidgetRefresher
@@ -29,11 +29,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var supabase: SupabaseClient
     @Inject lateinit var authDeeplinkCoordinator: AuthDeeplinkCoordinator
-
-    private var initialTab by mutableStateOf<String?>(null)
-    private var initialHabitId by mutableStateOf<String?>(null)
-    private var initialChallengeId by mutableStateOf<String?>(null)
-    private var initialFriendRequestId by mutableStateOf<String?>(null)
+    @Inject lateinit var launchTargetCoordinator: LaunchTargetCoordinator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,16 +43,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             HabitAppTheme {
-                NavigationWrapper(
-                    initialTabRoute = initialTab,
-                    onTabRouteConsumed = { consumeTab() },
-                    initialHabitId = initialHabitId,
-                    onHabitIdConsumed = { consumeHabitId() },
-                    initialChallengeId = initialChallengeId,
-                    onChallengeIdConsumed = { consumeChallengeId() },
-                    initialFriendRequestId = initialFriendRequestId,
-                    onFriendRequestConsumed = { consumeFriendRequest() },
-                )
+                NavigationWrapper()
             }
         }
         handleAuthDeeplink(intent)
@@ -81,52 +68,24 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun applyLaunchExtras(intent: Intent?) {
-        initialHabitId = WidgetLaunchExtras.habitIdFromIntent(intent)
-        initialChallengeId = if (initialHabitId == null) {
-            WidgetLaunchExtras.challengeIdFromIntent(intent)
-        } else {
-            null
+        launchTargetFromIntent(intent)?.let(launchTargetCoordinator::open)
+    }
+
+    /** One target per intent. Priority: habit > challenge > friend request > tab. */
+    private fun launchTargetFromIntent(intent: Intent?): LaunchTarget? {
+        WidgetLaunchExtras.habitIdFromIntent(intent)?.let { return LaunchTarget.HabitDetail(it) }
+        WidgetLaunchExtras.challengeIdFromIntent(intent)?.let { return LaunchTarget.ChallengeDetail(it) }
+        if (WidgetLaunchExtras.friendRequestIdFromIntent(intent) != null) {
+            return LaunchTarget.Tab(TabScreens.TabFriends)
         }
-        val friendRequestId = WidgetLaunchExtras.friendRequestIdFromIntent(intent)
-        initialFriendRequestId = if (initialHabitId == null && initialChallengeId == null) {
-            friendRequestId
-        } else {
-            null
+        val tab = when (WidgetLaunchExtras.tabFromIntent(intent)) {
+            WidgetLaunchExtras.TAB_HOME -> TabScreens.TabHome
+            WidgetLaunchExtras.TAB_STATS -> TabScreens.TabStats
+            WidgetLaunchExtras.TAB_FRIENDS -> TabScreens.TabFriends
+            else -> null
         }
-        initialTab = when {
-            initialHabitId != null || initialChallengeId != null -> null
-            initialFriendRequestId != null -> WidgetLaunchExtras.TAB_FRIENDS
-            else -> WidgetLaunchExtras.tabFromIntent(intent)
-        }
-        if (initialHabitId != null || initialChallengeId != null) {
-            intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
-        }
+        return tab?.let(LaunchTarget::Tab)
     }
-
-    private fun consumeTab() {
-        initialTab = null
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
-    }
-
-    private fun consumeHabitId() {
-        initialHabitId = null
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_HABIT_ID)
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
-    }
-
-    private fun consumeChallengeId() {
-        initialChallengeId = null
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_CHALLENGE_ID)
-    }
-
-    private fun consumeFriendRequest() {
-        initialFriendRequestId = null
-        initialTab = null
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_FRIEND_REQUEST_ID)
-        intent?.removeExtra(WidgetLaunchExtras.EXTRA_BOTTOM_TAB)
-    }
-
-
 
     private fun handleAuthDeeplink(intent: Intent) {
         val uri = intent.data ?: return

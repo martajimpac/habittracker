@@ -55,6 +55,20 @@ fun ProgressFlower(
         val flowerY = height * 0.24f
         val tipY = ground + (flowerY - ground) * growth.stem
 
+        // Soil mound and seed: always visible so 0% progress isn't an empty gap.
+        drawOval(
+            color = stemColor.copy(alpha = 0.12f),
+            topLeft = Offset(width * 0.14f, ground - height * 0.035f),
+            size = Size(width * 0.72f, height * 0.07f),
+        )
+        if (growth.stem <= 0.02f) {
+            drawCircle(
+                color = stemColor.copy(alpha = 0.55f),
+                radius = width * 0.06f,
+                center = Offset(width * 0.5f, ground - height * 0.035f),
+            )
+        }
+
         if (growth.stem > 0.02f) {
             val stem = Path().apply {
                 moveTo(width * 0.5f, ground)

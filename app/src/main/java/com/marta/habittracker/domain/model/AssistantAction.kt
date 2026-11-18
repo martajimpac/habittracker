@@ -30,12 +30,52 @@ sealed interface AssistantAction {
         val date: LocalDate,
         val completed: Boolean,
     ) : AssistantAction
+
+    /**
+     * Challenge [friend] with a new shared habit. [habitId] and [challengeId] are chosen when the
+     * card is shown and reused on every retry, so a retry cannot create a second challenge.
+     */
+    data class CreateChallenge(
+        val challengeId: String,
+        val habitId: String,
+        val friend: Profile,
+        val proposal: ChallengeProposal,
+    ) : AssistantAction
 }
+
+/**
+ * A challenge proposal already checked against the form rules, before the friend is looked up.
+ * [friendQuery] is the name as the person wrote it; it is the only friend data sent back to Bloom.
+ */
+data class ChallengeProposal(
+    val friendQuery: String,
+    val draft: ChallengeHabitDraft,
+    val criteria: ChallengeCriteria,
+    val durationDays: Int,
+)
+
+/** Why the app did not show a challenge card. */
+enum class ChallengeDiscardReason {
+    FriendNotFound,
+    FriendAmbiguous,
+    NoFriends,
+    LookupFailed,
+}
+
+/** A challenge proposal the app did not show. [candidates] are the matching friends' names (ambiguous only). */
+data class ChallengeDiscard(
+    val proposal: ChallengeProposal,
+    val reason: ChallengeDiscardReason,
+    val candidates: List<String> = emptyList(),
+)
 
 enum class AssistantActionStatus {
     Pending,
     Done,
     Cancelled,
+
+    /** The app did not show the card (see [ChallengeDiscard]). */
+    Discarded,
 }
 
 /** An action as Bloom sent it, before any check. Values are raw and may be invalid. */
@@ -55,6 +95,18 @@ sealed interface ProposedAction {
         val habitId: String,
         val date: String,
         val completed: Boolean,
+    ) : ProposedAction
+
+    data class CreateChallenge(
+        val friendName: String,
+        val name: String,
+        val icon: String?,
+        val color: String?,
+        val scheduleMode: String?,
+        val days: List<String>,
+        val weeklyTarget: Int?,
+        val criteria: String?,
+        val durationDays: Int?,
     ) : ProposedAction
 }
 
