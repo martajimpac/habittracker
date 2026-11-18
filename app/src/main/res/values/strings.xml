@@ -469,4 +469,5 @@
     <string name="chat_challenge_no_friends">You don\'t have any friends yet. Add one from Friends to challenge them.</string>
 
     <!-- Legacy tab keys -->
+    <string name="debug_mode_active">Debug mode active</string>
 </resources>

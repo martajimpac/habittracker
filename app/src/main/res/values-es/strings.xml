@@ -469,4 +469,5 @@
     <string name="chat_challenge_no_friends">Aún no tienes amigos. Añade alguno desde Amigos para poder retarle.</string>
 
     <!-- Legacy tab keys -->
+    <string name="debug_mode_active">Modo depuración activo</string>
 </resources>
