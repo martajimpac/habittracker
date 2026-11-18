@@ -21,7 +21,7 @@ class ExecuteAssistantActionTest {
     private val today = LocalDate(2026, 11, 12)
     private val yesterday = LocalDate(2026, 11, 11)
 
-    private fun execute(repository: FakeHabitRepository) = ExecuteAssistantAction(repository, SaveHabit(repository))
+    private fun execute(repository: FakeHabitRepository) = ExecuteAssistantAction(repository, SaveHabit(repository), FakeFriendsRepository())
 
     // CA-03
     @Test

@@ -1,9 +1,11 @@
 package com.marta.habittracker.data.remote.ai.datasources
 
 import android.util.Log
+import com.marta.habittracker.data.mapper.AssistantActionMapper.historyAction
+import com.marta.habittracker.data.mapper.AssistantActionMapper.historyDiscardReason
+import com.marta.habittracker.data.mapper.AssistantActionMapper.historyStatus
 import com.marta.habittracker.data.mapper.AssistantActionMapper.toBody
 import com.marta.habittracker.data.mapper.AssistantActionMapper.toProposal
-import com.marta.habittracker.data.mapper.AssistantActionMapper.wire
 import com.marta.habittracker.data.remote.ai.BloomAccessTokens
 import com.marta.habittracker.data.remote.ai.RecommendationTransport
 import com.marta.habittracker.data.remote.ai.TokenRefresh
@@ -52,8 +54,9 @@ class BloomRecommendationDataSource(
                     ChatMessageBody(
                         role = turn.role.wire(),
                         content = turn.text,
-                        action = turn.action?.toBody(),
-                        actionStatus = turn.action?.let { turn.actionStatus?.wire() },
+                        action = turn.historyAction(),
+                        actionStatus = turn.historyStatus(),
+                        discardReason = turn.historyDiscardReason(),
                     )
                 },
                 today = context.today.toString(),

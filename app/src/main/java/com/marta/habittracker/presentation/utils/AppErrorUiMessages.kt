@@ -27,6 +27,7 @@ fun AppError.toUserMessageRes(): Int = when (this) {
     RecommendationError.MissingBaseUrl, -> R.string.recommendation_error_unavailable
     AssistantActionError.HabitNotFound -> R.string.chat_action_error_habit_missing
     AssistantActionError.DayNotAllowed -> R.string.chat_action_error_day_not_allowed
+    AssistantActionError.FriendNotFound -> R.string.chat_action_error_friend_missing
     AppError.Common.Network -> R.string.error_no_internet
     AppError.Common.Unauthorized -> R.string.error_common_unauthorized
     AppError.Common.Unknown -> R.string.error_common_unknown

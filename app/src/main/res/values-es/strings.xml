@@ -457,6 +457,16 @@
     <string name="chat_action_cd_completion">Propuesta: %1$s, %2$s, %3$s. %4$s</string>
     <string name="chat_action_error_habit_missing">Ese hábito ya no existe.</string>
     <string name="chat_action_error_day_not_allowed">Ese día ya no se puede cambiar desde el chat.</string>
+    <string name="chat_action_error_friend_missing">Esa persona ya no es tu amiga, así que el reto no se ha enviado.</string>
+    <string name="chat_challenge_title">Reto</string>
+    <string name="chat_challenge_confirm">Retar</string>
+    <string name="chat_challenge_terms">%1$s · %2$s</string>
+    <string name="chat_challenge_status_sent">Reto enviado</string>
+    <string name="chat_challenge_open">Ver reto</string>
+    <string name="chat_challenge_cd">Propuesta de reto con %1$s: %2$s, %3$s, %4$s, %5$s. Estado: %6$s</string>
+    <string name="chat_challenge_friend_not_found">No encuentro a «%1$s» entre tus amigos. Revisa el nombre o añádelo desde Amigos.</string>
+    <string name="chat_challenge_friend_ambiguous">Varios amigos encajan con «%1$s»: %2$s. ¿A cuál quieres retar?</string>
+    <string name="chat_challenge_no_friends">Aún no tienes amigos. Añade alguno desde Amigos para poder retarle.</string>
 
     <!-- Legacy tab keys -->
 </resources>

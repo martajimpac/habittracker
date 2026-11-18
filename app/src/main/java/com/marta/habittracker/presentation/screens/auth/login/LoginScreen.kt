@@ -5,12 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
@@ -72,11 +75,9 @@ fun LoginScreen(
     val prompt by loginViewModel.prompt.collectAsStateWithLifecycle()
     var showAccountNotConfirmed by remember { mutableStateOf(false) }
 
-    ObserveAsEvents(flow = loginViewModel.navigateToHome) {
-        navigateToHome()
-    }
     ObserveAsEvents(flow = loginViewModel.events) { event ->
         when (event) {
+            LoginEvent.NavigateToHome -> navigateToHome()
             LoginEvent.AccountNotConfirmed -> showAccountNotConfirmed = true
         }
     }
@@ -145,16 +146,22 @@ fun LoginContent(
                 MaterialTheme.colorScheme.primary,
             ),
     ) {
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .navigationBarsPadding(),
         ) {
-            Spacer(modifier = Modifier.height(28.dp))
-
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    // Keeps the card vertically centred while still scrolling on small screens.
+                    .heightIn(min = maxHeight)
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,7 +174,7 @@ fun LoginContent(
                     painter = painterResource(bloomLogoRes()),
                     contentDescription = stringResource(R.string.app_name),
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(0.72f),
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
@@ -274,6 +281,7 @@ fun LoginContent(
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = stringResource(R.string.login_no_account),
@@ -286,13 +294,13 @@ fun LoginContent(
                         color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier
-                            .padding(start = 4.dp)
-                            .clickable(onClick = onNavigateToRegister),
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onNavigateToRegister)
+                            .padding(horizontal = 4.dp, vertical = 8.dp),
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            }
         }
 
         if (uiState.isLoading) {

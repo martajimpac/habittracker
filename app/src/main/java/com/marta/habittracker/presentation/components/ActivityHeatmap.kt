@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
@@ -81,7 +82,7 @@ fun ActivityHeatmap(
                     Modifier
                         .clip(CardShape)
                         .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                        .border(1.dp, HabitOutline, CardShape)
+                        .border(1.dp, habitCardBorderColor(), CardShape)
                         .padding(16.dp)
                 } else {
                     Modifier

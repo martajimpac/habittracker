@@ -58,14 +58,14 @@ class LoginViewModelTest {
     @Test
     fun `successful login emits navigateToHome once and does not sticky-flag ui state`() = runTest {
         val viewModel = loginViewModel()
-        val navigation = async { viewModel.navigateToHome.first() }
+        val navigation = async { viewModel.events.first() }
 
         viewModel.onEmailChanged("user@example.com")
         viewModel.onPasswordChanged("Secret12")
         viewModel.onClickSelected()
         advanceUntilIdle()
 
-        assertEquals(Unit, navigation.await())
+        assertEquals(LoginEvent.NavigateToHome, navigation.await())
         assertFalse(viewModel.uiState.value.isLoading)
         assertFalse(
             "LoginUiState must not expose a sticky isUserLogged flag",
@@ -80,7 +80,7 @@ class LoginViewModelTest {
         )
         var navigated = false
         val collector = launch {
-            viewModel.navigateToHome.collect { navigated = true }
+            viewModel.events.collect { if (it == LoginEvent.NavigateToHome) navigated = true }
         }
 
         viewModel.onEmailChanged("user@example.com")

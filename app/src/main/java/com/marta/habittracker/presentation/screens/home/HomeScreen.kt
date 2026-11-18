@@ -81,6 +81,7 @@ import com.marta.habittracker.presentation.theme.HabitOnSurfaceVariant
 import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import com.marta.habittracker.presentation.theme.SuccessColor
 import com.marta.habittracker.presentation.utils.toHex
@@ -539,7 +540,7 @@ private fun HomeProgressCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(20.dp),
@@ -611,7 +612,7 @@ private fun HomeHabitCard(
             .alpha(if (isFuture && !isDone) 0.55f else 1f)
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, HabitPrimary.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .clickable(enabled = !isFuture && !isSaving, onClick = onToggle)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -660,10 +661,16 @@ private fun HomeHabitCard(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.padding(top = 2.dp),
             ) {
+                // A zero streak is neutral information, so it doesn't take the accent colour.
+                val streakColor = if (streak > 0) {
+                    accentColor
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
                 Icon(
                     imageVector = Icons.Rounded.LocalFireDepartment,
                     contentDescription = null,
-                    tint = accentColor,
+                    tint = streakColor,
                     modifier = Modifier.size(12.dp),
                 )
                 Text(
@@ -674,7 +681,7 @@ private fun HomeHabitCard(
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = accentColor,
+                    color = streakColor,
                 )
                 Text(
                     text = stringResource(R.string.home_time_separator, habitTimeLabel(habit)),
@@ -730,6 +737,7 @@ private fun HomeMotivationCard(overallStreak: Int, inWeeks: Boolean) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(1.dp, habitCardBorderColor(), RoundedCornerShape(24.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

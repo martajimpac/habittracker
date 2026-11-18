@@ -43,11 +43,8 @@ class RegisterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
-    val navigateToHome = _navigateToHome.receiveAsFlow()
-
-    private val _accountCreated = Channel<RegisteredAccount>(Channel.BUFFERED)
-    val accountCreated = _accountCreated.receiveAsFlow()
+    private val _events = Channel<RegisterEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     private val _focusField = Channel<RegisterField>(Channel.BUFFERED)
     val focusField = _focusField.receiveAsFlow()
@@ -165,15 +162,17 @@ class RegisterViewModel @Inject constructor(
                 is DataResult.Success -> {
                     deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
-                    _navigateToHome.send(Unit)
+                    _events.send(RegisterEvent.NavigateToHome)
                 }
                 is DataResult.Error -> {
                     if (result.error is RegisterError.EmailConfirmationRequired) {
                         _uiState.update { it.copy(isLoading = false, errorMessageRes = null) }
-                        _accountCreated.send(
-                            RegisteredAccount(
-                                email = state.email.trim(),
-                                password = state.password,
+                        _events.send(
+                            RegisterEvent.AccountCreated(
+                                RegisteredAccount(
+                                    email = state.email.trim(),
+                                    password = state.password,
+                                ),
                             ),
                         )
                     } else {
@@ -243,6 +242,11 @@ class RegisterViewModel @Inject constructor(
     private companion object {
         const val USERNAME_CHECK_DELAY_MS = 350L
     }
+}
+
+sealed interface RegisterEvent {
+    data object NavigateToHome : RegisterEvent
+    data class AccountCreated(val account: RegisteredAccount) : RegisterEvent
 }
 
 data class RegisteredAccount(

@@ -83,6 +83,7 @@ fun NavigationBottomWrapper(
         composable<TabRecommendations> {
             RecommendationScreen(
                 onBack = { navHostController.popBackStack() },
+                onOpenChallenge = { id -> navHostController.navigate(TabChallengeDetail(id)) },
             )
         }
 

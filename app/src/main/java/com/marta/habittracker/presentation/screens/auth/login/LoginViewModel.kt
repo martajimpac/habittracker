@@ -44,9 +44,6 @@ class LoginViewModel @Inject constructor(
         _prompt.value = null
     }
 
-    private val _navigateToHome = Channel<Unit>(Channel.BUFFERED)
-    val navigateToHome = _navigateToHome.receiveAsFlow()
-
     private val _events = Channel<LoginEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
@@ -73,7 +70,7 @@ class LoginViewModel @Inject constructor(
                     syncHabits()
                     deviceTokenRegistration.registerCurrentToken()
                     _uiState.update { it.copy(isLoading = false) }
-                    _navigateToHome.send(Unit)
+                    _events.send(LoginEvent.NavigateToHome)
                 }
                 is DataResult.Error -> {
                     if (result.error is LoginError.EmailNotVerified) {
@@ -129,5 +126,6 @@ data class LoginUiState(
 }
 
 sealed interface LoginEvent {
+    data object NavigateToHome : LoginEvent
     data object AccountNotConfirmed : LoginEvent
 }

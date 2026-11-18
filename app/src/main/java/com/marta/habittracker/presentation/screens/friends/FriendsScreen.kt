@@ -89,7 +89,6 @@ import kotlinx.datetime.DayOfWeek
 import com.marta.habittracker.presentation.theme.HabitField
 import com.marta.habittracker.presentation.theme.HabitOnSurface
 import com.marta.habittracker.presentation.theme.HabitOutline
-import com.marta.habittracker.presentation.theme.HabitPrimary
 import com.marta.habittracker.presentation.theme.HabitPrimaryLight
 import com.marta.habittracker.presentation.utils.HabitColorOptions
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
@@ -207,7 +206,7 @@ private fun FriendsHeader(onAddFriend: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = HabitTopBarHorizontalPadding, vertical = 16.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp)
             .heightIn(min = 44.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

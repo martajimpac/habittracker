@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 
 /**
  * One conversation turn in a Bloom chat request; [role] is `user` or `assistant`. A Bloom turn
- * that showed a card carries its [action] and [actionStatus] (`pending`, `done` or `cancelled`).
+ * that showed a card carries its [action] and [actionStatus] (`pending`, `done`, `cancelled` or
+ * `discarded`). A discarded challenge also carries [discardReason].
  */
 @Serializable
 internal data class ChatMessageBody(
@@ -13,4 +14,5 @@ internal data class ChatMessageBody(
     val content: String,
     val action: ChatActionBody? = null,
     @SerialName("action_status") val actionStatus: String? = null,
+    @SerialName("discard_reason") val discardReason: String? = null,
 )

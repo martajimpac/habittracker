@@ -63,6 +63,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.marta.habittracker.R
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChallengeDiscard
+import com.marta.habittracker.domain.model.ChallengeDiscardReason
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.coroutines.launch
 import com.marta.habittracker.presentation.components.HabitIconButton
@@ -85,6 +87,7 @@ private val ComposerShape = RoundedCornerShape(28.dp)
 @Composable
 fun RecommendationScreen(
     onBack: () -> Unit,
+    onOpenChallenge: (String) -> Unit = {},
     viewModel: RecommendationViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,6 +112,7 @@ fun RecommendationScreen(
         onRetry = viewModel::retry,
         onConfirmAction = viewModel::confirmAction,
         onCancelAction = viewModel::cancelAction,
+        onOpenChallenge = onOpenChallenge,
     )
 }
 
@@ -123,6 +127,7 @@ fun RecommendationContent(
     onConfirmAction: (Int) -> Unit,
     onCancelAction: (Int) -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onOpenChallenge: (String) -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
     Scaffold(
@@ -162,6 +167,7 @@ fun RecommendationContent(
                     uiState = uiState,
                     onConfirmAction = onConfirmAction,
                     onCancelAction = onCancelAction,
+                    onOpenChallenge = onOpenChallenge,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -206,6 +212,7 @@ private fun ChatTranscript(
     uiState: ChatUiState,
     onConfirmAction: (Int) -> Unit,
     onCancelAction: (Int) -> Unit,
+    onOpenChallenge: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -234,6 +241,7 @@ private fun ChatTranscript(
                 saving = index in uiState.savingActions,
                 onConfirm = { onConfirmAction(index) },
                 onCancel = { onCancelAction(index) },
+                onOpenChallenge = onOpenChallenge,
             )
         }
         if (sending) {
@@ -268,15 +276,18 @@ private fun MessageBubble(
     saving: Boolean,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
+    onOpenChallenge: (String) -> Unit,
 ) {
     val fromUser = message.role == AssistantRole.User
+    // A discarded challenge shows the app's notice instead of Bloom's text (SPEC chat-challenges RF-06).
+    val text = message.discard?.let { challengeNotice(it) } ?: message.text
     val label = stringResource(
         if (fromUser) R.string.recommendation_you else R.string.recommendation_assistant,
     )
-    val spoken = if (fromUser) message.text else assistantPlainText(message.text).ifBlank { message.text }
+    val spoken = if (fromUser) text else assistantPlainText(text).ifBlank { text }
     val action = message.action.takeIf { !fromUser }
     val actionStatus = message.actionStatus
-    val wide = !fromUser && (action != null || parseAssistantMarkdown(message.text).any { it.isStructural() })
+    val wide = !fromUser && (action != null || parseAssistantMarkdown(text).any { it.isStructural() })
     val scheme = MaterialTheme.colorScheme
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -295,13 +306,13 @@ private fun MessageBubble(
             ) {
                 if (fromUser) {
                     Text(
-                        text = message.text,
+                        text = text,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 } else {
                     AssistantMarkdownText(
-                        text = message.text,
+                        text = text,
                         color = scheme.onSurface,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     )
@@ -316,9 +327,24 @@ private fun MessageBubble(
                 onConfirm = onConfirm,
                 onCancel = onCancel,
                 modifier = Modifier.padding(top = 6.dp),
+                onOpenChallenge = onOpenChallenge,
             )
         }
     }
+}
+
+/** The app's notice for a challenge it could not show. Null keeps Bloom's text (friends not loaded). */
+@Composable
+private fun challengeNotice(discard: ChallengeDiscard): String? = when (discard.reason) {
+    ChallengeDiscardReason.FriendNotFound ->
+        stringResource(R.string.chat_challenge_friend_not_found, discard.proposal.friendQuery)
+    ChallengeDiscardReason.FriendAmbiguous -> stringResource(
+        R.string.chat_challenge_friend_ambiguous,
+        discard.proposal.friendQuery,
+        discard.candidates.joinToString(", "),
+    )
+    ChallengeDiscardReason.NoFriends -> stringResource(R.string.chat_challenge_no_friends)
+    ChallengeDiscardReason.LookupFailed -> null
 }
 
 @Composable

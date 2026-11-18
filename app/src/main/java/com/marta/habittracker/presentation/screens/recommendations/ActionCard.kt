@@ -32,10 +32,15 @@ import com.marta.habittracker.R
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.AssistantAction
 import com.marta.habittracker.domain.model.AssistantActionStatus
+import com.marta.habittracker.domain.model.ChallengeCriteria
+import com.marta.habittracker.domain.model.ChallengeHabitDraft
+import com.marta.habittracker.domain.model.ChallengeProposal
 import com.marta.habittracker.domain.model.HabitSchedule
+import com.marta.habittracker.domain.model.Profile
 import com.marta.habittracker.presentation.components.HabitButton
 import com.marta.habittracker.presentation.components.HabitButtonVariant
 import com.marta.habittracker.presentation.components.HabitLineIcon
+import com.marta.habittracker.presentation.components.ProfileAvatar
 import com.marta.habittracker.presentation.theme.BloomTheme
 import com.marta.habittracker.presentation.utils.parseHabitColor
 import java.time.format.DateTimeFormatter
@@ -46,7 +51,8 @@ private val CardShape = RoundedCornerShape(16.dp)
 
 /**
  * Card for an action Bloom proposed. While [status] is pending it shows the confirm and cancel
- * buttons; [saving] disables them. Afterwards it shows the outcome as text.
+ * buttons; [saving] disables them. Afterwards it shows the outcome as text. A sent challenge also
+ * offers [onOpenChallenge] to open its detail.
  */
 @Composable
 fun ActionCard(
@@ -56,6 +62,7 @@ fun ActionCard(
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenChallenge: (String) -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
     val statusText = statusText(action, status, saving)
@@ -73,6 +80,15 @@ fun ActionCard(
             dayText(action.date),
             statusText,
         )
+        is AssistantAction.CreateChallenge -> stringResource(
+            R.string.chat_challenge_cd,
+            action.friend.displayName,
+            action.proposal.draft.name,
+            frequencyText(action.proposal.draft),
+            criteriaText(action.proposal.criteria),
+            stringResource(R.string.friends_duration_days, action.proposal.durationDays),
+            statusText,
+        )
     }
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -86,6 +102,7 @@ fun ActionCard(
                 when (action) {
                     is AssistantAction.CreateHabit -> CreateBody(action)
                     is AssistantAction.SetCompletion -> CompletionBody(action)
+                    is AssistantAction.CreateChallenge -> ChallengeBody(action.friend, action.proposal)
                 }
                 if (status != AssistantActionStatus.Pending || saving) {
                     StatusLine(text = statusText, status = status, saving = saving)
@@ -116,9 +133,82 @@ fun ActionCard(
                     )
                 }
             }
+            if (action is AssistantAction.CreateChallenge && status == AssistantActionStatus.Done) {
+                HabitButton(
+                    text = stringResource(R.string.chat_challenge_open),
+                    onClick = { onOpenChallenge(action.challengeId) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    variant = HabitButtonVariant.Secondary,
+                    compact = true,
+                )
+            }
         }
     }
 }
+
+@Composable
+private fun ChallengeBody(friend: Profile, proposal: ChallengeProposal) {
+    Text(
+        text = stringResource(R.string.chat_challenge_title),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(
+        modifier = Modifier.padding(top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ProfileAvatar(
+            avatarUrl = friend.avatarUrl,
+            displayName = friend.displayName,
+            avatarColor = friend.avatarColor,
+            size = 32.dp,
+        )
+        Text(
+            text = friend.displayName,
+            modifier = Modifier.padding(start = 10.dp),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+    HabitRow(
+        icon = proposal.draft.icon,
+        colorHex = proposal.draft.colorHex,
+        title = proposal.draft.name,
+        subtitle = frequencyText(proposal.draft),
+    )
+    Text(
+        text = stringResource(
+            R.string.chat_challenge_terms,
+            criteriaText(proposal.criteria),
+            stringResource(R.string.friends_duration_days, proposal.durationDays),
+        ),
+        modifier = Modifier.padding(top = 8.dp),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun criteriaText(criteria: ChallengeCriteria): String = stringResource(
+    when (criteria) {
+        ChallengeCriteria.Streak -> R.string.friends_criteria_streak
+        ChallengeCriteria.AllDays -> R.string.friends_criteria_all_days
+        ChallengeCriteria.CompletionPct -> R.string.friends_criteria_completion
+    },
+)
+
+@Composable
+private fun frequencyText(draft: ChallengeHabitDraft): String = frequencyText(
+    schedule = when (draft.scheduleMode) {
+        "weekdays" -> HabitSchedule.WEEKDAYS
+        "weekly_count" -> HabitSchedule.WEEKLY_COUNT
+        else -> HabitSchedule.DAILY
+    },
+    days = draft.daysOfWeek,
+    daysPerWeek = draft.daysPerWeek,
+)
 
 @Composable
 private fun CreateBody(action: AssistantAction.CreateHabit) {
@@ -220,6 +310,7 @@ private fun statusText(action: AssistantAction, status: AssistantActionStatus, s
     status == AssistantActionStatus.Pending -> stringResource(R.string.chat_action_status_pending)
     status == AssistantActionStatus.Cancelled -> stringResource(R.string.chat_action_status_cancelled)
     action is AssistantAction.CreateHabit -> stringResource(R.string.chat_action_status_created)
+    action is AssistantAction.CreateChallenge -> stringResource(R.string.chat_challenge_status_sent)
     action is AssistantAction.SetCompletion && action.completed -> stringResource(R.string.chat_action_status_marked)
     else -> stringResource(R.string.chat_action_status_unmarked)
 }
@@ -228,6 +319,7 @@ private fun statusText(action: AssistantAction, status: AssistantActionStatus, s
 private fun confirmLabel(action: AssistantAction): String = when (action) {
     is AssistantAction.CreateHabit -> stringResource(R.string.chat_action_create)
     is AssistantAction.SetCompletion -> completionLabel(action.completed)
+    is AssistantAction.CreateChallenge -> stringResource(R.string.chat_challenge_confirm)
 }
 
 @Composable
@@ -299,6 +391,37 @@ private fun ActionCardCompletionDonePreview() {
                 habitColorHex = "#FF7775",
                 date = LocalDate(2026, 11, 11),
                 completed = true,
+            ),
+            status = AssistantActionStatus.Done,
+            saving = false,
+            onConfirm = {},
+            onCancel = {},
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ActionCardChallengePreview() {
+    BloomTheme {
+        ActionCard(
+            action = AssistantAction.CreateChallenge(
+                challengeId = "c",
+                habitId = "h",
+                friend = Profile(id = "f", username = "laura", displayName = "Laura", avatarColor = "#FF7775"),
+                proposal = ChallengeProposal(
+                    friendQuery = "Laura",
+                    draft = ChallengeHabitDraft(
+                        name = "Meditar 10 minutos",
+                        icon = "menu_book",
+                        colorHex = "#294536",
+                        daysOfWeek = DayOfWeek.entries.toSet(),
+                        scheduleMode = "daily",
+                    ),
+                    criteria = ChallengeCriteria.Streak,
+                    durationDays = 14,
+                ),
             ),
             status = AssistantActionStatus.Done,
             saving = false,

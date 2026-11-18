@@ -328,38 +328,47 @@ class FriendsRepositoryImpl @Inject constructor(
         draft: ChallengeHabitDraft,
         criteria: ChallengeCriteria,
         durationDays: Int,
+        habitId: String?,
+        challengeId: String?,
     ): DataResult<Unit, AppError> {
         if (durationDays <= 0 || draft.name.isBlank() || draft.daysPerWeek !in 1..7) {
             Log.w(TAG, "createChallenge rejected: invalid draft")
             return DataResult.Error(AppError.Common.Unknown)
         }
         val habit = newChallengeHabit(
-            id = IdGenerator.newId(),
+            id = habitId ?: IdGenerator.newId(),
             draft = draft,
             createdAt = Instant.now(),
         )
-        when (val inserted = habitRepository.insertHabit(habit)) {
-            is DataResult.Error -> return inserted
-            is DataResult.Success -> Unit
-        }
-        val created = runOnline(OP_CREATE_CHALLENGE) {
-            val startsAt = Instant.now()
-            challengeRemote.insertChallenge(
-                challengerId = session.requireUserId(),
-                challengedId = challengedId,
-                challengerHabitId = habit.id,
-                challengedHabitId = null,
-                criteria = criteria.toRemoteValue(),
-                startsAt = startsAt,
-                endsAt = startsAt.plus(durationDays.toLong(), ChronoUnit.DAYS),
-            )
-        }
-        if (created is DataResult.Error) {
-            Log.e(TAG, "createChallenge failed after habit insert id=${habit.id}")
-            habitRepository.deleteHabit(habit)
-            return created
-        }
-        return DataResult.Success(Unit)
+        val newChallengeId = challengeId ?: IdGenerator.newId()
+        return createChallengeSteps(
+            insertHabit = { habitRepository.insertHabit(habit) },
+            insertChallenge = {
+                runOnline(OP_CREATE_CHALLENGE) {
+                    val startsAt = Instant.now()
+                    challengeRemote.insertChallenge(
+                        id = newChallengeId,
+                        challengerId = session.requireUserId(),
+                        challengedId = challengedId,
+                        challengerHabitId = habit.id,
+                        challengedHabitId = null,
+                        criteria = criteria.toRemoteValue(),
+                        startsAt = startsAt,
+                        endsAt = startsAt.plus(durationDays.toLong(), ChronoUnit.DAYS),
+                    )
+                    Unit
+                }
+            },
+            challengeExists = {
+                runOnline(OP_CHALLENGE_EXISTS) {
+                    challengeRemote.fetchChallengeById(newChallengeId) != null
+                }
+            },
+            rollbackHabit = {
+                Log.e(TAG, "createChallenge failed after habit insert id=${habit.id}")
+                habitRepository.deleteHabit(habit)
+            },
+        )
     }
 
     private suspend fun acceptChallenge(existing: ChallengeDto): ChallengeDto {
@@ -584,6 +593,7 @@ class FriendsRepositoryImpl @Inject constructor(
         private const val OP_SEND_REQUEST = "sendFriendRequest"
         private const val OP_RESPOND_REQUEST = "respondToFriendRequest"
         private const val OP_PUBLIC_HABITS = "getPublicHabitsForFriend"
+        private const val OP_CHALLENGE_EXISTS = "challengeExists"
         private const val OP_CREATE_CHALLENGE = "createChallenge"
     }
 }

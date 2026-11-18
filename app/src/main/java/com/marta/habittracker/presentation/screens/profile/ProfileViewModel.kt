@@ -86,14 +86,8 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    private val _navigateToLogin = Channel<Unit>(Channel.BUFFERED)
-    val navigateToLogin = _navigateToLogin.receiveAsFlow()
-
-    private val _reminderDenied = Channel<Int>(Channel.BUFFERED)
-    val reminderDenied = _reminderDenied.receiveAsFlow()
-
-    private val _dailyCheckInActivated = Channel<Unit>(Channel.BUFFERED)
-    val dailyCheckInActivated = _dailyCheckInActivated.receiveAsFlow()
+    private val _events = Channel<ProfileEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     val dailyCheckIn: StateFlow<DailyCheckInSettings> = dailyCheckInRepository.settings()
         .stateIn(
@@ -105,7 +99,7 @@ class ProfileViewModel @Inject constructor(
     fun onDailyCheckInEnabled(enabled: Boolean) {
         viewModelScope.launch {
             dailyCheckInRepository.setEnabled(enabled)
-            if (enabled) _dailyCheckInActivated.send(Unit)
+            if (enabled) _events.send(ProfileEvent.DailyCheckInActivated)
         }
     }
 
@@ -114,7 +108,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onReminderDenied(@StringRes messageRes: Int) {
-        viewModelScope.launch { _reminderDenied.send(messageRes) }
+        viewModelScope.launch { _events.send(ProfileEvent.ReminderDenied(messageRes)) }
     }
 
     val themeMode: StateFlow<ThemeMode> = themeRepository.themeMode()
@@ -169,11 +163,17 @@ class ProfileViewModel @Inject constructor(
     fun onSignOutClicked() {
         viewModelScope.launch {
             when (authRepository.signOut()) {
-                is DataResult.Success -> _navigateToLogin.send(Unit)
+                is DataResult.Success -> _events.send(ProfileEvent.NavigateToLogin)
                 is DataResult.Error -> Unit
             }
         }
     }
+}
+
+sealed interface ProfileEvent {
+    data object NavigateToLogin : ProfileEvent
+    data class ReminderDenied(@StringRes val messageRes: Int) : ProfileEvent
+    data object DailyCheckInActivated : ProfileEvent
 }
 
 private fun fallbackDisplayNameFromEmail(email: String): String =

@@ -428,6 +428,16 @@ Detalle en `ai-docs/features/chat-actions/`.
 - El chat funciona sin hábitos: el saludo invita a crear el primero. La API acepta la lista vacía.
 - A Bloom se le envían los nombres, los recuentos semanales, la programación y los días hechos de la semana de cada hábito, la fecha de hoy, los iconos y colores del formulario y el resultado de cada propuesta (pendiente, hecha o cancelada). La conversación sigue sin guardarse.
 
+#### Retos desde el chat
+
+Detalle en `ai-docs/features/chat-challenges/`.
+
+- La persona puede pedir a Bloom que rete a un amigo aceptado («reta a Laura a meditar 14 días»). La tarjeta muestra el amigo (foto y nombre), el hábito (nombre, icono, color, frecuencia), el criterio y la duración, con Retar y Cancelar. Al confirmar, el reto se crea igual que desde la hoja de Amigos (pendiente, hábito público de quien reta, push al retado) y la tarjeta pasa a «Reto enviado» con un botón «Ver reto» que abre su detalle.
+- Por defecto: icono y color del formulario, frecuencia diaria, criterio % completado y 7 días. La duración solo puede ser 3, 7, 14 o 30 días; otra se redondea a la más cercana (en empate, la mayor) y Bloom lo avisa. Si no queda claro de qué es el reto, Bloom pregunta.
+- **Privacidad:** a Bloom no se le envía ningún dato de los amigos. Bloom solo copia el nombre que escribió la persona y la app lo busca entre sus amigos aceptados (nombre visible o usuario, sin distinguir mayúsculas ni acentos; una coincidencia exacta gana a las parciales; menos de 2 caracteres no encaja con nadie). Si no hay ninguno, hay varios o no tiene amigos, la app muestra su propio aviso en lugar del texto de Bloom (con varios, lista los nombres y pregunta a cuál) y Bloom recibe solo el motivo. Si no se pueden cargar los amigos, se ve el texto de Bloom sin tarjeta y un error.
+- Al confirmar, la app comprueba de nuevo que sigue siendo amigo (si no, error y no se crea nada). Los ids del hábito y del reto se fijan al mostrar la tarjeta, así que reintentar tras un error no duplica el reto. `createChallenge` acepta esos ids y, si el `INSERT` falla, comprueba si el reto existe antes de borrar el hábito (también protege a la hoja de Amigos si se pierde la respuesta).
+- Fuera de alcance: aceptar, rechazar, renombrar o cancelar retos desde el chat, reutilizar hábitos existentes, retar a varias personas y enviar solicitudes de amistad.
+
 ### Secretos
 
 - El proyecto debe escanearse en tests para detectar posibles claves de Firebase, API keys, tokens, passwords o private keys hardcodeadas.

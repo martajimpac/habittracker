@@ -16,7 +16,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import com.marta.habittracker.presentation.theme.isHabitDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,57 +26,38 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.marta.habittracker.presentation.navigation.BottomNavigation
+import com.marta.habittracker.presentation.navigation.LaunchTarget
 import com.marta.habittracker.presentation.navigation.NavigationBottomWrapper
 import com.marta.habittracker.presentation.navigation.TabScreens
 import com.marta.habittracker.presentation.navigation.navigateToTab
+import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import com.marta.habittracker.presentation.utils.SyncStatusBarIcons
-import com.marta.habittracker.presentation.widgets.WidgetLaunchExtras
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun BottomNavScreen(
     onSignedOut: () -> Unit,
-    initialTabRoute: String? = null,
-    onTabRouteConsumed: () -> Unit = {},
-    initialHabitId: String? = null,
-    onHabitIdConsumed: () -> Unit = {},
-    initialChallengeId: String? = null,
-    onChallengeIdConsumed: () -> Unit = {},
-    initialFriendRequestId: String? = null,
-    onFriendRequestConsumed: () -> Unit = {},
+    launchTargets: Flow<LaunchTarget> = emptyFlow(),
     bottomNavViewModel: BottomNavViewModel = hiltViewModel(),
 ) {
     val tabNavController = rememberNavController()
-    LaunchedEffect(initialTabRoute, initialHabitId, initialChallengeId, initialFriendRequestId) {
-        val habitId = initialHabitId
-        if (!habitId.isNullOrBlank()) {
-            tabNavController.navigate(TabScreens.TabDetail(habitId)) {
-                popUpTo(TabScreens.TabHome) { inclusive = false }
-                launchSingleTop = true
-            }
-            onHabitIdConsumed()
-            onChallengeIdConsumed()
-            return@LaunchedEffect
+    ObserveAsEvents(flow = launchTargets) { target ->
+        when (target) {
+            is LaunchTarget.HabitDetail ->
+                tabNavController.navigate(TabScreens.TabDetail(target.habitId)) {
+                    popUpTo(TabScreens.TabHome) { inclusive = false }
+                    launchSingleTop = true
+                }
+
+            is LaunchTarget.ChallengeDetail ->
+                tabNavController.navigate(TabScreens.TabChallengeDetail(target.challengeId)) {
+                    popUpTo(TabScreens.TabHome) { inclusive = false }
+                    launchSingleTop = true
+                }
+
+            is LaunchTarget.Tab -> tabNavController.navigateToTab(target.tab)
         }
-        val challengeId = initialChallengeId
-        if (!challengeId.isNullOrBlank()) {
-            tabNavController.navigate(TabScreens.TabChallengeDetail(challengeId)) {
-                popUpTo(TabScreens.TabHome) { inclusive = false }
-                launchSingleTop = true
-            }
-            onChallengeIdConsumed()
-            return@LaunchedEffect
-        }
-        val tab = when (initialTabRoute) {
-            WidgetLaunchExtras.TAB_HOME -> TabScreens.TabHome
-            WidgetLaunchExtras.TAB_STATS -> TabScreens.TabStats
-            WidgetLaunchExtras.TAB_FRIENDS -> TabScreens.TabFriends
-            else -> null
-        } ?: return@LaunchedEffect
-        tabNavController.navigateToTab(tab)
-        if (tab == TabScreens.TabFriends && !initialFriendRequestId.isNullOrBlank()) {
-            onFriendRequestConsumed()
-        }
-        onTabRouteConsumed()
     }
     val navStackEntry by tabNavController.currentBackStackEntryAsState()
     val destinationRoute = navStackEntry?.destination?.route.orEmpty()

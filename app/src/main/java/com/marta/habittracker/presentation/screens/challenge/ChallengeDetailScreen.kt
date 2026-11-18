@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marta.habittracker.presentation.theme.habitCardBorderColor
 import com.marta.habittracker.R
 import com.marta.habittracker.core.toJava
 import com.marta.habittracker.domain.model.ChallengeCard
@@ -66,7 +67,6 @@ import com.marta.habittracker.presentation.components.HabitLineIcon
 import com.marta.habittracker.presentation.components.HabitLoadingIndicator
 import com.marta.habittracker.presentation.components.toComposeColor
 import com.marta.habittracker.presentation.theme.HabitOnSurface
-import com.marta.habittracker.presentation.theme.HabitOutline
 import com.marta.habittracker.presentation.theme.habitDangerColors
 import com.marta.habittracker.presentation.utils.ObserveAsEvents
 import kotlinx.datetime.LocalDate
@@ -559,7 +559,7 @@ private fun Modifier.detailCard(contentPadding: Dp = 20.dp): Modifier = this
     .padding(horizontal = 20.dp)
     .clip(DetailCardShape)
     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-    .border(1.dp, HabitOutline, DetailCardShape)
+    .border(1.dp, habitCardBorderColor(), DetailCardShape)
     .padding(contentPadding)
 
 @StringRes

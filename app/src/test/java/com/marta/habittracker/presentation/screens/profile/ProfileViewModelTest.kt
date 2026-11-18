@@ -178,7 +178,7 @@ class ProfileViewModelTest {
         val authRepository = FakeAuthRepository()
         val viewModel = createViewModel(authRepository = authRepository)
 
-        val navigation = async { viewModel.navigateToLogin.first() }
+        val navigation = async { viewModel.events.first { it == ProfileEvent.NavigateToLogin } }
         viewModel.onSignOutClicked()
         advanceUntilIdle()
 
@@ -195,7 +195,7 @@ class ProfileViewModelTest {
 
         var navigated = false
         val collectJob = backgroundScope.launch {
-            viewModel.navigateToLogin.collect { navigated = true }
+            viewModel.events.collect { if (it == ProfileEvent.NavigateToLogin) navigated = true }
         }
         viewModel.onSignOutClicked()
         advanceUntilIdle()
@@ -210,7 +210,7 @@ class ProfileViewModelTest {
         val dailyCheckInRepository = FakeDailyCheckInRepository()
         val viewModel = createViewModel(dailyCheckInRepository = dailyCheckInRepository)
 
-        val confirmation = async { viewModel.dailyCheckInActivated.first() }
+        val confirmation = async { viewModel.events.first { it == ProfileEvent.DailyCheckInActivated } }
         viewModel.onDailyCheckInEnabled(true)
         advanceUntilIdle()
 
@@ -223,7 +223,7 @@ class ProfileViewModelTest {
         val viewModel = createViewModel()
         var confirmed = false
         val collectJob = backgroundScope.launch {
-            viewModel.dailyCheckInActivated.collect { confirmed = true }
+            viewModel.events.collect { if (it == ProfileEvent.DailyCheckInActivated) confirmed = true }
         }
 
         viewModel.onDailyCheckInEnabled(false)
