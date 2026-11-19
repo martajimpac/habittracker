@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Glance instantiates widget ActionCallbacks by reflection (Class.getDeclaredConstructor()).
+# Without this, R8 strips the no-arg constructor and tapping a widget action does nothing
+# (NoSuchMethodException: ToggleTodayHabitAction.<init> []).
+-keep class * implements androidx.glance.appwidget.action.ActionCallback {
+    <init>();
+}
