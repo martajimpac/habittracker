@@ -23,6 +23,7 @@ La app se llama Bloom. Sirve para crear, consultar y completar habitos personale
   - Progreso numérico (`computeChallengeScore`): en «% completado» y «todos los días», días cumplidos hasta hoy (con el tope semanal del hábito) sobre los días que pide el reto entero; en «racha», la racha actual dentro del reto sobre la duración del reto. El orden de los números coincide con el del porcentaje que decide quién gana.
   - Textos en ingles (`strings.xml`).
   - Android usa el contrato de dominio `FriendsRepository` y `SocialRemoteDataSource` (Supabase); el `FriendsViewModel` expone el estado de la UI y recarga los datos al volver a primer plano.
+  - El indicador de carga a pantalla completa solo aparece en la primera carga, cuando aún no hay datos. Las recargas posteriores (volver a primer plano, tras aceptar una solicitud o crear un reto) son silenciosas: el contenido ya cargado sigue visible y se sustituye al llegar los datos nuevos. Si una recarga falla, se mantienen los datos anteriores. Si ya hay una recarga en curso, no se lanza otra.
   - Todas las lecturas y mutaciones sociales requieren red (remote-only, online-first); no existe cache Room de friends/challenges en el MVP.
   - La privacidad se persiste extremo a extremo mediante `Habit.isPublic`, `HabitEntity.isPublic` y `HabitDto.is_public`; por defecto cada hábito es privado.
   - Plan de implementación: `ai-docs/plans/2026-07-31-friends-figma-android.md`.

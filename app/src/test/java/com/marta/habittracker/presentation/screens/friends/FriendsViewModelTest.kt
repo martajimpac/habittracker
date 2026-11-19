@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.DayOfWeek
@@ -244,6 +245,73 @@ class FriendsViewModelTest {
         assertEquals(2, repository.getAcceptedFriendsCalls)
         assertEquals(2, repository.getActiveChallengesCalls)
         assertEquals(2, repository.getPendingFriendRequestsCalls)
+    }
+
+    @Test
+    fun `refresh after first load keeps content visible without loading indicator`() = runTest {
+        val friend = FriendListItem(profile("friend"), bestStreak = 1, publicHabitsCount = 0, activeChallengeCount = 0)
+        val fake = FakeFriendsRepository(acceptedFriendsResult = DataResult.Success(listOf(friend)))
+        val viewModel = FriendsViewModel(SlowAcceptedFriendsRepository(fake), FakeHabitRepository())
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(listOf(friend), viewModel.uiState.value.friends)
+        advanceUntilIdle()
+        assertEquals(2, fake.getAcceptedFriendsCalls)
+    }
+
+    @Test
+    fun `first load shows loading indicator`() = runTest {
+        val viewModel = FriendsViewModel(
+            SlowAcceptedFriendsRepository(FakeFriendsRepository()),
+            FakeHabitRepository(),
+        )
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isLoading)
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `refresh while a load is in progress is ignored`() = runTest {
+        val fake = FakeFriendsRepository()
+        val viewModel = FriendsViewModel(SlowAcceptedFriendsRepository(fake), FakeHabitRepository())
+        runCurrent()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertEquals(1, fake.getAcceptedFriendsCalls)
+    }
+
+    @Test
+    fun `failed refresh keeps previously loaded content`() = runTest {
+        val friend = FriendListItem(profile("friend"), bestStreak = 1, publicHabitsCount = 0, activeChallengeCount = 0)
+        val fake = FakeFriendsRepository(acceptedFriendsResult = DataResult.Success(listOf(friend)))
+        val viewModel = FriendsViewModel(fake, FakeHabitRepository())
+        advanceUntilIdle()
+
+        fake.acceptedFriendsResult = DataResult.Error(AppError.Common.Network)
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(listOf(friend), viewModel.uiState.value.friends)
+        assertEquals(R.string.error_no_internet, viewModel.uiState.value.errorRes)
+    }
+
+    /** Simula una red lenta en la carga de amigos para observar estados intermedios. */
+    private class SlowAcceptedFriendsRepository(
+        private val delegate: FakeFriendsRepository,
+    ) : FriendsRepository by delegate {
+        override suspend fun getAcceptedFriends(): DataResult<List<FriendListItem>, AppError> {
+            delay(1_000)
+            return delegate.getAcceptedFriends()
+        }
     }
 
     private fun profile(id: String) = Profile(

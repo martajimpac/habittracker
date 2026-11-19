@@ -18,6 +18,7 @@ import com.marta.habittracker.domain.push.SilentChallengeDeclineNotifier
 import com.marta.habittracker.domain.repository.FriendsRepository
 import com.marta.habittracker.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,6 +65,8 @@ class FriendsViewModel @Inject constructor(
     private val _events = Channel<FriendsEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    private var hasLoadedContent = false
+
     init {
         viewModelScope.launch {
             habitRepository.getAllHabitsWithRecords().collect { habits ->
@@ -83,8 +86,12 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob: Job? = null
+
+    /** Recarga silenciosa; ignora la llamada si ya hay una recarga en curso. */
     fun refresh() {
-        viewModelScope.launch {
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
             loadContent()
         }
     }
@@ -195,8 +202,12 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga amigos, retos y solicitudes. Solo la primera carga (sin datos aún) muestra el
+     * indicador a pantalla completa; las siguientes mantienen el contenido visible.
+     */
     private suspend fun loadContent() {
-        _uiState.update { it.copy(isLoading = true, errorRes = null) }
+        _uiState.update { it.copy(isLoading = !hasLoadedContent, errorRes = null) }
 
         val friends = when (val result = friendsRepository.getAcceptedFriends()) {
             is DataResult.Success -> result.data
@@ -211,6 +222,7 @@ class FriendsViewModel @Inject constructor(
             is DataResult.Error -> return finishLoadingWithError(result.error)
         }
 
+        hasLoadedContent = true
         _uiState.update {
             it.copy(
                 isLoading = false,
