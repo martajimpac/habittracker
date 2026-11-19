@@ -11,6 +11,7 @@ import com.marta.habittracker.domain.DataResult
 import com.marta.habittracker.domain.model.AssistantActionStatus
 import com.marta.habittracker.domain.model.AssistantRole
 import com.marta.habittracker.domain.model.AssistantTurn
+import com.marta.habittracker.domain.model.ChatReply
 import com.marta.habittracker.domain.model.Habit
 import com.marta.habittracker.domain.model.HabitCatalog
 import com.marta.habittracker.domain.model.ProposedAction
@@ -194,7 +195,7 @@ class RecommendationViewModel(
         viewModelScope.launch {
             when (val result = recommendations.send(context, languageCode, messages)) {
                 is DataResult.Success -> {
-                    val turn = assistantTurn(result.data.text, result.data.proposal, snapshot, day)
+                    val turn = assistantTurn(result.data, snapshot, day)
                     _uiState.update {
                         it.copy(
                             phase = ChatPhase.Ready,
@@ -216,14 +217,18 @@ class RecommendationViewModel(
     /**
      * Bloom's turn with its card, if any. A challenge proposal needs the friends list, so it is
      * resolved here; when no friend fits, the turn carries the app's notice instead of a card.
+     * A proposal that the API or the app rejects as invalid also gets the app's notice.
      */
     private suspend fun assistantTurn(
-        text: String,
-        proposal: ProposedAction?,
+        reply: ChatReply,
         snapshot: List<Habit>,
         day: kotlinx.datetime.LocalDate,
     ): AssistantTurn {
-        val plain = AssistantTurn(role = AssistantRole.Assistant, text = text)
+        val plain = AssistantTurn(role = AssistantRole.Assistant, text = reply.text)
+        val proposal = reply.proposal
+        if (proposal == null) {
+            return if (reply.proposalRejected) invalidTurn(plain, "rejected before reaching the app") else plain
+        }
         if (proposal is ProposedAction.CreateChallenge) {
             return when (val resolution = resolveChallenge(proposal, catalog, newId)) {
                 is ChallengeResolution.Card -> plain.copy(
@@ -241,11 +246,17 @@ class RecommendationViewModel(
                         discard = resolution.discard,
                     )
                 }
-                ChallengeResolution.Invalid -> plain
+                ChallengeResolution.Invalid -> invalidTurn(plain, "challenge fields")
             }
         }
-        val action = proposal?.let { resolveAssistantAction(it, snapshot, day, catalog, newId) }
-        return plain.copy(action = action, actionStatus = action?.let { AssistantActionStatus.Pending })
+        val action = resolveAssistantAction(proposal, snapshot, day, catalog, newId)
+            ?: return invalidTurn(plain, proposal::class.simpleName.orEmpty())
+        return plain.copy(action = action, actionStatus = AssistantActionStatus.Pending)
+    }
+
+    private fun invalidTurn(plain: AssistantTurn, what: String): AssistantTurn {
+        Log.w(TAG, "Chat proposal discarded as invalid: $what")
+        return plain.copy(actionStatus = AssistantActionStatus.Discarded, invalidProposal = true)
     }
 
     companion object {

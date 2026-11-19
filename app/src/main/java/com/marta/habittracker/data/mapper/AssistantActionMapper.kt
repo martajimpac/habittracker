@@ -22,6 +22,7 @@ internal object AssistantActionMapper {
     private const val TYPE_CREATE = "create_habit"
     private const val TYPE_COMPLETION = "set_completion"
     private const val TYPE_CHALLENGE = "create_challenge"
+    private const val DISCARD_INVALID = "invalid_proposal"
 
     fun HabitWeekStat.toBody(): RecommendationHabitBody = RecommendationHabitBody(
         name = name,
@@ -72,9 +73,11 @@ internal object AssistantActionMapper {
     fun AssistantTurn.historyAction(): ChatActionBody? = action?.toBody() ?: discard?.proposal?.toBody()
 
     fun AssistantTurn.historyStatus(): String? =
-        if (action != null || discard != null) actionStatus?.wire() else null
+        if (action != null || discard != null || invalidProposal) actionStatus?.wire() else null
 
-    fun AssistantTurn.historyDiscardReason(): String? = discard?.reason?.wire()
+    /** Why the app showed no card. An invalid proposal is sent without its action (its data is not valid). */
+    fun AssistantTurn.historyDiscardReason(): String? =
+        discard?.reason?.wire() ?: DISCARD_INVALID.takeIf { invalidProposal }
 
     /** The action as sent back in the history, so Bloom knows what it proposed. */
     fun AssistantAction.toBody(): ChatActionBody = when (this) {

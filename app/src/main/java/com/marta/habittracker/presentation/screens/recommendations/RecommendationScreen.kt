@@ -279,8 +279,11 @@ private fun MessageBubble(
     onOpenChallenge: (String) -> Unit,
 ) {
     val fromUser = message.role == AssistantRole.User
-    // A discarded challenge shows the app's notice instead of Bloom's text (SPEC chat-challenges RF-06).
-    val text = message.discard?.let { challengeNotice(it) } ?: message.text
+    // A discarded challenge or an invalid proposal shows the app's notice instead of Bloom's text.
+    val text = when {
+        message.invalidProposal -> stringResource(R.string.chat_proposal_invalid)
+        else -> message.discard?.let { challengeNotice(it) } ?: message.text
+    }
     val label = stringResource(
         if (fromUser) R.string.recommendation_you else R.string.recommendation_assistant,
     )

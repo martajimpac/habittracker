@@ -375,7 +375,7 @@ class BloomRecommendationDataSourceTest {
         )
     }
 
-    // CA-23
+    // CA-23: the text is kept and the reply says a proposal was rejected.
     @Test
     fun `a malformed action is dropped and the text is kept`() = runTest {
         listOf(
@@ -387,8 +387,46 @@ class BloomRecommendationDataSourceTest {
 
             val result = source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "hola")))
 
-            assertEquals(payload, DataResult.Success(ChatReply("Hola")), result)
+            assertEquals(payload, DataResult.Success(ChatReply("Hola", proposalRejected = true)), result)
         }
+    }
+
+    @Test
+    fun `an action rejected by the api is reported as rejected`() = runTest {
+        val payload = """{"message":"Mira:","action_rejected":true}"""
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = FakeRecommendationTransport(TransportResult.Http(200, payload)))
+
+        val result = source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "crea un hábito")))
+
+        assertEquals(DataResult.Success(ChatReply("Mira:", proposalRejected = true)), result)
+    }
+
+    @Test
+    fun `a plain reply is not reported as rejected`() = runTest {
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"Hola"}""")))
+
+        val result = source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "hola")))
+
+        assertEquals(DataResult.Success(ChatReply("Hola")), result)
+    }
+
+    @Test
+    fun `an invalid proposal is sent back as discarded without action`() = runTest {
+        val transport = FakeRecommendationTransport(TransportResult.Http(200, """{"message":"ok"}"""))
+        val source = dataSource(baseUrl = "http://10.0.2.2:8000", transport = transport)
+        val invalid = AssistantTurn(
+            role = AssistantRole.Assistant,
+            text = "Te propongo esto:",
+            actionStatus = AssistantActionStatus.Discarded,
+            invalidProposal = true,
+        )
+
+        source.send(context, "es", listOf(AssistantTurn(AssistantRole.User, "crea un hábito"), invalid, AssistantTurn(AssistantRole.User, "vale")))
+
+        val body = transport.body.orEmpty()
+        assertTrue(body.contains("\"action_status\":\"discarded\""))
+        assertTrue(body.contains("\"discard_reason\":\"invalid_proposal\""))
+        assertFalse(body.contains("\"action\":{"))
     }
 }
 

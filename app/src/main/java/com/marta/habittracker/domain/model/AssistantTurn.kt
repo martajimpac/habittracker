@@ -16,4 +16,9 @@ data class AssistantTurn(
     val actionStatus: AssistantActionStatus? = null,
     /** Set when the app replaced a challenge card with its own notice ([actionStatus] = Discarded). */
     val discard: ChallengeDiscard? = null,
+    /**
+     * True when Bloom proposed something the API or the app rejected as invalid. The turn shows the
+     * app's notice instead of Bloom's text ([actionStatus] = Discarded) and Bloom is told next time.
+     */
+    val invalidProposal: Boolean = false,
 )

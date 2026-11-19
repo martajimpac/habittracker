@@ -467,6 +467,7 @@
     <string name="chat_challenge_friend_not_found">I can\'t find “%1$s” among your friends. Check the name, or add them from Friends.</string>
     <string name="chat_challenge_friend_ambiguous">Several friends match “%1$s”: %2$s. Which one do you want to challenge?</string>
     <string name="chat_challenge_no_friends">You don\'t have any friends yet. Add one from Friends to challenge them.</string>
+    <string name="chat_proposal_invalid">I couldn\'t prepare that proposal, so nothing was saved. Ask me again, if you like in other words.</string>
 
     <!-- Legacy tab keys -->
     <string name="debug_mode_active">Debug mode active</string>
