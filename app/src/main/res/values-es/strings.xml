@@ -467,6 +467,7 @@
     <string name="chat_challenge_friend_not_found">No encuentro a «%1$s» entre tus amigos. Revisa el nombre o añádelo desde Amigos.</string>
     <string name="chat_challenge_friend_ambiguous">Varios amigos encajan con «%1$s»: %2$s. ¿A cuál quieres retar?</string>
     <string name="chat_challenge_no_friends">Aún no tienes amigos. Añade alguno desde Amigos para poder retarle.</string>
+    <string name="chat_proposal_invalid">No he podido preparar esa propuesta, así que no se ha guardado nada. Pídemela de nuevo, si quieres con otras palabras.</string>
 
     <!-- Legacy tab keys -->
     <string name="debug_mode_active">Modo depuración activo</string>

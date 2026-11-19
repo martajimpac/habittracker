@@ -197,7 +197,7 @@ class RecommendationViewModelTest {
 
     // CA-02, CA-23
     @Test
-    fun `a valid proposal becomes a pending card and an invalid one is text only`() = runTest {
+    fun `a valid proposal becomes a pending card and an invalid one shows the notice`() = runTest {
         val remote = FakeRecommendationRepository(
             results = listOf(
                 DataResult.Success(ChatReply("Here:", createProposal)),
@@ -213,8 +213,46 @@ class RecommendationViewModelTest {
         val card = viewModel.uiState.value.messages[1]
         assertEquals(AssistantActionStatus.Pending, card.actionStatus)
         assertEquals("fixed-id", (card.action as AssistantAction.CreateHabit).habitId)
-        val textOnly = viewModel.uiState.value.messages[3]
-        assertEquals(AssistantTurn(AssistantRole.Assistant, "Done?"), textOnly)
+        val invalid = viewModel.uiState.value.messages[3]
+        assertEquals(
+            AssistantTurn(
+                role = AssistantRole.Assistant,
+                text = "Done?",
+                actionStatus = AssistantActionStatus.Discarded,
+                invalidProposal = true,
+            ),
+            invalid,
+        )
+    }
+
+    @Test
+    fun `a reply without proposal stays plain text`() = runTest {
+        val remote = FakeRecommendationRepository(results = listOf(DataResult.Success(ChatReply("Hi"))))
+        val viewModel = viewModel(habits = listOf(habit()), remote = remote)
+        advanceUntilIdle()
+
+        viewModel.chat("hello")
+
+        assertEquals(AssistantTurn(AssistantRole.Assistant, "Hi"), viewModel.uiState.value.messages[1])
+    }
+
+    @Test
+    fun `a proposal rejected by the api is discarded and Bloom is told next time`() = runTest {
+        val remote = FakeRecommendationRepository(
+            results = listOf(DataResult.Success(ChatReply("Here:", proposalRejected = true))),
+        )
+        val viewModel = viewModel(habits = listOf(habit()), remote = remote)
+        advanceUntilIdle()
+
+        viewModel.chat("create a habit that suits me")
+
+        val turn = viewModel.uiState.value.messages[1]
+        assertEquals(AssistantActionStatus.Discarded, turn.actionStatus)
+        assertEquals(null, turn.action)
+        assertTrue(turn.invalidProposal)
+
+        viewModel.chat("ok")
+        assertTrue(remote.sent.last()[1].invalidProposal)
     }
 
     // CA-03, CA-20

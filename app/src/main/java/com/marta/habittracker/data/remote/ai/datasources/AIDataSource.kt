@@ -129,7 +129,10 @@ class BloomRecommendationDataSource(
         return if (reply.isEmpty()) {
             DataResult.Error(RecommendationError.EmptyResponse)
         } else {
-            DataResult.Success(ChatReply(text = reply, proposal = parsed.action?.let(::parseProposal)))
+            if (parsed.actionRejected) Log.w(TAG, "Chat action rejected by the API as invalid")
+            val proposal = parsed.action?.let(::parseProposal)
+            val rejected = parsed.actionRejected || (parsed.action != null && proposal == null)
+            DataResult.Success(ChatReply(text = reply, proposal = proposal, proposalRejected = rejected))
         }
     }
 

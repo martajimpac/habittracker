@@ -110,10 +110,14 @@ sealed interface ProposedAction {
     ) : ProposedAction
 }
 
-/** Bloom's reply: the text and, optionally, a proposal. */
+/**
+ * Bloom's reply: the text and, optionally, a proposal. [proposalRejected] is true when Bloom tried
+ * to propose something but the API or the app could not read it, so there is no [proposal].
+ */
 data class ChatReply(
     val text: String,
     val proposal: ProposedAction? = null,
+    val proposalRejected: Boolean = false,
 )
 
 /** Icons and colors the habit form offers. Bloom may only pick from these. */
