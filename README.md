@@ -4,6 +4,9 @@
 
 Bloom also features an **AI-powered assistant** that analyzes weekly habit statistics and provides personalized insights and recommendations. This functionality is powered by a **FastAPI backend integrated with Groq**, using the `openai/gpt-oss-120b` model.
 
+## Demo
+[▶️ Ver demo](https://github.com/user-attachments/assets/f129b16b-04d8-49d9-a925-d085b7be61ac)
+
 ## Screenshots
 
 Sign in and create account.
